@@ -178,6 +178,47 @@ function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularQuadrat
 end
 
 #==========================================================================================
+                            QuadrilateralQuadratic9 (COMSOL Layout)
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
+                                        3  9  4                                      
+                                        6  7  8                                      
+                                        1  5  2                                      
+==========================================================================================#
+psi1q(u,alpha) = 1.0/(2.0*(1.0 - alpha)^2)*u.*(u .- (1.0 - alpha))
+psi2q(u,alpha) = 1.0/(2.0*(1.0 - alpha)^2)*u.*(u .+ (1.0 - alpha))
+psi3q(u,alpha) = 1.0/(2.0*(1.0 - alpha)^2)*((1.0 - alpha) .- u).*((1.0 - alpha) .+ u)
+discontinuousQuadrilateralQuadratic9(u,v,alpha) = [
+                                 0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
+                                -0.25*u.*(1.0 .+ u).*v.*(1.0 .- v);
+                                -0.25*u.*(1.0 .- u).*v.*(1.0 .+ v);
+                                 0.25*u.*(1.0 .+ u).*v.*(1.0 .+ v);
+                                -0.50*(1.0 .+ u).*(1.0 .- u).*v.*(1.0 .- v);
+                                -0.50*u.*(1.0 .- u).*(1.0 .+ v).*(1.0 .- v);
+                                (1.0 .- u.^2).*(1.0 .- v.^2);
+                                 0.50*u.*(1.0 .+ u).*(1.0 .+ v).*(1.0 .- v);
+                                 0.50*(1.0 .+ u).*(1.0 .- u).*(1.0 .+ v).*v]
+function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadratic9,u,v)
+    return discontinuousQuadrilateralQuadratic9(u,v,surfaceFunction.alpha)
+end
+#==========================================================================================
+                            QuadrilateralQuadratic4 (COMSOL Layout)
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
+                                        3 --- 4                                      
+                                        |     |                                      
+                                        1 --- 2                                      
+==========================================================================================#
+psi1l(u,alpha) = 1.0/(2.0*(1.0 - alpha))*((1.0 - alpha) .- u)
+psi2l(u,alpha) = 1.0/(2.0*(1.0 - alpha))*((1.0 - alpha) .+ u)
+discontinuousQuadrilateralLinear4(u,v,alpha) = [
+                                    0.25*(1.0 .- u).*(1.0 .- v);
+                                    0.25*(1.0 .+ u).*(1.0 .- v);
+                                    0.25*(1.0 .- u).*(1.0 .+ v);
+                                    0.25*(1.0 .+ u).*(1.0 .+ v)];
+function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
+    return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.alpha)
+end
+
+#==========================================================================================
                                 Constructors                                 
 ==========================================================================================#
 function TriangularLinear(n::Real,m::Real)
@@ -187,6 +228,14 @@ function TriangularLinear(n::Real,m::Real)
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return TriangularLinear(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
+function TriangularLinear(SF::Triangular)
+    TMP = TriangularLinear(3,3)
+    gauss_u = SF.gauss_u
+    gauss_v = SF.gauss_v
+    derivatives_u,derivatives_v = TMP'(gauss_u',gauss_v')
+    interp = TMP(gauss_u',gauss_v')
+    return TriangularLinear(SF.weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interp)
+end
 function TriangularQuadratic(n::Real,m::Real)
     nodes_u, nodes_v, weights = triangularQuadpoints(n,m)
     TMP = TriangularQuadratic(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
@@ -194,6 +243,41 @@ function TriangularQuadratic(n::Real,m::Real)
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return TriangularQuadratic(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
+function TriangularQuadratic(SF::Triangular)
+    weights = SF.weights
+    gauss_u = SF.gauss_u
+    gauss_v = SF.gauss_v
+    TMP = TriangularQuadratic(3,3)
+    interp = TMP(gauss_u',gauss_v')
+    derivatives_u,derivatives_v = TMP'(gauss_u',gauss_v')
+    return TriangularQuadratic(weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interp)
+end
+function DiscontinuousTriangularConstant(SF::Triangular)
+    weights = SF.weights
+    gauss_u = SF.gauss_u
+    gauss_v = SF.gauss_v
+    derivatives_u = zeros(1,length(gauss_u))
+    derivatives_v = zeros(1,length(gauss_v))
+    interpolation = zeros(1,length(gauss_v))
+    return DiscontinuousTriangularConstant(weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interpolation)
+end
+function DiscontinuousTriangularLinear(SF::Triangular,beta)
+    weights = SF.weights
+    gauss_u = SF.gauss_u
+    gauss_v = SF.gauss_v
+    interp  = discontinuousTriangularLinear(gauss_u',gauss_v',beta)
+    dX,dY   = discontinuousTriangularLinearDerivatives(gauss_u',gauss_v',beta)
+    return DiscontinuousTriangularLinear(weights,gauss_u,gauss_v,dX,dY,interp,beta)
+end
+function DiscontinuousTriangularQuadratic(SF::Triangular,beta)
+    weights = SF.weights
+    gauss_u = SF.gauss_u
+    gauss_v = SF.gauss_v
+    interp  = discontinuousTriangularQuadratic(gauss_u',gauss_v',beta)
+    dX,dY   = discontinuousTriangularQuadraticDerivatives(gauss_u',gauss_v',beta)
+    return DiscontinuousTriangularQuadratic(weights,gauss_u,gauss_v,dX,dY,interp,beta)
+end
+
 function QuadrilateralLinear(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
     TMP = QuadrilateralLinear(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
@@ -222,3 +306,4 @@ function QuadrilateralQuadratic9(n::Real,m::Real)
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralQuadratic9(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
+

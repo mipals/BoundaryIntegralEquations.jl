@@ -40,6 +40,15 @@ function get_element_normals(basisElement::SurfaceFunction,coordinates, topology
     return -normals ./ sqrt.(sum(abs2,normals,dims=1)) # Normalizing + fixing orientation
 end
 
+function normalize_vector!(normals)
+    @inbounds for i = 1:size(normals,2)
+        scale = hypot(normals[1,i],normals[2,i],normals[3,i])
+        normals[1,i] = normals[1,i]/scale
+        normals[2,i] = normals[2,i]/scale
+        normals[3,i] = normals[3,i]/scale
+    end
+end
+
 """
     tangents!(normals, tangentX, tangentY)
 
@@ -47,7 +56,6 @@ Inplace computation of two tagents of the columns of `normals`.
 Results are saved in `tangentX` and `tangentY` respectively.
 """
 function tangents!(normals, tangentX, tangentY)
-
     e2 = [0.0;1.0;0.0]
     e1 = [1.0;0.0;0.0]
     for i = 1:size(tangentX,2)
@@ -56,15 +64,14 @@ function tangents!(normals, tangentX, tangentY)
         dY      = @view tangentY[:,i]
         cross!(dX,e2,normal)
         cross!(dY,normal,dX)
-        if sum(dX) <= 100*eps(eltype(normals))
+        if abs.(dot(e2,normal) - 1.0) <= 1e-10
             cross!(dY,normal,e1)
             cross!(dX,dY,normal)
         end
     end
-    tangentX .= tangentX ./ sqrt.(sum(tangentX.^2,dims=1))  # Normalize
-    tangentY .= tangentY ./ sqrt.(sum(tangentY.^2,dims=1))  # Normalize
+    normalize_vector!(tangentX)
+    normalize_vector!(tangentY)
 end
-
 
 function compute_sources(basisElement,physicsElement,topology,coordinates)
     nShapeFunctions = number_of_shape_functions(physicsElement)
@@ -73,7 +80,7 @@ function compute_sources(basisElement,physicsElement,topology,coordinates)
     sources   = zeros(3,nSources)
     normals   = similar(sources)
     geometryElement = deepcopy(basisElement)
-    setInterpolationNodes!(geometryElement,physicsElement)
+    set_interpolation_nodes!(geometryElement,physicsElement)
     dX = geometryElement.derivatives_u
     dY = geometryElement.derivatives_v
     
@@ -96,20 +103,36 @@ function compute_sources(basisElement,physicsElement,topology,coordinates)
     return sources,normals,physicsTopology
 end
 
-function get_beta_linear(betaType)
+function get_beta_tri_linear(betaType)
     if lowercase(betaType) == "legendre"
         return 0.1667
-    elseif lowercase(betaType) == "equividistant"
+    elseif lowercase(betaType) == "equidistant"
         return 0.25
     end
 end
-function get_beta_quadratic(betaType)
+function get_beta_tri_quadratic(betaType)
     if typeof(betaType) <: Number
         return betaType
     elseif lowercase(betaType) == "legendre"
         return 0.0916
-    elseif lowercase(betaType) == "equividistant"
+    elseif lowercase(betaType) == "equidistant"
         return 0.1667
+    end
+end
+function get_beta_quad_linear(betaType)
+    if lowercase(betaType) == "legendre"
+        return 0.4226
+    elseif lowercase(betaType) == "equidistant"
+        return 0.5
+    end
+end
+function get_beta_quad_quadratic(betaType)
+    if typeof(betaType) <: Number
+        return betaType
+    elseif lowercase(betaType) == "legendre"
+        return 0.2254
+    elseif lowercase(betaType) == "equidistant"
+        return 1.0/3.0
     end
 end
 
@@ -121,11 +144,21 @@ function set_physics_element(physicsType,basisElement,betaType)
     elseif lowercase(physicsType) == "disctriconstant"
         return DiscontinuousTriangularConstant(basisElement)
     elseif lowercase(physicsType) == "disctrilinear"
-        beta = get_beta_linear(betaType)
+        beta = get_beta_tri_linear(betaType)
         return DiscontinuousTriangularLinear(basisElement,beta)
     elseif lowercase(physicsType) == "disctriquadratic"
-        beta = get_beta_quadratic(betaType)
+        beta = get_beta_tri_quadratic(betaType)
         return DiscontinuousTriangularQuadratic(basisElement,beta)
+    elseif lowercase(physicsType) == "discquadconstant"
+        error("Discontinuous Constant Quadrilaterals are not implemented yet")
+    elseif lowercase(physicsType) == "discquadlinear"
+        beta = get_beta_tri_linear(betaType)
+        error("Discontinuous Linear Quadrilaterals are not implemented yet")
+        # return DiscontinuousQuadrilateralLinear4(basisElement,beta)
+    elseif lowercase(physicsType) == "discquadquadratic"
+        beta = get_beta_tri_quadratic(betaType)
+        error("Discontinuous Quadratic Quadrilaterals are not implemented yet")
+        # return DiscontinuousQuadrilateralLinear9(basisElement,beta)
     else 
         return deepcopy(basisElement)
     end
