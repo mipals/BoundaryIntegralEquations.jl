@@ -219,26 +219,27 @@ function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
 end
 
 #==========================================================================================
-                                Constructors                                 
+                                Triangular Constructors                                 
 ==========================================================================================#
 function TriangularLinear(n::Real,m::Real)
     nodes_u, nodes_v, weights = triangularQuadpoints(n,m)
-    TMP = TriangularLinear(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
+    TMP = TriangularLinear(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return TriangularLinear(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function TriangularLinear(SF::Triangular)
     TMP = TriangularLinear(3,3)
+    weights = SF.weights
     gauss_u = SF.gauss_u
     gauss_v = SF.gauss_v
     derivatives_u,derivatives_v = TMP'(gauss_u',gauss_v')
     interp = TMP(gauss_u',gauss_v')
-    return TriangularLinear(SF.weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interp)
+    return TriangularLinear(weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interp)
 end
 function TriangularQuadratic(n::Real,m::Real)
     nodes_u, nodes_v, weights = triangularQuadpoints(n,m)
-    TMP = TriangularQuadratic(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
+    TMP = TriangularQuadratic(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return TriangularQuadratic(weights,nodes_u,nodes_v,dX,dY,interpolation)
@@ -247,8 +248,8 @@ function TriangularQuadratic(SF::Triangular)
     weights = SF.weights
     gauss_u = SF.gauss_u
     gauss_v = SF.gauss_v
-    TMP = TriangularQuadratic(3,3)
-    interp = TMP(gauss_u',gauss_v')
+    TMP     = TriangularQuadratic(3,3)
+    interp  = TMP(gauss_u',gauss_v')
     derivatives_u,derivatives_v = TMP'(gauss_u',gauss_v')
     return TriangularQuadratic(weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interp)
 end
@@ -278,32 +279,58 @@ function DiscontinuousTriangularQuadratic(SF::Triangular,beta)
     return DiscontinuousTriangularQuadratic(weights,gauss_u,gauss_v,dX,dY,interp,beta)
 end
 
+#==========================================================================================
+                            Quadrilateral Constructors                                 
+==========================================================================================#
 function QuadrilateralLinear(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    TMP = QuadrilateralLinear(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
+    TMP = QuadrilateralLinear(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralLinear(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function QuadrilateralLinear4(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    TMP = QuadrilateralLinear4(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
+    TMP = QuadrilateralLinear4(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralLinear4(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function QuadrilateralQuadratic(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    TMP = QuadrilateralQuadratic(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
+    TMP = QuadrilateralQuadratic(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralQuadratic(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function QuadrilateralQuadratic9(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    TMP = QuadrilateralQuadratic9(nodes_u, nodes_v, weights,rand(3,2),rand(3,2),rand(3,2))
+    TMP = QuadrilateralQuadratic9(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralQuadratic9(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
-
+function DiscontinuousQuadrilateralConstant(n::Real,m::Real)
+    nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
+    alpha = get_beta_quad_linear(alphaType)
+    TMP = DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
+    interpolation           = TMP(nodes_u',nodes_v')
+    dX, dY                  = TMP'(nodes_u',nodes_v')
+    return DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,dX,dY,interpolation)
+end
+function DiscontinuousQuadrilateralLinear4(n::Real,m::Real,alphaType="legendre")
+    nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
+    alpha = get_beta_quad_linear(alphaType)
+    TMP = DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    interpolation           = TMP(nodes_u',nodes_v')
+    dX, dY                  = TMP'(nodes_u',nodes_v')
+    return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+end
+function DiscontinuousQuadrilateralQuadratic9(n::Real,m::Real,alphaType="legendre")
+    nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
+    alpha = get_beta_quad_quadratic(alphaType)
+    TMP = DiscontinuousQuadrilateralQuadratic9(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    interpolation           = TMP(nodes_u',nodes_v')
+    dX, dY                  = TMP'(nodes_u',nodes_v')
+    return DiscontinuousQuadrilateralQuadratic9(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+end
