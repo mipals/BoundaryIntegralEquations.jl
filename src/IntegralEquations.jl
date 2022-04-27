@@ -15,6 +15,10 @@ using ProgressMeter
 using DelimitedFiles
 using ForwardDiff
 using LegendrePolynomials
+using Meshes
+using MeshViz
+using Base.Threads
+import GLMakie as Mke
 #==========================================================================================
                                     Utility functions
 ==========================================================================================#
@@ -32,8 +36,10 @@ include("3d/shape_functions.jl")
 include("3d/jacobian.jl")
 include("3d/mesh.jl")
 include("3d/read_comsol.jl")
+include("3d/adaptive_integration.jl")
+include("3d/triangular_modifications.jl")
 include("3d/assembly_collocation.jl")
-
+include("3d/visualizations.jl")
 #==========================================================================================
                                 Exporting relevant function
 ==========================================================================================#
@@ -49,9 +55,13 @@ export Mesh, Mesh3d, Mesh2d
 export TriangularLinear, TriangularQuadratic, Triangular,
        DiscontinuousTriangularConstant, DiscontinuousTriangularLinear,
        DiscontinuousTriangularQuadratic, DiscontinuousTriangular,
-       QuadrilateralLinear,QuadrilateralLinear4,
+       Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
        QuadrilateralQuadratic,QuadrilateralQuadratic9
 
 export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh
+
+# visualizations
+export create_simple_mesh, create_bc_simple_mesh, viz
+
 
 end

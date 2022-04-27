@@ -111,3 +111,33 @@ end
 function getQuadpoints(elementType::Triangular,n=4,m=4)
     return triangularQuadpoints(n,m)
 end
+
+#==========================================================================================
+                                 Rotation of integration points 
+==========================================================================================#
+"""
+    rotatedTriangularQuadpoints(n=4,m=4)
+
+Returns `m*n` integration points and `weights` for a triangule using a duffy transformation.
+
+The integration points are clustered around node "1" in the triangle:
+
+                                    3          
+                                    | \
+                                    1 - 2 
+"""
+function rotated_triangular_quadpoints(n=4,m=4)
+    nodex, wx = curveLinearQuadpoints(n) # Nodes in the interval [0, 1]
+    nodey, wy = curveLinearQuadpoints(m) # Nodes in the interval [0, 1]
+
+    u = kron(ones(m),nodex)
+    v = kron(nodey,ones(n))
+    w = kron(wy,wx)
+
+    # Transforming the quadrilateral element to an triangular element
+    ξ = u .* v
+    η = (1.0 .- u) .* v
+    weights = w .* v
+
+    return ξ,η,weights
+end
