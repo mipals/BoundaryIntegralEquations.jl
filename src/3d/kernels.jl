@@ -7,7 +7,7 @@
 Green's function for the Helmholtz Equation in 3d.
 """
 function greens3d!(integrand,r,k)
-    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+    for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = exp(-im*k*r[i,j])/(4.0*π*r[i,j])
     end
 end
@@ -17,7 +17,7 @@ end
 Normal derivative of the 3D Helmholtz Green's function with respect to interpolation nodes.
 """
 function freens3d!(integrand,r,interpolation,sources,normals,k)
-    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+    for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = -exp(-im*k*r[i,j])*(1.0 + im*k*r[i,j])*
                         (normals[1,j]*(interpolation[1,j] - sources[1,i]) + 
                          normals[2,j]*(interpolation[2,j] - sources[2,i]) + 

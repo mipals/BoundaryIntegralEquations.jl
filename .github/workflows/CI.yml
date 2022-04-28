@@ -20,7 +20,7 @@ jobs:
         version:
           - '1.7'
         os:
-          - ubuntu-latest
+          # - ubuntu-latest
           - macos-11
         arch:
           - x64

@@ -39,6 +39,7 @@ include("3d/read_comsol.jl")
 include("3d/adaptive_integration.jl")
 include("3d/triangular_modifications.jl")
 include("3d/assembly_collocation.jl")
+include("3d/assembly_galerkin.jl")
 include("3d/visualizations.jl")
 #==========================================================================================
                                 Exporting relevant function
