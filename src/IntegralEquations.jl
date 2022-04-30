@@ -24,6 +24,8 @@ import GLMakie as Mke
 ==========================================================================================#
 include("utils/basis.jl")
 include("utils/mesh.jl")
+include("utils/ambient_to_properties.jl")
+include("utils/lossy_constants.jl")
 #==========================================================================================
                                     2D Routines
 ==========================================================================================#
@@ -42,15 +44,22 @@ include("3d/assembly_collocation.jl")
 include("3d/assembly_galerkin.jl")
 include("3d/visualizations.jl")
 #==========================================================================================
+                                Analytical solutions
+==========================================================================================#
+include("analytical/scattering.jl")
+#==========================================================================================
                                 Exporting relevant function
 ==========================================================================================#
 # Helper functions
 export adjoint, *
 
+# Utility functions
+export visco_thermal_constants, ambient_to_properties
 # Mesh-related functions
 export Mesh, Mesh3d, Mesh2d
+export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh
+
 # 1D element types (for 2D)
-# export CurveLinear, CurveQuadratic
 
 # 2D element types (for 3D)
 export TriangularLinear, TriangularQuadratic, Triangular,
@@ -58,11 +67,9 @@ export TriangularLinear, TriangularQuadratic, Triangular,
        DiscontinuousTriangularQuadratic, DiscontinuousTriangular,
        Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
        QuadrilateralQuadratic,QuadrilateralQuadratic9
-
-export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh
-
+# Assembly
+export assemble_parallel!
 # visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz
-
 
 end

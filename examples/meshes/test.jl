@@ -106,112 +106,98 @@ using LinearAlgebra
 import IntegralEquations: SurfaceElement, jacobian!, interpolate_on_nodes!, interpolate_elements
 import IntegralEquations: assemble_parallel!, create_rotated_element, computing_integrals!
 import IntegralEquations: freens3d!, greens3d!,freens3dk0!, computing_integrand!
-
+import IntegralEquations: assemble_parallel_galerkin!
 
 mesh_file = "examples/meshes/resonatorFinal"
 tri_mesh = load3dTriangularComsolMesh(mesh_file)
 # Fl,Gl,Cl = assemble_parallel!(tri_mesh,1.0,tri_mesh.sources);
+# Fl,Gl,Cl = assemble_parallel_galerkin!(tri_mesh,1.0,tri_mesh.sources)
 
 quad_mesh_file = "examples/meshes/quad_cylinder"
-quad_mesh = load3dQuadComsolMesh(quad_mesh_file)
-# quad_mesh = load3dQuadComsolMesh(quad_mesh_file;physicsType="linear")
+# quad_mesh = load3dQuadComsolMesh(quad_mesh_file)
+quad_mesh = load3dQuadComsolMesh(quad_mesh_file;physicsType="linear")
 # Fq,Gq,Cq = assemble_parallel!(quad_mesh,1.0,quad_mesh.sources;n=4,m=4);
+Fq,Gq,Cq = assemble_parallel_galerkin!(quad_mesh,1.0);
+
+import IntegralEquations: compute_distances
 
 
-import IntegralEquations: assemble_parallel_galerkin!
-Fg,Gg,Cg = assemble_parallel_galerkin!(tri_mesh,1.0,tri_mesh.sources)
+
+gx = 10
+gy = 16
+nx = 6
+ny = 9
+wx = ones(gx)
+Nx = rand(gx,nx)'
+wy = ones(gy)
+Ny = rand(gy,ny)'
+Gxy = ones(gy,gx)
+integrand = ones(ny,nx)
+@time computing_integrand!(integrand,Gxy,Ny,wy,Nx,wx);
 
 
+i = 1
+T1 = wx'*(Gxy[i,:] .* Nx')
+wx'*(Gxy[i,:] .* Nx')
+(wx' .* Gxy[i,:]')*Nx'
+T1 = wx' .* Gxy[i,:]'
+T2 = wx'*(Gxy[i,:] .* Nx')
 
-import IntegralEquations: number_of_elements, create_shape_function, interpolate_elements,
-                            copy_interpolation_nodes!, computing_galerkin_integrals!
-mesh = tri_mesh
-insources = tri_mesh.sources
-shape_function = tri_mesh.shape_function
-ntest = 3
-mtest = 3
-nbasis = 4
-mbasis = 4
+T1 = wx .* Gxy[i,:]
+T2 = Nx*T1
 
-
-nElements   = number_of_elements(mesh)
-# nThreads    = nthreads()
-# sources     = convert.(eltype(shape_function),insources)
-nSources    = size(insources,2)
-nNodes      = size(mesh.sources,2)
-physicsTopology  = mesh.physics_topology
-physics_function = mesh.physics_function
-#======================================================================================
-
-======================================================================================#
-test_function       = create_shape_function(shape_function;n=ntest,m=mtest)
-basis_function      = create_shape_function(shape_function;n=nbasis,m=mbasis)
-test_interpolation  = interpolate_elements(mesh,test_function)
-basis_interpolation = interpolate_elements(mesh,basis_function)
-test_physics        = deepcopy(physics_function)
-basis_physics       = deepcopy(physics_function)
-copy_interpolation_nodes!(test_physics,test_function)
-copy_interpolation_nodes!(basis_physics,basis_function)
-# Avoiding to have gauss-node on a singularity. Should be handled differently,
-# but, this is good for now.
-# if typeof(shape_function) <: QuadrilateralQuadratic9
-#     for (x,y) in zip(test_function.gauss_u,shape_function1.gauss_v)
-#         if isapprox.(x, 0.0, atol=1e-15) && isapprox.(y, 0.0, atol=1e-15)
-#             error("Gauss Node Singularity.")
-#         end
-#     end
-# end
-#======================================================================================
-                    Preallocation of return values & Intermediate values
-======================================================================================#
-# 
-F = zeros(ComplexF64, nSources, nNodes)
-G = zeros(ComplexF64, nSources, nNodes)
-C = zeros(ComplexF64, nSources)
-
-# Preallocation according to the number of threads
-#======================================================================================
-                                Assembly
-======================================================================================#
-@inbounds for test_element = 1:nElements
-    # Access source
-    # Every thread has access to parts of the pre-allocated matrices
-    integrand = zeros(ComplexF64, ntest*mtest, nbasis*nbasis)
-    r         = zeros(            ntest*mtest, nbasis*nbasis)
-    test_nodes = @view physicsTopology[:,test_element]
-    @inbounds for basis_element = 1:nElements
-        if basis_element == test_element
-            continue
-        end
-        basis_nodes = @view physicsTopology[:,basis_element]
-        # Acces submatrix of the BEM matrix
-        submatrixF = @view F[test_nodes,basis_nodes]
-        submatrixG = @view G[test_nodes,basis_nodes]
-        subvectorC = @view C[test_nodes]
-        # Interpolating on the mesh. 
-        # test_physics,test_interpolation,
-        #  basis_physics,basis_interpolation,
-        #  submatrixF,submatrixG,subvectorC,k,integrand,r)
-        computing_galerkin_integrals!(test_physics,test_interpolation[test_element],
-                                        basis_physics,basis_interpolation[basis_element],
-                                        submatrixF,submatrixG,subvectorC,k,integrand,r)
-        @assert all(.!isnan.(r))
-        @assert all(.!isnan.(submatrixG))
-        @assert all(.!isnan.(submatrixF))
+function jacmul!(jac,g,w)
+    @inbounds for i = 1:length(jac)
+        jac[i] = g[i]*w[i]
     end
-    println(test_element)
 end
+function computing_integrand_test!(integrand,Gxy,Ny,wy,Nx,wx,temporary1,temporary2)
+    for i = 1:length(wy)
+        # temporary1 .= Gxy[i,:] .* wx
+        jacmul!(temporary1,Gxy[i,:],wx)
+        mul!(temporary2,Nx,temporary1)
+        mul!(integrand,Ny[:,i],temporary2',wy[i],true)
+    end
+end
+# @time Ny[:,i]*(wx'*(Gxy[i,:] .* Nx'))*wy[i]
+@time computing_integrand!(integrand,Gxy,Ny,wy,Nx,wx);
+@time computing_integrand_test!(integrand,Gxy,Ny,wy,Nx,wx,T1,T2);
 
-1.0 + 1.0
+tm = deepcopy(Gxy[i,:])
+@time jacmul!(T1,Gxy[i,:],wx)
+@time mul!(T2,Nx,T1);
+i = 1
+@time mul!(integrand,Ny[:,i],T2',wy[i],true);
 
-# gx = 16
-# gy = 16
-# nx = 9
-# ny = 9
-# wx = ones(gx)
-# Nx = ones(gx,nx)'
-# wy = ones(gy)
-# Ny = ones(gy,ny)'
+
+function computing_c_integrand!(integrand,Ny,wy)
+    @inbounds for i = 1:length(wy)
+        mul!(integrand,Ny[:,i],Ny[:,i]',wy[i],true)
+    end
+end
+inte = Ny[:,i]*Ny[:,i]'
+@time computing_c_integrand!(inte,Ny,wy);
+
+
+tmp = zeros(ny,nx)
+tmp1 = wx'* Nx'
+tmp2 = Ny*wy
+function computing_integrand2!(integrand,Ny,wy,Nx,wx,tmp1)
+    tmp1 .= wx'* Nx'
+    for i = 1:length(wy)
+        # integrand .+= Ny[:,i]*wy[i]*(tmp1)
+        mul!(integrand,Ny[:,i],tmp1,wy[i],true)
+    end
+end
+function computing_integrand3!(integrand,Ny,wy,Nx,wx,tmp1,tmp2)
+    mul!(tmp1,wx',Nx')
+    mul!(tmp2,Ny,wy)
+    mul!(integrand,tmp2,tmp1,true,true)
+end
+@time tmp .= Ny*wy * (wx'*Nx');
+@time computing_integrand3!(tmp,Ny,wy,Nx,wx,tmp1,tmp2);
+@time computing_integrand2!(tmp,Ny,wy,Nx,wx,tmp1);
+
 # Gxy = ones(gy,gx)
 # @time sum(Ny[:,i]*(wx'*(Gxy[i,:] .* Nx')) for i = 1:gy);
 # function summing!(Nx,wx,Ny,wy,Gxy,tmp)
@@ -219,7 +205,6 @@ end
 #         tmp .+= Ny[:,i]*(wx'*(Gxy[i,:] .* Nx'))
 #     end
 # end
-# tmp = zeros(ny,nx)
 # @time summing!(Nx,wx,Ny,wy,Gxy,tmp)
 # tmp - sum(Ny[:,i]*(wx'*(Gxy[i,:] .* Nx')) for i = 1:gy)
 # @time sum(Ny[:,i]*(wx'*(Gxy[i,:] .* Nx')) for i = 1:gy);
