@@ -3,8 +3,8 @@ function create_simple_mesh(bem_mesh::Mesh3d)
 end
 function create_simple_mesh(tri_mesh,shape_function::Triangular)
     initial_topology = tri_mesh.topology[1:3,:]
-    used_nodes   = sort(unique(initial_topology))
-    topo        = IntegralEquations.remove_unused_nodes(initial_topology)
+    used_nodes = sort(unique(initial_topology))
+    topo       = remove_unused_nodes(initial_topology)
     x = tri_mesh.coordinates[1,used_nodes]
     y = tri_mesh.coordinates[2,used_nodes]
     z = tri_mesh.coordinates[3,used_nodes]
@@ -15,8 +15,8 @@ end
 
 function create_simple_mesh(quad_mesh,shape_function::Quadrilateral)
     initial_topology = quad_mesh.topology[[1;2;4;3],:]
-    used_nodes   = sort(unique(initial_topology))
-    topo        = IntegralEquations.remove_unused_nodes(initial_topology)
+    used_nodes = sort(unique(initial_topology))
+    topo       = remove_unused_nodes(initial_topology)
     x = quad_mesh.coordinates[1,used_nodes]
     y = quad_mesh.coordinates[2,used_nodes]
     z = quad_mesh.coordinates[3,used_nodes]

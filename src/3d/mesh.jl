@@ -1,12 +1,12 @@
 """
-    get_element_normals(basisElement::Triangular,coordinates, topology)
+    get_element_normals(shape_function::Triangular,coordinates, topology)
 
 Compute the normal as the average normal of all normals from the different elements
 that a `coordinate` is connected to via `topology`.
 """
-function get_element_normals(basisElement::SurfaceFunction,coordinates, topology)
+function get_element_normals(shape_function::SurfaceFunction,coordinates, topology)
     # Copying geometry element and setting interpolation nodes to be at corners & midpoints
-    geometryElement = deepcopy(basisElement)
+    geometryElement = deepcopy(shape_function)
     set_nodal_interpolation!(geometryElement)
 
     # Getting number shape functions as well as number of elements
@@ -73,13 +73,13 @@ function tangents!(normals, tangentX, tangentY)
     normalize_vector!(tangentY)
 end
 
-function compute_sources(basisElement,physicsElement,topology,coordinates)
+function compute_sources(shape_function,physicsElement,topology,coordinates)
     nShapeFunctions = number_of_shape_functions(physicsElement)
     nElements = size(topology,2)
     nSources  = nShapeFunctions * nElements
     sources   = zeros(3,nSources)
     normals   = similar(sources)
-    geometryElement = deepcopy(basisElement)
+    geometryElement = deepcopy(shape_function)
     set_interpolation_nodes!(geometryElement,physicsElement)
     dX = geometryElement.derivatives_u
     dY = geometryElement.derivatives_v
@@ -103,86 +103,90 @@ function compute_sources(basisElement,physicsElement,topology,coordinates)
     return sources,normals,physicsTopology
 end
 
-function get_beta_tri_linear(betaType)
-    if lowercase(betaType) == "legendre"
+function get_beta_tri_linear(beta_type)
+    if typeof(beta_type) <: Number
+        return beta_type
+    elseif beta_type == :legendre
         return 0.1667
-    elseif lowercase(betaType) == "equidistant"
+    elseif beta_type == :equidistant
         return 0.25
     end
 end
-function get_beta_tri_quadratic(betaType)
-    if typeof(betaType) <: Number
-        return betaType
-    elseif lowercase(betaType) == "legendre"
+function get_beta_tri_quadratic(beta_type)
+    if typeof(beta_type) <: Number
+        return beta_type
+    elseif beta_type == :legendre
         return 0.0916
-    elseif lowercase(betaType) == "equidistant"
+    elseif beta_type == :equidistant
         return 0.1667
     end
 end
-function get_beta_quad_linear(betaType)
-    if lowercase(betaType) == "legendre"
+function get_beta_quad_linear(beta_type)
+    if typeof(beta_type) <: Number
+        return beta_type
+    elseif beta_type == :legendre
         return 0.4226
-    elseif lowercase(betaType) == "equidistant"
+    elseif beta_type == :equidistant
         return 0.5
     end
 end
-function get_beta_quad_quadratic(betaType)
-    if typeof(betaType) <: Number
-        return betaType
-    elseif lowercase(betaType) == "legendre"
+function get_beta_quad_quadratic(beta_type)
+    if typeof(beta_type) <: Number
+        return beta_type
+    elseif beta_type == :legendre
         return 0.2254
-    elseif lowercase(betaType) == "equidistant"
+    elseif beta_type == :equidistant
         return 1.0/3.0
     end
 end
 
-function set_physics_element(physicsType,basisElement,betaType)
-    if lowercase(physicsType) == "geometry"
-        return deepcopy(basisElement)
-    elseif lowercase(physicsType) == "linear"
-        return TriangularLinear(basisElement)
-    elseif lowercase(physicsType) == "disctriconstant"
-        return DiscontinuousTriangularConstant(basisElement)
-    elseif lowercase(physicsType) == "disctrilinear"
-        beta = get_beta_tri_linear(betaType)
-        return DiscontinuousTriangularLinear(basisElement,beta)
-    elseif lowercase(physicsType) == "disctriquadratic"
-        beta = get_beta_tri_quadratic(betaType)
-        return DiscontinuousTriangularQuadratic(basisElement,beta)
-    elseif lowercase(physicsType) == "discquadconstant"
+function set_physics_element(physics_order,shape_function,beta_type)
+    if physics_order == :geometry
+        return deepcopy(shape_function)
+    elseif physics_order == :linear
+        return TriangularLinear(shape_function)
+    elseif physics_order == :disctriconstant
+        return DiscontinuousTriangularConstant(shape_function)
+    elseif physics_order == :disctrilinear
+        beta = get_beta_tri_linear(beta_type)
+        return DiscontinuousTriangularLinear(shape_function,beta)
+    elseif physics_order == :disctriquadratic
+        beta = get_beta_tri_quadratic(beta_type)
+        return DiscontinuousTriangularQuadratic(shape_function,beta)
+    elseif physics_order == :discquadconstant
         error("Discontinuous Constant Quadrilaterals are not implemented yet")
-    elseif lowercase(physicsType) == "discquadlinear"
-        beta = get_beta_tri_linear(betaType)
+    elseif physics_order == :discquadlinear
+        beta = get_beta_tri_linear(beta_type)
         error("Discontinuous Linear Quadrilaterals are not implemented yet")
-        # return DiscontinuousQuadrilateralLinear4(basisElement,beta)
-    elseif lowercase(physicsType) == "discquadquadratic"
-        beta = get_beta_tri_quadratic(betaType)
+        # return DiscontinuousQuadrilateralLinear4(shape_function,beta)
+    elseif physics_order == :discquadquadratic
+        beta = get_beta_tri_quadratic(beta_type)
         error("Discontinuous Quadratic Quadrilaterals are not implemented yet")
-        # return DiscontinuousQuadrilateralLinear9(basisElement,beta)
+        # return DiscontinuousQuadrilateralLinear9(shape_function,beta)
     else 
-        return deepcopy(basisElement)
+        return deepcopy(shape_function)
     end
 end
 
 function remove_unused_nodes(topology)
-    usedNodes = sort(unique(topology))
-    maxNodeNumber = maximum(usedNodes)
-    if length(usedNodes) == maxNodeNumber
+    used_nodes = sort(unique(topology))
+    maxium_node_number = maximum(used_nodes)
+    if length(used_nodes) == maxium_node_number
         return topology
     end
-    offset = collect(1:maxNodeNumber)
-    offset[usedNodes] .= 0
+    offset = collect(1:maxium_node_number)
+    offset[used_nodes] .= 0
     nonzero = findall(x -> x != 0,offset)
-    offset = collect(1:maxNodeNumber)
+    offset = collect(1:maxium_node_number)
     for nz in nonzero[end:-1:1]
         offset[nz:end] .-= 1
     end
-    newTopology = similar(topology)
+    new_topology = similar(topology)
     nElementNodes, nElements = size(topology)
     for i = 1:nElementNodes
         for j = 1:nElements
-            newTopology[i,j] = offset[topology[i,j]]
+            new_topology[i,j] = offset[topology[i,j]]
         end
     end
-    return newTopology
+    return new_topology
 end

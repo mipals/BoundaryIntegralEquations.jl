@@ -47,18 +47,18 @@ function read_comsol_mesh(meshName,elementType)
 end
 
 function load3dTriangularComsolMesh(meshFile;m=4,n=4,
-                geometryType="TriQuadratic",
-                physicsType="geometry",betaType="Legendre",
+                geometry_order=:quadratic,
+                physics_order=:geometry,beta_type=:legendre,
                 entites=false,removedEntites=[-1])
     # Figuring out the element type
     initialCoordinates,initialTopology,ents = read_comsol_mesh(meshFile,TriangularQuadratic(2,2))
-    if lowercase(geometryType) == "triquadratic"
-        basisElement = TriangularQuadratic(m,n)
-    elseif lowercase(geometryType) == "trilinear"
-        basisElement = TriangularLinear(m,n)
+    if geometry_order == :quadratic
+        shape_function = TriangularQuadratic(m,n)
+    elseif geometry_order == :linear
+        shape_function = TriangularLinear(m,n)
         initialTopology = initialTopology[1:3,:]
     else
-        error("Only TriQuadratic and TriLinear geometry types supported")
+        error("Only quadratic and linear geometries are currently supported")
     end
 
     mask = .!convert.(Bool,sum(ents .∈ removedEntites,dims=1))[:]
@@ -69,20 +69,20 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
 
     println("")
     # Compute normals
-    # physicsElement = set_physics_element(physicsType,basisElement,betaType)
-    if lowercase(physicsType) == "geometry"
-        physicsElement = set_physics_element(physicsType,basisElement,betaType)
-        normals = get_element_normals(basisElement,coordinates,topology)
+    # physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+    if physics_order == :geometry
+        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+        normals = get_element_normals(shape_function,coordinates,topology)
         physicsTopology = topology
-    elseif lowercase(physicsType) == "linear"
+    elseif physics_order == :linear
         physicsElement = TriangularLinear(3,3)
-        normals = get_element_normals(basisElement,coordinates,topology)
+        normals = get_element_normals(shape_function,coordinates,topology)
         physicsTopology = topology[1:3,:]
         normals = normals[:,unique(topology[1:3,:])]
         sources = coordinates[:,unique(topology[1:3,:])]
     else
-        physicsElement = set_physics_element(physicsType,basisElement,betaType)
-        sources,normals,physicsTopology = compute_sources(basisElement,
+        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+        sources,normals,physicsTopology = compute_sources(shape_function,
                                                         physicsElement,
                                                         topology,
                                                         coordinates)
@@ -94,7 +94,7 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
     tangents!(normals,tangentX,tangentY)
     
     # Create mesh
-    mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,basisElement,
+    mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,shape_function,
                  physicsElement,physicsTopology)
     if entites
         return mesh,ents[mask]
@@ -104,15 +104,15 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
 end
 
 function load3dQuadComsolMesh(meshFile;m=4,n=4,
-                geometryType="QuadQuadratic",
-                physicsType="geometry",betaType="Legendre",
+                geometry_order=:quadratic,
+                physics_order=:geometry,beta_type=:legendre,
                 entites=false,removedEntites=[-1])
     # Figuring out the element type
     initialCoordinates,initialTopology,ents = read_comsol_mesh(meshFile,QuadrilateralQuadratic9(2,2))
-    if lowercase(geometryType) == "quadquadratic"
-        basisElement = QuadrilateralQuadratic9(m,n)
-    elseif lowercase(geometryType) == "quadlinear"
-        basisElement = QuadrilateralLinear4(m,n)
+    if geometry_order == :quadratic
+        shape_function = QuadrilateralQuadratic9(m,n)
+    elseif geometry_order == :linear
+        shape_function = QuadrilateralLinear4(m,n)
         initialTopology = initialTopology[1:4,:]
     else
         error("Only QuadQuadratic and QuadLinear geometry types supported")
@@ -126,20 +126,22 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
 
     println("")
     # Compute normals
-    # physicsElement = set_physics_element(physicsType,basisElement,betaType)
-    if lowercase(physicsType) == "geometry"
-        physicsElement = set_physics_element(physicsType,basisElement,betaType)
-        normals = get_element_normals(basisElement,coordinates,topology)
+    # physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+    if physics_order == :geometry
+        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+        normals = get_element_normals(shape_function,coordinates,topology)
         physicsTopology = topology
-    elseif lowercase(physicsType) == "linear"
+    elseif physics_order == :linear
         physicsElement = QuadrilateralLinear4(3,3)
-        normals = get_element_normals(basisElement,coordinates,topology)
+        copy_interpolation_nodes!(physicsElement,shape_function)
+        normals = get_element_normals(shape_function,coordinates,topology)
         physicsTopology = topology[1:4,:]
-        normals = normals[:,unique(topology[1:4,:])]
-        sources = coordinates[:,unique(topology[1:4,:])]
+        new_sort = sort(unique(topology[1:4,:]))
+        normals = normals[:,new_sort]
+        sources = coordinates[:,new_sort]
     else
-        physicsElement = set_physics_element(physicsType,basisElement,betaType)
-        sources,normals,physicsTopology = compute_sources(basisElement,
+        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+        sources,normals,physicsTopology = compute_sources(shape_function,
                                                         physicsElement,
                                                         topology,
                                                         coordinates)
@@ -151,7 +153,7 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
     tangents!(normals,tangentX,tangentY)
     
     # Create mesh
-    mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,basisElement,
+    mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,shape_function,
                  physicsElement,physicsTopology)
     if entites
         return mesh,ents[mask]

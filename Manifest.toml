@@ -189,9 +189,9 @@ version = "1.0.3"
 
 [[deps.DiffRules]]
 deps = ["IrrationalConstants", "LogExpFunctions", "NaNMath", "Random", "SpecialFunctions"]
-git-tree-sha1 = "dd933c4ef7b4c270aacd4eb88fa64c147492acf0"
+git-tree-sha1 = "28d605d9a0ac17118fe2c5e9ce0fbb76c3ceb120"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
-version = "1.10.0"
+version = "1.11.0"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
@@ -205,9 +205,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "5a4168170ede913a2cd679e53c2123cb4b889795"
+git-tree-sha1 = "221ff6c6c9ede484e9f8be4974697187c06eb06b"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.53"
+version = "0.25.55"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -298,9 +298,9 @@ version = "0.4.2"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "1bd6fc0c344fc0cbee1f42f8d2e7ec8253dda2d2"
+git-tree-sha1 = "34e6147e7686a101c245f12dba43b743c7afda96"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "0.10.25"
+version = "0.10.27"
 
 [[deps.FreeType]]
 deps = ["CEnum", "FreeType2_jll"]
@@ -554,9 +554,9 @@ uuid = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
 
 [[deps.LegendrePolynomials]]
 deps = ["OffsetArrays", "SpecialFunctions"]
-git-tree-sha1 = "c288ff0c806570e65c0f88399617dd5dd69f4084"
+git-tree-sha1 = "e8b158685d1b0d41aff76828d38bd9e07fd8f2e3"
 uuid = "3db4a2ba-fc88-11e8-3e01-49c72059a882"
-version = "0.4.1"
+version = "0.4.2"
 
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
@@ -625,9 +625,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "a970d55c2ad8084ca317a4658ba6ce99b7523571"
+git-tree-sha1 = "44a7b7bb7dd1afe12bac119df6a7e540fa2c96bc"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.12"
+version = "0.3.13"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -687,16 +687,16 @@ uuid = "7269a6da-0436-5bbc-96c2-40638cbb6118"
 version = "0.4.10"
 
 [[deps.MeshViz]]
-deps = ["CategoricalArrays", "Colors", "Makie", "Meshes", "Tables"]
-git-tree-sha1 = "bbc2495772879e1e0e1e93a374e7e4130760e7f6"
+deps = ["CategoricalArrays", "ColorSchemes", "Colors", "Makie", "Meshes", "Tables"]
+git-tree-sha1 = "96c655eea68f1637d533c13bde709fe7f9be666f"
 uuid = "9ecf9c4f-6e5a-4b5e-83ae-06f2c7a661d8"
-version = "0.3.5"
+version = "0.4.2"
 
 [[deps.Meshes]]
 deps = ["CategoricalArrays", "CircularArrays", "Distances", "IterTools", "IteratorInterfaceExtensions", "LinearAlgebra", "NearestNeighbors", "Random", "RecipesBase", "ReferenceFrameRotations", "SimpleTraits", "SparseArrays", "SpecialFunctions", "StaticArrays", "StatsBase", "TableTraits", "Tables"]
-git-tree-sha1 = "6b0288319bb8c7b226bb672a0b6426751c60e4fd"
+git-tree-sha1 = "ff94b1729daae4ce45b0182cadf5884eae185369"
 uuid = "eacbb407-ea5a-433e-ab97-5258b1ca43fa"
-version = "0.22.0"
+version = "0.22.1"
 
 [[deps.Missings]]
 deps = ["DataAPI"]
@@ -822,15 +822,15 @@ version = "8.44.0+0"
 
 [[deps.PDMats]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "e8185b83b9fc56eb6456200e873ce598ebc7f262"
+git-tree-sha1 = "3114946c67ef9925204cc024a73c9e679cebe0d7"
 uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.11.7"
+version = "0.11.8"
 
 [[deps.PNGFiles]]
 deps = ["Base64", "CEnum", "ImageCore", "IndirectArrays", "OffsetArrays", "libpng_jll"]
-git-tree-sha1 = "eb4dbb8139f6125471aa3da98fb70f02dc58e49c"
+git-tree-sha1 = "e925a64b8585aa9f4e3047b8d2cdc3f0e79fd4e4"
 uuid = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
-version = "0.3.14"
+version = "0.3.16"
 
 [[deps.Packing]]
 deps = ["GeometryBasics"]
@@ -846,9 +846,9 @@ version = "0.5.11"
 
 [[deps.Parsers]]
 deps = ["Dates"]
-git-tree-sha1 = "3b429f37de37f1fc603cc1de4a799dc7fbe4c0b6"
+git-tree-sha1 = "1285416549ccfcdf0c50d4997a94331e88d68413"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.3.0"
+version = "2.3.1"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1049,15 +1049,15 @@ version = "0.1.1"
 
 [[deps.Static]]
 deps = ["IfElse"]
-git-tree-sha1 = "87e9954dfa33fd145694e42337bdd3d5b07021a6"
+git-tree-sha1 = "91181e5820a400d1171db4382aa36e7fd19bee27"
 uuid = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
-version = "0.6.0"
+version = "0.6.3"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "4f6ec5d99a28e1a749559ef7dd518663c5eca3d5"
+git-tree-sha1 = "cd56bf18ed715e8b09f06ef8c6b781e6cdc49911"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.4.3"
+version = "1.4.4"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1083,9 +1083,9 @@ version = "0.9.18"
 
 [[deps.StructArrays]]
 deps = ["Adapt", "DataAPI", "StaticArrays", "Tables"]
-git-tree-sha1 = "57617b34fa34f91d536eb265df67c2d4519b8b98"
+git-tree-sha1 = "8f705dd141733d79aa2932143af6c6e0b6cea8df"
 uuid = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
-version = "0.6.5"
+version = "0.6.6"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -1123,9 +1123,9 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.TiffImages]]
 deps = ["ColorTypes", "DataStructures", "DocStringExtensions", "FileIO", "FixedPointNumbers", "IndirectArrays", "Inflate", "OffsetArrays", "PkgVersion", "ProgressMeter", "UUIDs"]
-git-tree-sha1 = "aaa19086bc282630d82f818456bc40b4d314307d"
+git-tree-sha1 = "f90022b44b7bf97952756a6b6737d1a0024a3233"
 uuid = "731e570b-9d59-4bfa-96dc-6df516fadf69"
-version = "0.5.4"
+version = "0.5.5"
 
 [[deps.TimeZones]]
 deps = ["Dates", "Downloads", "InlineStrings", "LazyArtifacts", "Mocking", "Printf", "RecipesBase", "Serialization", "Unicode"]

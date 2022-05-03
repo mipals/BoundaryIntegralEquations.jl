@@ -6,22 +6,25 @@ import IntegralEquations: incoming_wave, plane_wave_scattering_sphere, psca, pin
 #==========================================================================================
                 Loading Mesh + Visualization (viz seems broken on M1 chips :/ )
 ==========================================================================================#
-# mesh_file = "examples/meshes/sphere_1m"
-# mesh_file = "examples/meshes/sphere_1m_fine"
-mesh_file = "examples/meshes/sphere_1m_finer"
-# tri_mesh  = load3dTriangularComsolMesh(mesh_file)
-# tri_mesh  = load3dTriangularComsolMesh(mesh_file;physicsType="DiscTriConstant")
-# tri_mesh  = load3dTriangularComsolMesh(mesh_file;physicsType="DiscTriLinear")
-# tri_mesh  = load3dTriangularComsolMesh(mesh_file;physicsType="DiscTriQuadratic")
-tri_mesh  = load3dTriangularComsolMesh(mesh_file;physicsType="DiscTriConstant",geometryType="TriLinear")
-# using MeshViz
-# import GLMakie as Mke
-# mesh = create_simple_mesh(tri_mesh)
-# viz(mesh;showfacets=true)
+# Triangular Meshes
+tri_mesh_file = "examples/meshes/sphere_1m"
+# tri_mesh_file = "examples/meshes/sphere_1m_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_finer"
+# mesh  = load3dTriangularComsolMesh(tri_mesh_file)
+# mesh  = load3dTriangularComsolMesh(tri_mesh_file;physics_order=:disctriconstant)
+# mesh  = load3dTriangularComsolMesh(tri_mesh_file;physics_order=:disctrilinear)
+# mesh  = load3dTriangularComsolMesh(tri_mesh_file;physics_order=:disctriquadratic)
+# mesh  = load3dTriangularComsolMesh(tri_mesh_file;physics_order=:disctriconstant,geometry_order=:linear)
+
+# Quadrilateral Meshes
+quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
+# quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
+mesh = load3dQuadComsolMesh(quad_mesh_file)
+# mesh = load3dQuadComsolMesh(quad_mesh_file;physics_order=:linear)
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq  = 200.0                                   # Frequency                 [Hz]
+freq  = 250.0                                   # Frequency                 [Hz]
 c     = 340.0                                   # Speed of sound            [m/s]
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 el_wl =   6*freq/c                              # Nyquist sampling
@@ -35,18 +38,23 @@ xyzb_chief=[x y z]';
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-Fp,Gp,Cp  = assemble_parallel!(tri_mesh,k,tri_mesh.sources);
-Fpc,Gpc,_ = assemble_parallel!(tri_mesh,k,xyzb_chief);
+Fp,Gp,Cp  = assemble_parallel!(mesh,k,mesh.sources);
+Fpc,Gpc,_ = assemble_parallel!(mesh,k,xyzb_chief;n=2,m=2);
 #==========================================================================================
             Setting up a linear system and solving for the pressure
 ==========================================================================================#
-Ap  = (-Fp + Diagonal(1.0 .+ Cp))
-FAp = [Ap;-Fpc]
-pI  = incoming_wave(angles,1.0,[tri_mesh.sources xyzb_chief],k)
+if typeof(mesh.shape_function) <: Quadrilateral
+    Ap  = (Fp + Diagonal(1.0 .- Cp))
+    FAp = [Ap;Fpc]
+else
+    Ap  = (-Fp + Diagonal(1.0 .+ Cp))
+    FAp = [Ap;-Fpc]
+end
+pI  = incoming_wave(angles,1.0,[mesh.sources xyzb_chief],k)
 p_bem = FAp\pI
 
 ## Plotting pressure on surface nodes
-surface_angles = acos.(-tri_mesh.sources[1,:]/radius)
+surface_angles = acos.(-mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
 p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
 plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)

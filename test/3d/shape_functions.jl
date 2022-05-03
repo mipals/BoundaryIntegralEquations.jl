@@ -1,3 +1,5 @@
+import IntegralEquations: get_beta_tri_linear, get_beta_tri_quadratic
+
 @testset "Linear Triangular Shape Functions" begin
     linear_triangular = TriangularLinear(3,3)
     # Weights should add to area of triangle
@@ -40,6 +42,41 @@ end
     @test quadratic_triangular.interpolation ≈ I
 end
 
+@testset "Discontinuous Triangular Constant Shape Functions" begin
+    quadratic_triangular = TriangularQuadratic(3,3)
+    disc_constant_tri = DiscontinuousTriangularConstant(quadratic_triangular)
+    # Weights should add to area of quad
+    @test sum(disc_constant_tri.weights) ≈ 0.5 
+    # Set interpolation to be on the interpolating nodes
+    set_nodal_interpolation!(disc_constant_tri)
+    # Checking if nodal set_nodal_interpolation! works as intended
+    @test disc_constant_tri.interpolation ≈ I
+end
+
+@testset "Discontinuous Triangular Linear Shape Functions" begin
+    quadratic_triangular = TriangularQuadratic(3,3)
+    beta = get_beta_tri_linear(:legendre)
+    disc_linear_tri = DiscontinuousTriangularLinear(quadratic_triangular,beta)
+    # Weights should add to area of quad
+    @test sum(disc_linear_tri.weights) ≈ 0.5 
+    # Set interpolation to be on the interpolating nodes
+    set_nodal_interpolation!(disc_linear_tri)
+    # Checking if nodal set_nodal_interpolation! works as intended
+    @test disc_linear_tri.interpolation ≈ I
+end
+
+@testset "Discontinuous Triangular Quadratic Shape Functions" begin
+    quadratic_triangular = TriangularQuadratic(3,3)
+    beta = get_beta_tri_quadratic(:legendre)
+    disc_linear_tri = DiscontinuousTriangularQuadratic(quadratic_triangular,beta)
+    # Weights should add to area of quad
+    @test sum(disc_linear_tri.weights) ≈ 0.5 
+    # Set interpolation to be on the interpolating nodes
+    set_nodal_interpolation!(disc_linear_tri)
+    # Checking if nodal set_nodal_interpolation! works as intended
+    @test disc_linear_tri.interpolation ≈ I
+end
+
 @testset "Linear Quadrilateral Shape Functions" begin
     linear_quad = QuadrilateralLinear4(3,3)
     # Weights should add to area of quad
@@ -58,4 +95,32 @@ end
     set_nodal_interpolation!(quadratic_quad)
     # Checking if nodal set_nodal_interpolation! works as intended 
     @test quadratic_quad.interpolation ≈ I
+end
+
+@testset "Discontinuous Quadrilateral Constant Shape Functions" begin
+    disc_constant_quad = DiscontinuousQuadrilateralConstant(4,4)
+    # Weights should add to area of quad
+    @test sum(disc_constant_quad.weights) ≈ 4.0 
+    # Set interpolation to be on the interpolating nodes
+    set_nodal_interpolation!(disc_constant_quad)
+    # Checking if nodal set_nodal_interpolation! works as intended 
+    @test disc_constant_quad.interpolation ≈ I
+end
+@testset "Discontinuous Quadrilateral Constant Shape Functions" begin
+    disc_linear_quad = DiscontinuousQuadrilateralLinear4(4,4)
+    # Weights should add to area of quad
+    @test sum(disc_linear_quad.weights) ≈ 4.0 
+    # Set interpolation to be on the interpolating nodes
+    set_nodal_interpolation!(disc_linear_quad)
+    # Checking if nodal set_nodal_interpolation! works as intended 
+    @test disc_linear_quad.interpolation ≈ I
+end
+@testset "Discontinuous Quadrilateral Constant Shape Functions" begin
+    disc_quadratic_quad = DiscontinuousQuadrilateralQuadratic9(4,4)
+    # Weights should add to area of quad
+    @test sum(disc_quadratic_quad.weights) ≈ 4.0 
+    # Set interpolation to be on the interpolating nodes
+    set_nodal_interpolation!(disc_quadratic_quad)
+    # Checking if nodal set_nodal_interpolation! works as intended 
+    @test disc_quadratic_quad.interpolation ≈ I
 end

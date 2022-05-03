@@ -107,6 +107,7 @@ function computing_integrals!(physics_function,interpolation_element,
     
     ### Evaluating the F-kernel (double-layer kernel) at the global nodes 
     freens3d!(integrand,r,interpolation_element.interpolation,source,interpolation_element.normals,k)
+    # onefunction!(integrand,r,interpolation_element.interpolation,source,interpolation_element.normals,k)
     # Computing the integrand
     integrand_mul!(integrand,interpolation_element.jacobian_mul_weights)
     # Approximating integral and adding the value to the BEM matrix
@@ -114,6 +115,7 @@ function computing_integrals!(physics_function,interpolation_element,
     
     ### Evaluating the G-kernel (single-layer kernel) at the global nodes
     greens3d!(integrand,r,k)
+    # onefunction!(integrand,r,k)
     # Computing the integrand
     integrand_mul!(integrand,interpolation_element.jacobian_mul_weights)
     # Approximating the integral and the adding the values to the BEM matrix
@@ -133,7 +135,7 @@ end
 
 Assembles the BEM matrices for F, G and G0 kernels over the elements on the mesh.
 """
-function assemble_parallel!(mesh::Mesh3d,k,insources;m=3,n=3,progress=true)
+function assemble_parallel!(mesh::Mesh3d,k,insources;m=4,n=4,progress=true)
     return assemble_parallel!(mesh::Mesh3d,k,insources,mesh.shape_function;
                                     m=m,n=n,progress=progress)
 end
@@ -146,7 +148,7 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::Triangular;
     nSources    = size(insources,2)
     nNodes      = size(mesh.sources,2)
     coordinates = convert.(eltype(shape_function),get_coordinates(mesh))
-    physicsTopology  = mesh.physics_topology
+    physics_topology  = mesh.physics_topology
     physics_function = mesh.physics_function
     #======================================================================================
         Introducing three elements: (The hope here is to compute singular integrals)    
@@ -192,7 +194,7 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::Triangular;
             # Access element topology and coordinates
             elementNodes        = @view topology[:,element]
             element_coordinates = @view coordinates[:,elementNodes]
-            physics_nodes       = @view physicsTopology[:,element]
+            physics_nodes       = @view physics_topology[:,element]
             # Acces submatrix of the BEM matrix
             submatrixF          = @view F[source_node:source_node,physics_nodes]
             submatrixG          = @view G[source_node:source_node,physics_nodes]
@@ -227,28 +229,28 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::SurfaceFunc
     sources     = convert.(eltype(shape_function),insources)
     nSources    = size(insources,2)
     nNodes      = size(mesh.sources,2)
-    physicsTopology  = mesh.physics_topology
+    physics_topology = mesh.physics_topology
     physics_function = mesh.physics_function
     #======================================================================================
 
     ======================================================================================#
     shape_function1    = create_shape_function(shape_function;n=n,m=m)
+    physics_function1  = deepcopy(physics_function)
+    copy_interpolation_nodes!(physics_function1,shape_function1)
+    mesh.physics_function = physics_function1
     interpolation_list = interpolate_elements(mesh,shape_function1)
-    physics_function   = deepcopy(physics_function)
-    copy_interpolation_nodes!(physics_function,shape_function1)
     # Avoiding to have gauss-node on a singularity. Should be handled differently,
     # but, this is good for now.
     if typeof(shape_function) <: QuadrilateralQuadratic9
         for (x,y) in zip(shape_function1.gauss_u,shape_function1.gauss_v)
             if isapprox.(x, 0.0, atol=1e-15) && isapprox.(y, 0.0, atol=1e-15)
-                error("Gauss Node Singularity.")
+                error("Gauss Node On Singularity.")
             end
         end
     end
     #======================================================================================
                         Preallocation of return values & Intermediate values
     ======================================================================================#
-    # 
     F = zeros(ComplexF64, nSources, nNodes)
     G = zeros(ComplexF64, nSources, nNodes)
     C = zeros(ComplexF64, nSources)
@@ -256,7 +258,6 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::SurfaceFunc
     # Preallocation according to the number of threads
     R         = zeros(eltype(shape_function), nThreads, n*m)
     Integrand = zeros(ComplexF64,             nThreads, n*m)
-
     #======================================================================================
                                     Assembly
     ======================================================================================#
@@ -268,13 +269,13 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::SurfaceFunc
         integrand      = @view Integrand[threadid():threadid(),:]
         r              = @view R[threadid():threadid(),:]
         @inbounds for element = 1:nElements
-            physics_nodes = @view physicsTopology[:,element]
+            physics_nodes = @view physics_topology[:,element]
             # Acces submatrix of the BEM matrix
             submatrixF = @view F[source_node:source_node,physics_nodes]
             submatrixG = @view G[source_node:source_node,physics_nodes]
             subvectorC = @view C[source_node:source_node]
             # Interpolating on the mesh. 
-            computing_integrals!(physics_function,interpolation_list[element],
+            computing_integrals!(physics_function1,interpolation_list[element],
                                 submatrixF,submatrixG,subvectorC,k,
                                 source,integrand,r)
         end
