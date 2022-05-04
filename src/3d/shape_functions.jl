@@ -334,3 +334,31 @@ function DiscontinuousQuadrilateralQuadratic9(n::Real,m::Real,alpha_type=:legend
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return DiscontinuousQuadrilateralQuadratic9(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
 end
+function DiscontinuousQuadrilateralConstant(SF::Quadrilateral)
+    nodes_u = SF.gauss_u
+    nodes_v = SF.gauss_v
+    weights = SF.weights
+    TMP = DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
+    interpolation = TMP(nodes_u',nodes_v')
+    dX, dY        = TMP'(nodes_u',nodes_v')
+    return DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,dX,dY,interpolation)
+end
+function DiscontinuousQuadrilateralLinear4(SF::Quadrilateral,alpha)
+    nodes_u = SF.gauss_u
+    nodes_v = SF.gauss_v
+    weights = SF.weights
+    TMP = DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    interpolation = TMP(nodes_u',nodes_v')
+    dX, dY        = TMP'(nodes_u',nodes_v')
+    return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+end
+function DiscontinuousQuadrilateralQuadratic9(SF::Quadrilateral,alpha)
+    nodes_u = SF.gauss_u
+    nodes_v = SF.gauss_v
+    weights = SF.weights
+    TMP = DiscontinuousQuadrilateralQuadratic9(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    interpolation = TMP(nodes_u',nodes_v')
+    dX, dY        = TMP'(nodes_u',nodes_v')
+    return DiscontinuousQuadrilateralQuadratic9(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+end
+

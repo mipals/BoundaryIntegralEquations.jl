@@ -1,7 +1,7 @@
 #==========================================================================================
                             Defining Various Element (Sub)Types
 ==========================================================================================#
-abstract type ShapeFunction end
+abstract type ShapeFunction                                 end
 abstract type CurveFunction              <: ShapeFunction   end
 abstract type SurfaceFunction            <: ShapeFunction   end
 abstract type Triangular                 <: SurfaceFunction end

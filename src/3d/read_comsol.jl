@@ -39,9 +39,10 @@ function read_comsol_mesh(meshName,elementType)
     close(fid)
     topology = topology .+ 1             # Fixing 0-index
     if typeof(elementType) <: TriangularQuadratic
-        topology[5:6,:] = topology[6:-1:5,:] # Fixing COMSOLs weird triangle layout
-        topology[2:3,:] = topology[3:-1:2,:]
-        topology[4:6,:] = topology[6:-1:4,:]
+        # topology[5:6,:] = topology[6:-1:5,:] # Fixing COMSOLs weird triangle layout
+        # topology[2:3,:] = topology[3:-1:2,:]
+        # topology[4:6,:] = topology[6:-1:4,:]
+        topology[5:6,:] = topology[6:-1:5,:]
     end
     return coordinates,topology,entities
 end
@@ -136,9 +137,9 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
         copy_interpolation_nodes!(physicsElement,shape_function)
         normals = get_element_normals(shape_function,coordinates,topology)
         physicsTopology = topology[1:4,:]
-        new_sort = sort(unique(topology[1:4,:]))
-        normals = normals[:,new_sort]
-        sources = coordinates[:,new_sort]
+        used_nodes = sort(unique(topology[1:4,:]))
+        normals = normals[:,used_nodes]
+        sources = coordinates[:,used_nodes]
     else
         physicsElement = set_physics_element(physics_order,shape_function,beta_type)
         sources,normals,physicsTopology = compute_sources(shape_function,

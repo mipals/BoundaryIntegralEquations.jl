@@ -154,15 +154,13 @@ function set_physics_element(physics_order,shape_function,beta_type)
         beta = get_beta_tri_quadratic(beta_type)
         return DiscontinuousTriangularQuadratic(shape_function,beta)
     elseif physics_order == :discquadconstant
-        error("Discontinuous Constant Quadrilaterals are not implemented yet")
+        return DiscontinuousQuadrilateralConstant(shape_function)
     elseif physics_order == :discquadlinear
         beta = get_beta_tri_linear(beta_type)
-        error("Discontinuous Linear Quadrilaterals are not implemented yet")
-        # return DiscontinuousQuadrilateralLinear4(shape_function,beta)
+        return DiscontinuousQuadrilateralLinear4(shape_function,beta)
     elseif physics_order == :discquadquadratic
         beta = get_beta_tri_quadratic(beta_type)
-        error("Discontinuous Quadratic Quadrilaterals are not implemented yet")
-        # return DiscontinuousQuadrilateralLinear9(shape_function,beta)
+        return DiscontinuousQuadrilateralQuadratic9(shape_function,beta)
     else 
         return deepcopy(shape_function)
     end

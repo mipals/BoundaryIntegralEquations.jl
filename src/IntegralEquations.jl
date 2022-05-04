@@ -16,9 +16,7 @@ using DelimitedFiles
 using ForwardDiff
 using LegendrePolynomials
 using Meshes
-using MeshViz
 using Base.Threads
-import GLMakie as Mke
 #==========================================================================================
                                     Utility functions
 ==========================================================================================#
@@ -72,6 +70,6 @@ export TriangularLinear, TriangularQuadratic, Triangular,
 # Assembly
 export assemble_parallel!
 # visualizations
-export create_simple_mesh, create_bc_simple_mesh, viz
+export create_simple_mesh, create_bc_simple_mesh
 
 end
