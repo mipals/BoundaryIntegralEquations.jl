@@ -152,6 +152,14 @@ mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: Quadrilateral
     N::Int64
 end
 #==========================================================================================
+                                Show
+==========================================================================================#
+function Base.show(io::IO, ::MIME"text/plain", surface_function::SurfaceFunction)
+    println(io, "SurfaceFunction Defined by:    \t $(typeof(surface_function))")
+    println(io, "Number of gauss nodes:         \t $(length(surface_function.gauss_u))")
+    println(io, "Number of basis functions:     \t $(length(surface_function))")
+end
+#==========================================================================================
                                     Utility functions
 ==========================================================================================#
 get_nodes(shape_function::CurveFunction)          = shape_function.gauss

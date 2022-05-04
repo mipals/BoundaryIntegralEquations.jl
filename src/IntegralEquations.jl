@@ -13,6 +13,7 @@ using SpecialFunctions
 using GaussQuadrature
 using ProgressMeter
 using DelimitedFiles
+using SparseArrays
 using ForwardDiff
 using LegendrePolynomials
 using Meshes
@@ -33,6 +34,7 @@ include("utils/lossy_constants.jl")
 include("3d/kernels.jl")
 include("3d/quadrature.jl")
 include("3d/shape_functions.jl")
+include("3d/shape_function_derivatives.jl")
 include("3d/jacobian.jl")
 include("3d/mesh.jl")
 include("3d/read_comsol.jl")

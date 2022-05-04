@@ -1,4 +1,5 @@
-import IntegralEquations: tangents!, number_of_shape_functions
+import IntegralEquations: tangents!, number_of_shape_functions, 
+                            global_coordinate_shape_function_derivative
 
 @testset "Triangular Mesh" begin
     # Relative path from the "runtests.jl" file (not the "meshing.jl" file)
@@ -23,6 +24,12 @@ import IntegralEquations: tangents!, number_of_shape_functions
         @test isapprox(sum(ones(1,3)*(mesh.normals.*mesh.tangents)),  0.0, atol=1e-14)
         @test isapprox(sum(ones(1,3)*(mesh.normals.*mesh.tangents)),  0.0, atol=1e-14)
         @test isapprox(sum(ones(1,3)*(mesh.tangents.*mesh.sangents)), 0.0, atol=1e-14)
+        # Checking of constant pressure will result in zero derivatives
+        Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
+        n_sources = size(mesh.sources,2)
+        @test isapprox(sum(Dx*ones(n_sources)), 0.0, atol=1e-12)
+        @test isapprox(sum(Dy*ones(n_sources)), 0.0, atol=1e-12)
+        @test isapprox(sum(Dz*ones(n_sources)), 0.0, atol=1e-12)
     end
 end
 
@@ -50,5 +57,11 @@ end
         @test isapprox(sum(ones(1,3)*(mesh.normals.*mesh.tangents)),  0.0, atol=1e-14)
         @test isapprox(sum(ones(1,3)*(mesh.normals.*mesh.tangents)),  0.0, atol=1e-14)
         @test isapprox(sum(ones(1,3)*(mesh.tangents.*mesh.sangents)), 0.0, atol=1e-14)
+        # Checking of constant pressure will result in zero derivatives
+        Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
+        n_sources = size(mesh.sources,2)
+        @test isapprox(sum(Dx*ones(n_sources)), 0.0, atol=1e-12)
+        @test isapprox(sum(Dy*ones(n_sources)), 0.0, atol=1e-12)
+        @test isapprox(sum(Dz*ones(n_sources)), 0.0, atol=1e-12)
     end
 end

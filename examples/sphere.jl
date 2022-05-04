@@ -13,18 +13,23 @@ quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:disc
 tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-mesh  = load3dTriangularComsolMesh(tri_mesh_file;physics_order=tri_physics_orders[2],geometry_order=geometry_orders[1])
+mesh  = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                                  physics_order=tri_physics_orders[2])
+
+import IntegralEquations: global_coordinate_shape_function_derivative
+Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
 
 # Quadrilateral Meshes
 quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
-mesh = load3dQuadComsolMesh(quad_mesh_file;physics_order=quad_physics_orders[2],geometry_order=geometry_orders[1])
+mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[2],
+                                            physics_order=quad_physics_orders[1])
 #==========================================================================================
             3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
 ==========================================================================================#
 # using Meshes, MeshViz
-# choose a Makie backend
+# ##choose a Makie backend
 # import GLMakie as Mke
 # simple_mesh = create_simple_mesh(mesh)
 # viz(simple_mesh, showfacets = true)
@@ -55,7 +60,7 @@ p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
 plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],abs.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 title!("Frequency = $(freq) (Hz)")
-norm(p_analytical - conj(p_bem))/norm(p_analytical)
+# norm(p_analytical - conj(p_bem))/norm(p_analytical)
 #==========================================================================================
                             Adding CHIEF points
 ==========================================================================================#

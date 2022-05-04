@@ -3,7 +3,11 @@
 [![Build Status](https://github.com/mipals/IntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/IntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/mipals/IntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/IntegralEquations.jl)
 
-This is a package provides the building blocks required for discretizing and solving (surface) integral equations using the techniques of the Boundary Element Method (BEM). The focus so far has been on the solution of the Kirchhoff–Helmholtz integral equation found in acoustical applications. However, as the package provides an interface to various element is should be easy to extended to handle all kinds of 
+The focus of the package so far has been on the solution of the Kirchhoff–Helmholtz integral equation found in acoustical applications. 
+
+![](kirchoff_helmholtz.png)
+
+However, the package provides an easy-to-use API to the building blocks required for discretizing and solving general (surface) integral equations using the techniques of the Boundary Element Method (BEM). All the user has to define is a different integrand. 
 
 ## Supported Element Types
 * Continuous (Linear and Quadratic) Triangular Elements
@@ -17,7 +21,7 @@ This is a package provides the building blocks required for discretizing and sol
 ## Roadmap
 * More basis functions
     - [ ] Higher order basis functions. 
-    - [ ] Legendre basis (also high order).
+    - [ ] Non-interpolatory basis such as [Higher-order Legendre basis functions.](https://ieeexplore.ieee.org/document/1353496)
 * Support for more mesh files. 
     - [ ] Gmesh files.
 * Better support for Boundary Conditions 
