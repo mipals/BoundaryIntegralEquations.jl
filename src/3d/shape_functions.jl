@@ -5,12 +5,12 @@
                                         |    |                                      
                                         1 -- 2                                       
 ==========================================================================================#
-quadrilateralLinear(u,v) = [0.25*(1.0 .- u).*(1.0 .- v);
+quadrilateralLinearSerendipity(u,v) = [0.25*(1.0 .- u).*(1.0 .- v);
                             0.25*(1.0 .+ u).*(1.0 .- v);
                             0.25*(1.0 .+ u).*(1.0 .+ v);
                             0.25*(1.0 .- u).*(1.0 .+ v)]
-function basisFunction(surfaceFunction::QuadrilateralLinear,u,v)
-    return quadrilateralLinear(u,v)
+function basisFunction(surfaceFunction::QuadrilateralLinearSerendipity,u,v)
+    return quadrilateralLinearSerendipity(u,v)
 end
 #==========================================================================================
                                 QuadrilateralQuadratic Surface                          
@@ -316,12 +316,12 @@ end
 #==========================================================================================
                             Quadrilateral Constructors                                 
 ==========================================================================================#
-function QuadrilateralLinear(n::Real,m::Real)
+function QuadrilateralLinearSerendipity(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    TMP = QuadrilateralLinear(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
+    TMP = QuadrilateralLinearSerendipity(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
-    return QuadrilateralLinear(weights,nodes_u,nodes_v,dX,dY,interpolation)
+    return QuadrilateralLinearSerendipity(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function QuadrilateralLinear4(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)

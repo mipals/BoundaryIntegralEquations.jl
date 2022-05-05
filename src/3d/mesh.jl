@@ -125,6 +125,7 @@ function get_beta_quad_linear(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
     elseif beta_type == :legendre
+        # Zeros of the Legendre polynomials
         # nodes,w = gausslegendre(2), return 1 + nodes[1]
         return 0.4226
     elseif beta_type == :equidistant
@@ -135,6 +136,7 @@ function get_beta_quad_quadratic(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
     elseif beta_type == :legendre
+        # Zeros of the Legendre polynomials
         # nodes,w = gausslegendre(3), return 1 + nodes[1]
         return 0.2254
     elseif beta_type == :equidistant

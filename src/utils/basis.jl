@@ -90,7 +90,7 @@ end
 #==========================================================================================
                                 Quadrilateral Elements
 ==========================================================================================#
-mutable struct QuadrilateralLinear{T<:AbstractFloat} <: Quadrilateral
+mutable struct QuadrilateralLinearSerendipity{T<:AbstractFloat} <: QuadrilateralSerendipity
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -209,22 +209,22 @@ get_derivatives(shape_function::SurfaceFunction)  = shape_function.derivatives_u
                                                     shape_function.derivatives_v
 get_weights(shape_function::ShapeFunction)::Array{Float64,1}        = shape_function.weights
 get_interpolation(shape_function::ShapeFunction)::Array{Float64,2}  = shape_function.interpolation
-number_of_shape_functions(shape_function::TriangularLinear)                     = 3
-number_of_shape_functions(shape_function::TriangularQuadratic)                  = 6
-number_of_shape_functions(shape_function::DiscontinuousTriangularConstant)      = 1
-number_of_shape_functions(shape_function::DiscontinuousTriangularLinear)        = 3
-number_of_shape_functions(shape_function::DiscontinuousTriangularQuadratic)     = 6
-number_of_shape_functions(shape_function::QuadrilateralLinear)                  = 4
-number_of_shape_functions(shape_function::QuadrilateralQuadratic)               = 8
-number_of_shape_functions(shape_function::QuadrilateralLinear4)                 = 4
-number_of_shape_functions(shape_function::QuadrilateralQuadraticLagrange)              = 9
-number_of_shape_functions(shape_function::DiscontinuousQuadrilateralConstant)   = 1
-number_of_shape_functions(shape_function::DiscontinuousQuadrilateralLinear4)    = 4
-number_of_shape_functions(shape_function::DiscontinuousQuadrilateralQuadraticLagrange) = 9
+number_of_shape_functions(shape_function::TriangularLinear)                             = 3
+number_of_shape_functions(shape_function::TriangularQuadratic)                          = 6
+number_of_shape_functions(shape_function::DiscontinuousTriangularConstant)              = 1
+number_of_shape_functions(shape_function::DiscontinuousTriangularLinear)                = 3
+number_of_shape_functions(shape_function::DiscontinuousTriangularQuadratic)             = 6
+number_of_shape_functions(shape_function::QuadrilateralLinearSerendipity)               = 4
+number_of_shape_functions(shape_function::QuadrilateralQuadratic)                       = 8
+number_of_shape_functions(shape_function::QuadrilateralLinear4)                         = 4
+number_of_shape_functions(shape_function::QuadrilateralQuadraticLagrange)               = 9
+number_of_shape_functions(shape_function::DiscontinuousQuadrilateralConstant)           = 1
+number_of_shape_functions(shape_function::DiscontinuousQuadrilateralLinear4)            = 4
+number_of_shape_functions(shape_function::DiscontinuousQuadrilateralQuadraticLagrange)  = 9
 
 Base.eltype(::Type{QuadrilateralQuadratic{T}})                  where {T} = T
-Base.eltype(::Type{QuadrilateralLinear{T}})                     where {T} = T
-Base.eltype(::Type{QuadrilateralQuadraticLagrange{T}})                 where {T} = T
+Base.eltype(::Type{QuadrilateralLinearSerendipity{T}})          where {T} = T
+Base.eltype(::Type{QuadrilateralQuadraticLagrange{T}})          where {T} = T
 Base.eltype(::Type{QuadrilateralLinear4{T}})                    where {T} = T
 Base.eltype(::Type{TriangularQuadratic{T}})                     where {T} = T
 Base.eltype(::Type{TriangularLinear{T}})                        where {T} = T
@@ -306,10 +306,10 @@ get_nodal_nodes_v(sf::DiscontinuousTriangularLinear)    = [sf.beta; sf.beta; 1.0
 get_nodal_nodes_u(sf::DiscontinuousTriangularQuadratic) = [sf.beta; 1.0-2.0*sf.beta; sf.beta; (1.0-sf.beta)/2.0; (1.0-sf.beta)/2.0; sf.beta]
 get_nodal_nodes_v(sf::DiscontinuousTriangularQuadratic) = [sf.beta; sf.beta; 1.0-2.0*sf.beta; sf.beta; (1.0-sf.beta)/2.0; (1.0-sf.beta)/2.0]
 # Quadrilateral Elements
-get_nodal_nodes_u(sf::QuadrilateralLinear)     = [-1.0; 1.0; 1.0;-1.0]
-get_nodal_nodes_v(sf::QuadrilateralLinear)     = [-1.0;-1.0; 1.0; 1.0]
-get_nodal_nodes_u(sf::QuadrilateralLinear4)    = [-1.0; 1.0;-1.0; 1.0]
-get_nodal_nodes_v(sf::QuadrilateralLinear4)    = [-1.0;-1.0; 1.0; 1.0]
+get_nodal_nodes_u(sf::QuadrilateralLinearSerendipity)       = [-1.0; 1.0; 1.0;-1.0]
+get_nodal_nodes_v(sf::QuadrilateralLinearSerendipity)       = [-1.0;-1.0; 1.0; 1.0]
+get_nodal_nodes_u(sf::QuadrilateralLinear4)                 = [-1.0; 1.0;-1.0; 1.0]
+get_nodal_nodes_v(sf::QuadrilateralLinear4)                 = [-1.0;-1.0; 1.0; 1.0]
 get_nodal_nodes_u(sf::QuadrilateralQuadratic)  = [-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0;-1.0]
 get_nodal_nodes_v(sf::QuadrilateralQuadratic)  = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0]
 get_nodal_nodes_u(sf::QuadrilateralQuadraticLagrange) = [-1.0; 1.0;-1.0; 1.0; 0.0;-1.0; 0.0; 1.0; 0.0]
