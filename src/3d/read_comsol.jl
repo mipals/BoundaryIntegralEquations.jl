@@ -109,9 +109,9 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
                 physics_order=:geometry,beta_type=:legendre,
                 entites=false,removedEntites=[-1])
     # Figuring out the element type
-    initialCoordinates,initialTopology,ents = read_comsol_mesh(meshFile,QuadrilateralQuadratic9(2,2))
+    initialCoordinates,initialTopology,ents = read_comsol_mesh(meshFile,QuadrilateralQuadraticLagrange(2,2))
     if geometry_order == :quadratic
-        shape_function = QuadrilateralQuadratic9(m,n)
+        shape_function = QuadrilateralQuadraticLagrange(m,n)
     elseif geometry_order == :linear
         shape_function = QuadrilateralLinear4(m,n)
         initialTopology = initialTopology[1:4,:]

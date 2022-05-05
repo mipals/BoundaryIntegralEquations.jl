@@ -31,13 +31,13 @@ function basisFunction(surfaceFunction::QuadrilateralQuadratic,u,v)
     return quadrilateralQuadratic(u,v)
 end
 #==========================================================================================
-                            QuadrilateralQuadratic9 (COMSOL Layout)
+                            QuadrilateralQuadraticLagrange (COMSOL Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                         3  9  4                                      
                                         6  7  8                                      
                                         1  5  2                                      
 ==========================================================================================#
-quadrilateralQuadratic9(u,v) = [0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
+quadrilateralQuadraticLagrange(u,v) = [0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
                                -0.25*u.*(1.0 .+ u).*v.*(1.0 .- v);
                                -0.25*u.*(1.0 .- u).*v.*(1.0 .+ v);
                                 0.25*u.*(1.0 .+ u).*v.*(1.0 .+ v);
@@ -46,8 +46,8 @@ quadrilateralQuadratic9(u,v) = [0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
                                (1.0 .- u.^2).*(1.0 .- v.^2);
                                 0.50*u.*(1.0 .+ u).*(1.0 .+ v).*(1.0 .- v);
                                 0.50*(1.0 .+ u).*(1.0 .- u).*(1.0 .+ v).*v]
-function basisFunction(surfaceFunction::QuadrilateralQuadratic9,u,v)
-    return quadrilateralQuadratic9(u,v)
+function basisFunction(surfaceFunction::QuadrilateralQuadraticLagrange,u,v)
+    return quadrilateralQuadraticLagrange(u,v)
 end
 #==========================================================================================
                             QuadrilateralQuadratic4 (COMSOL Layout)
@@ -95,15 +95,49 @@ function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
     return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.alpha)
 end
 #==========================================================================================
-                            QuadrilateralQuadratic9 (COMSOL Layout)
+                QuadrilateralLegendre: See https://ieeexplore.ieee.org/document/1353496
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
+                                          ---
+                                        | ... |                                      
+                                        | ... |                                      
+                                          ---                                       
+==========================================================================================#
+function quadrilateralLegendre(N,M,u,v)
+    @assert N >= 2
+    if length(u) == 1
+        Pm = vcat(collectPl.(u,lmax=M)...)
+        Pn = vcat(collectPl.(v,lmax=N)...)
+    else
+        Pm = hcat(collectPl.(u,lmax=M)...)
+        Pn = hcat(collectPl.(v,lmax=N)...)
+    end
+    Pm_tilde = [0.5 .- 0.5*u; 0.5 .+ 0.5*u; Pm[3:end,:] - Pm[1:end-2,:]]
+    return hcat([kron(Pm_tilde[:,i],Pn[:,i]) for i = 1:size(Pn,2)]...)
+end
+function basisFunction(surfaceFunction::QuadrilateralLegendre,ξ,η)
+    return quadrilateralLegendre(surfaceFunction.N,surfaceFunction.M,ξ,η)
+end
+#==========================================================================================
+                            QuadrilateralQuadraticLagrange (COMSOL Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                         3  9  4                                      
                                         6  7  8                                      
                                         1  5  2                                      
 ==========================================================================================#
-discontinuousQuadrilateralQuadratic9(u,v,alpha) = quadrilateralQuadratic9(u./(1.0-alpha),v./(1.0-alpha))
-function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadratic9,u,v)
-    return discontinuousQuadrilateralQuadratic9(u,v,surfaceFunction.alpha)
+discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1.0-alpha),v./(1.0-alpha))
+function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
+    return discontinuousQuadrilateralQuadraticLagrange(u,v,surfaceFunction.alpha)
+end
+#==========================================================================================
+                    DiscontinuousQuadrilateralLagrange (Kronecker Layout)
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
+                                        3    4     7  8  9     
+                                1   ->         ->  4  5  6     ....
+                                        1    2     1  2  3 
+==========================================================================================#
+quadrilateralLagrange(u,v,M) = error("QuadrilateralLagrange elements not implemented yet.")
+function basisFunction(surfaceFunction::QuadrilateralLagrange,u,v)
+    return discontinuousQuadrilateralLagrange(u,v,surfaceFunction.M)
 end
 #==========================================================================================
                                    TriangularLinear Surface                             
@@ -303,12 +337,12 @@ function QuadrilateralQuadratic(n::Real,m::Real)
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralQuadratic(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
-function QuadrilateralQuadratic9(n::Real,m::Real)
+function QuadrilateralQuadraticLagrange(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    TMP = QuadrilateralQuadratic9(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
+    TMP = QuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
-    return QuadrilateralQuadratic9(weights,nodes_u,nodes_v,dX,dY,interpolation)
+    return QuadrilateralQuadraticLagrange(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function DiscontinuousQuadrilateralConstant(n::Real,m::Real,alpha_type=:legendre)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
@@ -326,13 +360,13 @@ function DiscontinuousQuadrilateralLinear4(n::Real,m::Real,alpha_type=:legendre)
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
 end
-function DiscontinuousQuadrilateralQuadratic9(n::Real,m::Real,alpha_type=:legendre)
+function DiscontinuousQuadrilateralQuadraticLagrange(n::Real,m::Real,alpha_type=:legendre)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
     alpha = get_beta_quad_quadratic(alpha_type)
-    TMP = DiscontinuousQuadrilateralQuadratic9(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    TMP = DiscontinuousQuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
-    return DiscontinuousQuadrilateralQuadratic9(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+    return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
 end
 function DiscontinuousQuadrilateralConstant(SF::Quadrilateral)
     nodes_u = SF.gauss_u
@@ -352,13 +386,13 @@ function DiscontinuousQuadrilateralLinear4(SF::Quadrilateral,alpha)
     dX, dY        = TMP'(nodes_u',nodes_v')
     return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
 end
-function DiscontinuousQuadrilateralQuadratic9(SF::Quadrilateral,alpha)
+function DiscontinuousQuadrilateralQuadraticLagrange(SF::Quadrilateral,alpha)
     nodes_u = SF.gauss_u
     nodes_v = SF.gauss_v
     weights = SF.weights
-    TMP = DiscontinuousQuadrilateralQuadratic9(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    TMP = DiscontinuousQuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
     interpolation = TMP(nodes_u',nodes_v')
     dX, dY        = TMP'(nodes_u',nodes_v')
-    return DiscontinuousQuadrilateralQuadratic9(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+    return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
 end
 

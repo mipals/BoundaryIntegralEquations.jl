@@ -27,9 +27,9 @@ import IntegralEquations: tangents!, number_of_shape_functions,
         # Checking of constant pressure will result in zero derivatives
         Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
         n_sources = size(mesh.sources,2)
-        @test isapprox(sum(Dx*ones(n_sources)), 0.0, atol=1e-12)
-        @test isapprox(sum(Dy*ones(n_sources)), 0.0, atol=1e-12)
-        @test isapprox(sum(Dz*ones(n_sources)), 0.0, atol=1e-12)
+        @test isapprox(sum(abs.(Dx*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
+        @test isapprox(sum(abs.(Dy*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
+        @test isapprox(sum(abs.(Dz*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
     end
 end
 
@@ -60,8 +60,8 @@ end
         # Checking of constant pressure will result in zero derivatives
         Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
         n_sources = size(mesh.sources,2)
-        @test isapprox(sum(Dx*ones(n_sources)), 0.0, atol=1e-12)
-        @test isapprox(sum(Dy*ones(n_sources)), 0.0, atol=1e-12)
-        @test isapprox(sum(Dz*ones(n_sources)), 0.0, atol=1e-12)
+        @test isapprox(sum(abs.(Dx*ones(n_sources))/n_sources), 0.0, atol=1e-14)
+        @test isapprox(sum(abs.(Dy*ones(n_sources))/n_sources), 0.0, atol=1e-14)
+        @test isapprox(sum(abs.(Dz*ones(n_sources))/n_sources), 0.0, atol=1e-14)
     end
 end

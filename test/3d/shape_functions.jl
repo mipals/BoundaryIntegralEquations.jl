@@ -88,7 +88,7 @@ end
 end
 
 @testset "Quadratic Quadrilateral Shape Functions" begin
-    quadratic_quad = QuadrilateralQuadratic9(3,3)
+    quadratic_quad = QuadrilateralQuadraticLagrange(3,3)
     # Weights should add to area of quad
     @test sum(quadratic_quad.weights) ≈ 4.0 
     # Set interpolation to be on the interpolating nodes
@@ -116,7 +116,7 @@ end
     @test disc_linear_quad.interpolation ≈ I
 end
 @testset "Discontinuous Quadrilateral Constant Shape Functions" begin
-    disc_quadratic_quad = DiscontinuousQuadrilateralQuadratic9(4,4)
+    disc_quadratic_quad = DiscontinuousQuadrilateralQuadraticLagrange(4,4)
     # Weights should add to area of quad
     @test sum(disc_quadratic_quad.weights) ≈ 4.0 
     # Set interpolation to be on the interpolating nodes

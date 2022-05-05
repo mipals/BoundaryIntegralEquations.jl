@@ -62,7 +62,7 @@ function global_coordinate_shape_function_derivative(mesh)
     copy_interpolation_nodes!(shape_function,physics_function)
     # Finding the number of shape functions. Used to distribute derivatives/gradients
     n_shape = number_of_shape_functions(physics_function)
-    
+    n_elements_pr_node = count_elements_pr_node(mesh) 
     # Pre-Allocation 
     global_gradients    = zeros(3,n_shape)   # ∇ₓ 
     local_gradients     = zeros(3,n_shape)   # ∇ξ
@@ -74,7 +74,7 @@ function global_coordinate_shape_function_derivative(mesh)
     Dx  = spzeros(n_sources,n_sources)  # ∂x 
     Dy  = spzeros(n_sources,n_sources)  # ∂y 
     Dz  = spzeros(n_sources,n_sources)  # ∂z 
-    n_elements_pr_node = count_elements_pr_node(mesh) 
+
     for element = 1:nElements
         # Extract element and compute 
         element_nodes        = @view topology[:,element]
@@ -89,9 +89,9 @@ function global_coordinate_shape_function_derivative(mesh)
             change_of_variables[1,:] = dX[:,node]
             change_of_variables[2,:] = dY[:,node]
             change_of_variables[3,:] = dZ[:,node]
-            local_gradients[1,:] .= physics_function.derivatives_u[:,node]
-            local_gradients[2,:] .= physics_function.derivatives_v[:,node]
-            global_gradients     .= change_of_variables\local_gradients
+            local_gradients[1,:]    .= physics_function.derivatives_u[:,node]
+            local_gradients[2,:]    .= physics_function.derivatives_v[:,node]
+            global_gradients        .= change_of_variables\local_gradients
             
             Dx[physics_nodes[node],physics_nodes] += global_gradients[1,:] ./ 
                                                      n_elements_pr_node[physics_nodes[node]]
@@ -106,8 +106,22 @@ function global_coordinate_shape_function_derivative(mesh)
 
 end
 
+function mesh_gradients(mesh,p)
+    Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
+    return [p'*Dx'; p'*Dy'; p'*Dz']
+end
+
+function mesh_normal_derivative(mesh,p)
+    mesh_gradient = mesh_gradients(mesh,p)
+    n_grad = zeros(length(p))
+    for i = 1:length(p)
+        n_grad[i] = dot(mesh_gradient[:,i],mesh.normals[:,i])
+    end
+    return n_grad
+end
+
 """
-    getTangentialDerivativeMatrix(physics_function,dZ,dX,dY)
+    getTangentialDerivativeMatrix!(physics_function,dZ,dX,dY)
 
 Returns a matrix whose columns are the tangential derivatives of the interpolating nodes.
 NOTE: It also normalized "dX" which it uses as the tangential direction of choice

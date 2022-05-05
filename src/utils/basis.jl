@@ -8,6 +8,8 @@ abstract type Triangular                 <: SurfaceFunction end
 abstract type Quadrilateral              <: SurfaceFunction end
 abstract type DiscontinuousTriangular    <: Triangular      end
 abstract type DiscontinuousQuadrilateral <: Quadrilateral   end
+abstract type QuadrilateralLagrange      <: Quadrilateral   end
+abstract type QuadrilateralSerendipity   <: Quadrilateral   end
 #==========================================================================================
                             A general definition of a derivative
 ==========================================================================================#
@@ -44,6 +46,14 @@ mutable struct TriangularLinear{T<:AbstractFloat} <: Triangular
     interpolation::AbstractArray{T,2}
 end
 mutable struct TriangularQuadratic{T<:AbstractFloat} <: Triangular
+    weights::AbstractArray{T,1}
+    gauss_u::AbstractArray{T,1}
+    gauss_v::AbstractArray{T,1}
+    derivatives_u::AbstractArray{T,2}
+    derivatives_v::AbstractArray{T,2}
+    interpolation::AbstractArray{T,2}
+end
+mutable struct TriangularCubic{T<:AbstractFloat} <: Triangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -88,7 +98,7 @@ mutable struct QuadrilateralLinear{T<:AbstractFloat} <: Quadrilateral
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct QuadrilateralQuadratic{T<:AbstractFloat} <: Quadrilateral
+mutable struct QuadrilateralQuadratic{T<:AbstractFloat} <: QuadrilateralSerendipity
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -104,7 +114,15 @@ mutable struct QuadrilateralLinear4{T<:AbstractFloat} <: Quadrilateral
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct QuadrilateralQuadratic9{T<:AbstractFloat} <: Quadrilateral
+mutable struct QuadrilateralQuadraticLagrange{T<:AbstractFloat} <: QuadrilateralLagrange
+    weights::AbstractArray{T,1}
+    gauss_u::AbstractArray{T,1}
+    gauss_v::AbstractArray{T,1}
+    derivatives_u::AbstractArray{T,2}
+    derivatives_v::AbstractArray{T,2}
+    interpolation::AbstractArray{T,2}
+end
+mutable struct QuadrilateralCubicLagrange{T<:AbstractFloat} <: QuadrilateralLagrange
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -129,7 +147,7 @@ mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: Quadrilate
     interpolation::AbstractArray{T,2}
     alpha::T
 end
-mutable struct DiscontinuousQuadrilateralQuadratic9{T<:AbstractFloat} <: Quadrilateral
+mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: Quadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -150,6 +168,27 @@ mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: Quadrilateral
     interpolation::AbstractArray{T,2}
     M::Int64
     N::Int64
+end
+#==========================================================================================
+            Generalized Elements: https://academic.csuohio.edu/duffy_s/CVE_512_11.pdf 
+==========================================================================================#
+mutable struct QuadrilateralLagrangeM{T<:AbstractFloat} <: QuadrilateralLagrange
+    weights::AbstractArray{T,1}
+    gauss_u::AbstractArray{T,1}
+    gauss_v::AbstractArray{T,1}
+    derivatives_u::AbstractArray{T,2}
+    derivatives_v::AbstractArray{T,2}
+    interpolation::AbstractArray{T,2}
+    M::Int64
+end
+mutable struct QuadrilateralSerendipityM{T<:AbstractFloat} <: QuadrilateralSerendipity
+    weights::AbstractArray{T,1}
+    gauss_u::AbstractArray{T,1}
+    gauss_v::AbstractArray{T,1}
+    derivatives_u::AbstractArray{T,2}
+    derivatives_v::AbstractArray{T,2}
+    interpolation::AbstractArray{T,2}
+    M::Int64
 end
 #==========================================================================================
                                 Show
@@ -178,14 +217,14 @@ number_of_shape_functions(shape_function::DiscontinuousTriangularQuadratic)     
 number_of_shape_functions(shape_function::QuadrilateralLinear)                  = 4
 number_of_shape_functions(shape_function::QuadrilateralQuadratic)               = 8
 number_of_shape_functions(shape_function::QuadrilateralLinear4)                 = 4
-number_of_shape_functions(shape_function::QuadrilateralQuadratic9)              = 9
+number_of_shape_functions(shape_function::QuadrilateralQuadraticLagrange)              = 9
 number_of_shape_functions(shape_function::DiscontinuousQuadrilateralConstant)   = 1
 number_of_shape_functions(shape_function::DiscontinuousQuadrilateralLinear4)    = 4
-number_of_shape_functions(shape_function::DiscontinuousQuadrilateralQuadratic9) = 9
+number_of_shape_functions(shape_function::DiscontinuousQuadrilateralQuadraticLagrange) = 9
 
 Base.eltype(::Type{QuadrilateralQuadratic{T}})                  where {T} = T
 Base.eltype(::Type{QuadrilateralLinear{T}})                     where {T} = T
-Base.eltype(::Type{QuadrilateralQuadratic9{T}})                 where {T} = T
+Base.eltype(::Type{QuadrilateralQuadraticLagrange{T}})                 where {T} = T
 Base.eltype(::Type{QuadrilateralLinear4{T}})                    where {T} = T
 Base.eltype(::Type{TriangularQuadratic{T}})                     where {T} = T
 Base.eltype(::Type{TriangularLinear{T}})                        where {T} = T
@@ -194,7 +233,7 @@ Base.eltype(::Type{DiscontinuousTriangularLinear{T}})           where {T} = T
 Base.eltype(::Type{DiscontinuousTriangularQuadratic{T}})        where {T} = T
 Base.eltype(::Type{DiscontinuousQuadrilateralConstant{T}})      where {T} = T
 Base.eltype(::Type{DiscontinuousQuadrilateralLinear4{T}})       where {T} = T
-Base.eltype(::Type{DiscontinuousQuadrilateralQuadratic9{T}})    where {T} = T
+Base.eltype(::Type{DiscontinuousQuadrilateralQuadraticLagrange{T}})    where {T} = T
 
 Base.length(basisFunction::SurfaceFunction) = number_of_shape_functions(basisFunction)
 #==========================================================================================
@@ -273,14 +312,14 @@ get_nodal_nodes_u(sf::QuadrilateralLinear4)    = [-1.0; 1.0;-1.0; 1.0]
 get_nodal_nodes_v(sf::QuadrilateralLinear4)    = [-1.0;-1.0; 1.0; 1.0]
 get_nodal_nodes_u(sf::QuadrilateralQuadratic)  = [-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0;-1.0]
 get_nodal_nodes_v(sf::QuadrilateralQuadratic)  = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0]
-get_nodal_nodes_u(sf::QuadrilateralQuadratic9) = [-1.0; 1.0;-1.0; 1.0; 0.0;-1.0; 0.0; 1.0; 0.0]
-get_nodal_nodes_v(sf::QuadrilateralQuadratic9) = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 0.0; 0.0; 1.0]
+get_nodal_nodes_u(sf::QuadrilateralQuadraticLagrange) = [-1.0; 1.0;-1.0; 1.0; 0.0;-1.0; 0.0; 1.0; 0.0]
+get_nodal_nodes_v(sf::QuadrilateralQuadraticLagrange) = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 0.0; 0.0; 1.0]
 get_nodal_nodes_u(sf::DiscontinuousQuadrilateralConstant)   = [0.0]
 get_nodal_nodes_v(sf::DiscontinuousQuadrilateralConstant)   = [0.0]
 get_nodal_nodes_u(sf::DiscontinuousQuadrilateralLinear4)    = [sf.alpha-1.0; 1.0-sf.alpha; sf.alpha-1.0; 1.0-sf.alpha]
 get_nodal_nodes_v(sf::DiscontinuousQuadrilateralLinear4)    = [sf.alpha-1.0; sf.alpha-1.0; 1.0-sf.alpha; 1.0-sf.alpha]
-get_nodal_nodes_u(sf::DiscontinuousQuadrilateralQuadratic9) = [sf.alpha-1.0; 1.0-sf.alpha; sf.alpha-1.0; 1.0-sf.alpha;          0.0; sf.alpha-1.0; 0.0; 1.0-sf.alpha; 0.0]
-get_nodal_nodes_v(sf::DiscontinuousQuadrilateralQuadratic9) = [sf.alpha-1.0; sf.alpha-1.0; 1.0-sf.alpha; 1.0-sf.alpha; sf.alpha-1.0;          0.0; 0.0;          0.0; 1.0-sf.alpha]
+get_nodal_nodes_u(sf::DiscontinuousQuadrilateralQuadraticLagrange) = [sf.alpha-1.0; 1.0-sf.alpha; sf.alpha-1.0; 1.0-sf.alpha;          0.0; sf.alpha-1.0; 0.0; 1.0-sf.alpha; 0.0]
+get_nodal_nodes_v(sf::DiscontinuousQuadrilateralQuadraticLagrange) = [sf.alpha-1.0; sf.alpha-1.0; 1.0-sf.alpha; 1.0-sf.alpha; sf.alpha-1.0;          0.0; 0.0;          0.0; 1.0-sf.alpha]
 """
     setInterpolationNodal!(shape_function::SurfaceFunction)
 Sets the interpolation nodes `shape_function` to be the nodal positions.

@@ -241,7 +241,7 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::SurfaceFunc
     interpolation_list = interpolate_elements(mesh,shape_function1)
     # Avoiding to have gauss-node on a singularity. Should be handled differently,
     # but, this is good for now.
-    if typeof(shape_function) <: QuadrilateralQuadratic9
+    if typeof(shape_function) <: QuadrilateralQuadraticLagrange
         for (x,y) in zip(shape_function1.gauss_u,shape_function1.gauss_v)
             if isapprox.(x, 0.0, atol=1e-15) && isapprox.(y, 0.0, atol=1e-15)
                 error("Gauss Node On Singularity.")

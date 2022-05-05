@@ -66,9 +66,9 @@ export TriangularLinear, TriangularQuadratic, Triangular,
        DiscontinuousTriangularConstant, DiscontinuousTriangularLinear,
        DiscontinuousTriangularQuadratic, DiscontinuousTriangular,
        Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
-       QuadrilateralQuadratic,QuadrilateralQuadratic9,
+       QuadrilateralQuadratic,QuadrilateralQuadraticLagrange,
        DiscontinuousQuadrilateralConstant,DiscontinuousQuadrilateralLinear4,
-       DiscontinuousQuadrilateralQuadratic9
+       DiscontinuousQuadrilateralQuadraticLagrange
 # Assembly
 export assemble_parallel!
 # visualizations

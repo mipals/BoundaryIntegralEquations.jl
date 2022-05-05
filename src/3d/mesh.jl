@@ -125,6 +125,7 @@ function get_beta_quad_linear(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
     elseif beta_type == :legendre
+        # nodes,w = gausslegendre(2), return 1 + nodes[1]
         return 0.4226
     elseif beta_type == :equidistant
         return 0.5
@@ -134,6 +135,7 @@ function get_beta_quad_quadratic(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
     elseif beta_type == :legendre
+        # nodes,w = gausslegendre(3), return 1 + nodes[1]
         return 0.2254
     elseif beta_type == :equidistant
         return 1.0/3.0
@@ -160,7 +162,7 @@ function set_physics_element(physics_order,shape_function,beta_type)
         return DiscontinuousQuadrilateralLinear4(shape_function,beta)
     elseif physics_order == :discquadquadratic
         beta = get_beta_tri_quadratic(beta_type)
-        return DiscontinuousQuadrilateralQuadratic9(shape_function,beta)
+        return DiscontinuousQuadrilateralQuadraticLagrange(shape_function,beta)
     else 
         return deepcopy(shape_function)
     end
