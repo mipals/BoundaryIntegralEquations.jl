@@ -19,6 +19,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 [compat]
 IterativeSolvers = "0.9"
 LegendrePolynomials = "0.4"
+Meshes = "0.22"
 julia = "1.7"
 
 [extras]
