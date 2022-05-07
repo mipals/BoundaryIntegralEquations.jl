@@ -19,18 +19,27 @@ using LegendrePolynomials
 using Meshes
 using Base.Threads
 #==========================================================================================
+                            General Properties of Shape Functions
+==========================================================================================#
+include("ShapeFunction.jl")
+#==========================================================================================
                                     Utility functions
 ==========================================================================================#
-include("utils/basis.jl")
 include("utils/mesh.jl")
 include("utils/ambient_to_properties.jl")
 include("utils/lossy_constants.jl")
 #==========================================================================================
                                     2D Routines
 ==========================================================================================#
+include("2d/CurveFunction.jl")
+include("2d/shape_functions.jl")
+include("2d/quadrature.jl")
+include("2d/kernels.jl")
+include("2d/meshing.jl")
 #==========================================================================================
                                     3D Routines
 ==========================================================================================#
+include("3d/SurfaceFunction.jl")
 include("3d/kernels.jl")
 include("3d/quadrature.jl")
 include("3d/shape_functions.jl")
