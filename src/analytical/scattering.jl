@@ -1,4 +1,3 @@
-import Jacobi
 function incoming_wave(angles,K,xyzb,k)
     # pI = zeros(size((xyzb)))
     A  = sin.(angles[1]) .* cos.(angles[2])
@@ -21,7 +20,7 @@ function plane_wave_scattering_sphere(k,a,r,θ,Ieps)
                (n*besselh(n - 0.5,ka) - (n + 1)*besselh(n + 1.5,ka));
         # Pmatrix = legendre(n,cos(theta));
         # Pmatrix[1,:]; # vector of legendre_n function of different arguments
-        P = Jacobi.legendre.(cos.(θ),n)
+        P = Pl.(cos.(θ),n)
         factor = (-im)^n*(2*n+1)*sqrt(π/2.0./kr);
         jn = besselj.(n + 0.5,kr);
         hn = besselh.(n + 0.5,kr);

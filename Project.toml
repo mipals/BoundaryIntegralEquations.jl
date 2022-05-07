@@ -17,10 +17,13 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
-IterativeSolvers = "0.9"
-LegendrePolynomials = "0.4"
-SpecialFunctions = "2"
-julia = "1.7"
+ForwardDiff = ">= 0.10"
+IterativeSolvers = ">= 0.9"
+LegendrePolynomials = ">=0.4"
+GaussQuadrature = ">= 0.5"
+ProgressMeter = ">= 1"
+Meshes = ">= 0.22"
+julia = ">= 1.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

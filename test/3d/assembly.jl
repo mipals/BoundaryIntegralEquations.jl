@@ -20,15 +20,15 @@
         #===================================================================================
                                         Assembling
         ===================================================================================#
-        Fp,Gp,Cp  = assemble_parallel!(mesh,k,mesh.sources;progress=false);
-        pI = incoming_wave(angles,1.0,mesh.sources,k)
+        Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources;progress=false)
+        pI       = incoming_wave(angles,1.0,mesh.sources,k)
         #===================================================================================
                     Setting up a linear system and solving for the pressure
         ===================================================================================#
         Ap    = Fp + Diagonal(1.0 .- Cp)
         p_bem = gmres(Ap,pI)
         ## Computing analytical solution
-        surface_angles = acos.(-mesh.sources[1,:]/radius)
+        surface_angles  = acos.(-mesh.sources[1,:]/radius)
         p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
         @test isapprox(norm(p_analytical - conj(p_bem))/norm(p_analytical),0.0,atol=errors[i,j])
     end
@@ -55,15 +55,15 @@ end
         #===================================================================================
                                         Assembling
         ===================================================================================#
-        Fp,Gp,Cp  = assemble_parallel!(mesh,k,mesh.sources;progress=false);
-        pI = incoming_wave(angles,1.0,mesh.sources,k)
+        Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources;progress=false)
+        pI       = incoming_wave(angles,1.0,mesh.sources,k)
         #===================================================================================
                     Setting up a linear system and solving for the pressure
         ===================================================================================#
         Ap    = Fp + Diagonal(1.0 .- Cp)
         p_bem = gmres(Ap,pI)
         ## Computing analytical solution
-        surface_angles = acos.(-mesh.sources[1,:]/radius)
+        surface_angles  = acos.(-mesh.sources[1,:]/radius)
         p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
         @test isapprox(norm(p_analytical - conj(p_bem))/norm(p_analytical),0.0,atol=errors[i,j])
     end
