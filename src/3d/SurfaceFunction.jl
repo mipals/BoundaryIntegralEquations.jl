@@ -1,17 +1,19 @@
 #==========================================================================================
                             Defining Various Element (Sub)Types
 ==========================================================================================#
-abstract type SurfaceFunction            <: ShapeFunction   end
-abstract type Triangular                 <: SurfaceFunction end
-abstract type Quadrilateral              <: SurfaceFunction end
-abstract type DiscontinuousTriangular    <: Triangular      end
-abstract type DiscontinuousQuadrilateral <: Quadrilateral   end
-abstract type QuadrilateralLagrange      <: Quadrilateral   end
-abstract type QuadrilateralSerendipity   <: Quadrilateral   end
+abstract type SurfaceFunction            <: ShapeFunction               end
+abstract type Triangular                 <: SurfaceFunction             end
+abstract type Quadrilateral              <: SurfaceFunction             end
+abstract type ConontinuousTriangular     <: Triangular                  end
+abstract type DiscontinuousTriangular    <: Triangular                  end
+abstract type ContinuousQuadrilateral    <: Quadrilateral               end
+abstract type DiscontinuousQuadrilateral <: Quadrilateral               end
+abstract type QuadrilateralLagrange      <: ContinuousQuadrilateral     end
+abstract type QuadrilateralSerendipity   <: ContinuousQuadrilateral     end
 #==========================================================================================
                                 Triangular Elements
 ==========================================================================================#
-mutable struct TriangularLinear{T<:AbstractFloat} <: Triangular
+mutable struct TriangularLinear{T<:AbstractFloat} <: ConontinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -19,7 +21,7 @@ mutable struct TriangularLinear{T<:AbstractFloat} <: Triangular
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct TriangularQuadratic{T<:AbstractFloat} <: Triangular
+mutable struct TriangularQuadratic{T<:AbstractFloat} <: ConontinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -27,7 +29,7 @@ mutable struct TriangularQuadratic{T<:AbstractFloat} <: Triangular
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct TriangularCubic{T<:AbstractFloat} <: Triangular
+mutable struct TriangularCubic{T<:AbstractFloat} <: ConontinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -104,7 +106,7 @@ mutable struct QuadrilateralCubicLagrange{T<:AbstractFloat} <: QuadrilateralLagr
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct DiscontinuousQuadrilateralConstant{T<:AbstractFloat} <: Quadrilateral
+mutable struct DiscontinuousQuadrilateralConstant{T<:AbstractFloat} <: DiscontinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -112,7 +114,7 @@ mutable struct DiscontinuousQuadrilateralConstant{T<:AbstractFloat} <: Quadrilat
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: Quadrilateral
+mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: DiscontinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -121,7 +123,7 @@ mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: Quadrilate
     interpolation::AbstractArray{T,2}
     alpha::T
 end
-mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: Quadrilateral
+mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: DiscontinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}

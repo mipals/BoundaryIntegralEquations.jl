@@ -10,7 +10,7 @@ import Base: adjoint, *
 ==========================================================================================#
 using LinearAlgebra
 using SpecialFunctions
-using GaussQuadrature
+using FastGaussQuadrature
 using ProgressMeter
 using DelimitedFiles
 using SparseArrays

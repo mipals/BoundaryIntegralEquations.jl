@@ -8,7 +8,7 @@ struct SurfaceElement{T<:AbstractFloat}
 end
 function create_shape_function(shape_function::SurfaceFunction;n=4,m=4)
     nodes_u,nodes_v,weights = getQuadpoints(shape_function,m,n)
-    new_shape_function = deepcopy(shape_function)
+    new_shape_function      = deepcopy(shape_function)
     new_shape_function.gauss_u = nodes_u
     new_shape_function.gauss_v = nodes_v
     new_shape_function.weights = weights
@@ -98,7 +98,7 @@ end
 Approximates the integral of `freens3d!`, `greens3d!` and `freens3dk0!` multiplied by the
 shapefunction over single `shape_function`, defined by `coordinates`.
 """
-function computing_integrals!(physics_function,interpolation_element,
+function computing_integrals!(physics_interpolation,interpolation_element,
                                 submatrixF,submatrixG,subvectorC,k,
                                 source,integrand,r)
     # Note that everything here has been written to avoid re-allocating things. 
@@ -111,7 +111,7 @@ function computing_integrals!(physics_function,interpolation_element,
     # Computing the integrand
     integrand_mul!(integrand,interpolation_element.jacobian_mul_weights)
     # Approximating integral and adding the value to the BEM matrix
-    mul!(submatrixF,integrand,Transpose(physics_function.interpolation),true,true)
+    mul!(submatrixF,integrand,Transpose(physics_interpolation),true,true)
     
     ### Evaluating the G-kernel (single-layer kernel) at the global nodes
     greens3d!(integrand,r,k)
@@ -119,7 +119,7 @@ function computing_integrals!(physics_function,interpolation_element,
     # Computing the integrand
     integrand_mul!(integrand,interpolation_element.jacobian_mul_weights)
     # Approximating the integral and the adding the values to the BEM matrix
-    mul!(submatrixG,integrand,Transpose(physics_function.interpolation),true,true)
+    mul!(submatrixG,integrand,Transpose(physics_interpolation),true,true)
 
     ### Evaluating the G0-kernel (used for computing the C-constant)
     # Recomputing integrand
@@ -261,6 +261,7 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::SurfaceFunc
     #======================================================================================
                                     Assembly
     ======================================================================================#
+    physics_interpolation  =physics_function1.interpolation
     if progress; prog = Progress(nSources, 0.2, "Assembling BEM matrices: \t", 50); end
     @inbounds @threads for source_node = 1:nSources   
         # Access source
@@ -275,7 +276,7 @@ function assemble_parallel!(mesh::Mesh3d,k,insources,shape_function::SurfaceFunc
             submatrixG = @view G[source_node:source_node,physics_nodes]
             subvectorC = @view C[source_node:source_node]
             # Interpolating on the mesh. 
-            computing_integrals!(physics_function1,interpolation_list[element],
+            computing_integrals!(physics_interpolation,interpolation_list[element],
                                 submatrixF,submatrixG,subvectorC,k,
                                 source,integrand,r)
         end

@@ -2,7 +2,7 @@
                                 Jacobian Computations
 ==========================================================================================#
 # For Linear Curve Shape Functions
-function jacobian(curveFunction::CurveLinear,coordinates,ξ)
+function jacobian(curveFunction::ContinuousCurveLinear,coordinates,ξ)
     len = length(ξ)
     if len == 1
         return norm(coordinates[:,1] - coordinates[:,2]);
@@ -10,12 +10,12 @@ function jacobian(curveFunction::CurveLinear,coordinates,ξ)
         return (ones(1,length(ξ))) * norm(coordinates[:,1] - coordinates[:,2]);
     end
 end
-function jacobian(curveFunction::CurveLinear,coordinates)
+function jacobian(curveFunction::ContinuousCurveLinear,coordinates)
     ξ = curveFunction.nodes;
     return (ones(1,length(ξ))) * norm(coordinates[:,1] - coordinates[:,2]);
 end 
 # For Quadratic Curve Shape Functions
-function jacobian(curveFunction::CurveQuadratic,coordinates,ξ)
+function jacobian(curveFunction::ContinuousCurveQuadratic,coordinates,ξ)
     len = length(ξ)
     dX = coordinates * curveQuadraticDerivative(ξ);
     if len == 1
@@ -24,7 +24,7 @@ function jacobian(curveFunction::CurveQuadratic,coordinates,ξ)
         return sqrt.(sum(dX.^2, dims=1))
     end
 end
-function jacobian(curveFunction::CurveQuadratic,coordinates)
+function jacobian(curveFunction::ContinuousCurveQuadratic,coordinates)
     return sqrt.(sum((coordinates * curveFunction.derivatives).^2, dims=1))
 end
 #==========================================================================================
@@ -32,12 +32,12 @@ end
                                    1 ---------- 2
 ==========================================================================================#
 curveLinear(ξ) = [(1.0 .- ξ); ξ];
-function basisFunction(curveFunction::CurveLinear,ξ)
+function basisFunction(curveFunction::ContinuousCurveLinear,ξ)
     return curveLinear(ξ)
 end
 curveLinearDerivative(ξ) = [-1.0*ones(eltype(ξ),length(ξ))';
                              1.0*ones(eltype(ξ),length(ξ))']
-function basisFunctionDerivative(curveFunction::CurveLinear,ξ)
+function basisFunctionDerivative(curveFunction::ContinuousCurveLinear,ξ)
     return curveLinearDerivative(ξ);
 end
 #==========================================================================================
@@ -45,80 +45,107 @@ end
                                    1 --- 2 --- 3
 ==========================================================================================#
 curveQuadratic(ξ) = [0.5 * ξ .* (ξ .- 1.0); 1.0 .- ξ .^2; 0.5 * ξ .* (ξ .+ 1.0)];
-function basisFunction(curveFunction::CurveQuadratic,ξ)
+function basisFunction(curveFunction::ContinuousCurveQuadratic,ξ)
     return curveQuadratic(ξ)
 end
 curveQuadraticDerivative(ξ) = [ξ .- 0.5; -2.0*ξ; ξ .+ 0.5]
-function basisFunctionDerivative(curveFunction::CurveQuadratic,ξ)
+function basisFunctionDerivative(curveFunction::ContinuousCurveQuadratic,ξ)
     return curveQuadraticDerivative(ξ)
 end
 #==========================================================================================
                         Discontinuous Continuous Constant
                                 -------- 1 --------
 ==========================================================================================#
-curveConstant(ξ) = ones(eltype(ξ),1,length(ξ))
-function basisFunction(curveFunction::DiscontinuousCurveLinear,ξ)
-    return curveConstant(ξ)
+discontinuousCurveConstant(ξ) = ones(eltype(ξ),1,length(ξ))
+function basisFunction(curveFunction::DiscontinuousCurveConstant,ξ)
+    return discontinuousCurveConstant(ξ)
 end
-function basisFunctionDerivative(curveFunction::DiscontinuousCurveLinear,ξ)
-    return zeros(eltype(ξ),1,length(ξ))
+discontinuousCurveConstantDerivative(ξ) = zeros(eltype(ξ),1,length(ξ))
+function basisFunctionDerivative(curveFunction::DiscontinuousCurveConstant,ξ)
+    return discontinuousCurveConstantDerivative(ξ)
 end
 #==========================================================================================
                         Discontinuous Continuous Linear
                                 -- 1 ---------- 2 --
 ==========================================================================================#
+discontinuousCurveLinear(ξ) = curveLinear(ξ/curveFunction.alpha)
 function basisFunction(curveFunction::DiscontinuousCurveLinear,ξ)
-    return curveLinear(ξ/curveFunction.alpha)
+    return discontinuousCurveLinear(ξ)
 end
+# Just a simple chain rule
+discontinuousCurveLinearDerivative(ξ) = curveLinearDerivative(ξ/curveFunction.alpha)/
+                                                                curveFunction.alpha
 function basisFunctionDerivative(curveFunction::DiscontinuousCurveLinear,ξ)
-    return curveLinearDerivative(ξ/curveFunction.alpha)/curveFunction.alpha
+    return discontinuousCurveLinearDerivative(ξ)
 end
 #==========================================================================================
                         Discontinuous Continuous Quadratic
                                 -- 1 --- 2 --- 3 --
 ==========================================================================================#
+discontinuousCurveQuadratic(ξ) = curveQuadratic(ξ/curveFunction.alpha);
 function basisFunction(curveFunction::DiscontinuousCurveQuadratic,ξ)
-    return curveQuadratic(ξ/curveFunction.alpha);
+    return discontinuousCurveQuadratic(ξ)
 end
+# Just a simple chain rule
+discontinuousCurveQuadraticDerivative(ξ) = curveQuadraticDerivative(ξ/curveFunction.alpha)/
+                                                                      curveFunction.alpha
 function basisFunctionDerivative(curveFunction::DiscontinuousCurveQuadratic,ξ)
-    return curveQuadraticDerivative(ξ/curveFunction.alpha)/curveFunction.alpha
+    return discontinuousCurveQuadraticDerivative(ξ)
 end
 #==========================================================================================
                             Defining relevant constructors 
 ==========================================================================================#
 ### For Linear Curve Shape Functions
-function CurveLinear(ξ::AbstractArray)
+function ContinuousCurveLinear(ξ::AbstractArray)
     weights = similar(ξ)
     interpolation = curveLinear(ξ')
     derivatives   = curveLinearDerivative(ξ')
-    return CurveLinear(weights,ξ,derivatives,interpolation)
+    return ContinuousCurveLinear(weights,ξ,derivatives,interpolation)
 end
-function CurveLinear(nodes::AbstractArray,weights::AbstractArray)
+function ContinuousCurveLinear(nodes::AbstractArray,weights::AbstractArray)
     interpolation = curveLinear(nodes')
     derivatives   = curveLinearDerivative(nodes')
-    return CurveLinear(weights,nodes,derivatives,interpolation)
+    return ContinuousCurveLinear(weights,nodes,derivatives,interpolation)
 end
-function CurveLinear(n::Real)
+function ContinuousCurveLinear(n::Real)
     nodes, weights = curveLinearQuadpoints(n)
     interpolation  = curveLinear(nodes')
     derivatives    = curveLinearDerivative(nodes')
-    return CurveLinear(weights,nodes,derivatives,interpolation)
+    return ContinuousCurveLinear(weights,nodes,derivatives,interpolation)
 end
-### FOr Quadrat
-function CurveQuadratic(ξ::AbstractArray)
+### For Quadratic
+function ContinuousCurveQuadratic(ξ::AbstractArray)
     weights = similar(ξ)
     interpolation = curveQuadratic(ξ)
     derivatives   = curveQuadraticDerivative(ξ)
-    return CurveQuadratic(weights,ξ,derivatives,interpolation)
+    return ContinuousCurveQuadratic(weights,ξ,derivatives,interpolation)
 end
-function CurveQuadratic(nodes::AbstractArray,weights::AbstractArray)
+function ContinuousCurveQuadratic(nodes::AbstractArray,weights::AbstractArray)
     interpolation = curveQuadratic(nodes')
     derivatives   = curveQuadraticDerivative(nodes')
-    return CurveQuadratic(weights,nodes,derivatives,interpolation)
+    return ContinuousCurveQuadratic(weights,nodes,derivatives,interpolation)
 end
-function CurveQuadratic(n::Real)
+function ContinuousCurveQuadratic(n::Real)
     nodes, weights = curveQuadraticQuadpoints(n);
     interpolation  = curveQuadratic(nodes')
     derivatives    = curveQuadraticDerivative(nodes')
-    return CurveQuadratic(weights,nodes,derivatives,interpolation);
+    return ContinuousCurveQuadratic(weights,nodes,derivatives,interpolation)
+end
+### For Discontinuous Constant
+function DiscontinuousCurveConstant(ξ::AbstractArray)
+    weights       = similar(ξ)
+    interpolation = discontinuousCurveConstant(ξ)
+    derivatives   = discontinuousCurveConstantDerivative(ξ)
+    return DiscontinuousCurveConstant(weights,ξ,derivatives,interpolation)
+end
+function DiscontinuousCurveConstant(nodes::AbstractArray,weights::AbstractArray)
+    interpolation = discontinuousCurveConstant(nodes')
+    derivatives   = discontinuousCurveConstantDerivative(nodes')
+    return DiscontinuousCurveConstant(weights,nodes,derivatives,interpolation)
+end
+function DiscontinuousCurveConstant(n::Real)
+    nodes, weights = curveQuadraticQuadpoints(n)
+    interpolation  = discontinuousCurveConstant(nodes')
+    derivatives    = discontinuousCurveConstantDerivative(nodes')
+    return DiscontinuousCurveConstant(weights,nodes,derivatives,interpolation)
 end

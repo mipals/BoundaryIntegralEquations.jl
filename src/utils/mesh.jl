@@ -5,12 +5,12 @@ abstract type Mesh end
 # abstract type Mesh2d end
 # abstract type Mesh3d end
 
-mutable struct Mesh2d{T} <: Mesh where {T <: AbstractArray}
+struct Mesh2d{T} <: Mesh where {T <: AbstractArray}
     coordinates::T
     topology::AbstractArray{Int64,2}
     shape_function::ShapeFunction
 end
-mutable struct Mesh3d{T} <: Mesh where {T <: AbstractArray}
+struct Mesh3d{T} <: Mesh where {T <: AbstractArray}
     sources::T
     coordinates::T
     topology::AbstractArray{Int64,2}

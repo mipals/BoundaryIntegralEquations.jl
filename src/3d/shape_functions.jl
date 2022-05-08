@@ -395,4 +395,3 @@ function DiscontinuousQuadrilateralQuadraticLagrange(SF::Quadrilateral,alpha)
     dX, dY        = TMP'(nodes_u',nodes_v')
     return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
 end
-

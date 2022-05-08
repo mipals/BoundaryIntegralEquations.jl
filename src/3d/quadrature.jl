@@ -7,8 +7,8 @@
 Returns `m*n` integration points and `weights` for a quadrilateral element.
 """
 function quadrilateralQuadpoints(n,m)
-    nodex, wx = legendre(n) # Nodes in the interval [-1, 1]
-    nodey, wy = legendre(m) # Nodes in the interval [-1, 1]
+    nodex, wx = gausslegendre(n) # Nodes in the interval [-1, 1]
+    nodey, wy = gausslegendre(m) # Nodes in the interval [-1, 1]
 
     ξ = kron(ones(m),nodex)
     η = kron(nodey,ones(n))

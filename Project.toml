@@ -5,10 +5,9 @@ version = "0.1.0"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-GaussQuadrature = "d54b0c1a-921d-58e0-8e36-89d8069c0969"
 IterativeSolvers = "42fd0dbc-a981-5370-80f2-aaf504508153"
-Jacobi = "83f21c0b-4282-5fbc-9e3f-f6da3d2e584c"
 LegendrePolynomials = "3db4a2ba-fc88-11e8-3e01-49c72059a882"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Meshes = "eacbb407-ea5a-433e-ab97-5258b1ca43fa"
@@ -17,12 +16,13 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
-ForwardDiff = ">= 0.10"
+ForwardDiff = ">= 0.1"
 IterativeSolvers = ">= 0.9"
 LegendrePolynomials = ">=0.4"
-GaussQuadrature = ">= 0.5"
-ProgressMeter = ">= 1"
-Meshes = ">= 0.22"
+Meshes = ">= 0.2"
+ProgressMeter = "1"
+FastGaussQuadrature = ">= 0.4"
+SpecialFunctions = "2"
 julia = ">= 1.7"
 
 [extras]

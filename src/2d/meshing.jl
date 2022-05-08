@@ -28,7 +28,7 @@ function create_topology(segments)
     return topology
 end
 
-function create_circle(shape_function::CurveLinear,n_elements,radius=1.0, angle_output=0)
+function create_circle(shape_function::ContinuousCurveLinear,n_elements,radius=1.0, angle_output=0)
     θ = reverse(collect(range(-pi,pi,length=n_elements+1)));
     θ = θ[1:end-1]'
 
@@ -39,7 +39,7 @@ function create_circle(shape_function::CurveLinear,n_elements,radius=1.0, angle_
     end
 end
 
-function create_circle(shape_function::CurveQuadratic,n_elements,radius=1.0, angle_output=0)
+function create_circle(shape_function::ContinuousCurveQuadratic,n_elements,radius=1.0, angle_output=0)
     θ = reverse(collect(range(-pi,pi,length=2*n_elements+1)));
     θ = θ[1:end-1]'
 
@@ -51,14 +51,14 @@ function create_circle(shape_function::CurveQuadratic,n_elements,radius=1.0, ang
     
 end
 
-function create_top(shape_function::CurveLinear,n_elements)
+function create_top(shape_function::ContinuousCurveLinear,n_elements)
     topology = ones(Int64, 2, n_elements)
     topology[1,:] = 1:1:n_elements
     topology[2,1:end-1] = 2:1:n_elements
     return topology
 end
 
-function create_top(shape_function::CurveQuadratic,n_elements)
+function create_top(shape_function::ContinuousCurveQuadratic,n_elements)
     topology = zeros(Int64, 3, n_elements)
     idx = 1
     for i = 1:n_elements
@@ -78,11 +78,11 @@ function circle_nodegen(shape_function,n_elements,radius=1.0)
     return coordinates, topology
 end
 
-function meshCircle(shape_function::CurveLinear, n_elements,radius=1.0)
+function meshCircle(shape_function::ContinuousCurveLinear, n_elements,radius=1.0)
     coordinates, topology = circle_nodegen(shape_function,n_elements,radius)
     return Mesh2d(coordinates,topology,CurveLinear(1))
 end
-function meshCircle(shape_function::CurveQuadratic,n_elements,radius=1.0)
+function meshCircle(shape_function::ContinuousCurveQuadratic,n_elements,radius=1.0)
     coordinates, topology = circle_nodegen(shape_function,n_elements,radius)
     return Mesh2d(coordinates,topology,CurveQuadratic(1))
 end

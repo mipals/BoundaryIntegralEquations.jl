@@ -1,16 +1,19 @@
+#==========================================================================================
+                                Defining Abstract Types
+==========================================================================================#
 abstract type CurveFunction              <: ShapeFunction   end
+abstract type ContinuousCurveFunction    <: CurveFunction   end
 abstract type DiscontinuousCurveFunction <: CurveFunction   end
-
 #==========================================================================================
                                 Curve elements for 2D
 ==========================================================================================#
-mutable struct CurveLinear{T<:AbstractFloat} <: CurveFunction 
+mutable struct ContinuousCurveLinear{T<:AbstractFloat} <: ContinuousCurveFunction 
     weights::AbstractArray{T,1}
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct CurveQuadratic{T<:AbstractFloat} <: CurveFunction
+mutable struct ContinuousCurveQuadratic{T<:AbstractFloat} <: ContinuousCurveFunction
     weights::AbstractArray{T,1}
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
@@ -61,21 +64,19 @@ end
 
 get_derivatives(curve_function::CurveFunction)    = curve_function.derivatives
 
-number_of_shape_functions(curve_function::CurveLinear)                  = 2
-number_of_shape_functions(curve_function::CurveQuadratic)               = 3
+number_of_shape_functions(curve_function::ContinuousCurveLinear)        = 2
+number_of_shape_functions(curve_function::ContinuousCurveQuadratic)     = 3
 number_of_shape_functions(curve_function::DiscontinuousCurveConstant)   = 1
 number_of_shape_functions(curve_function::DiscontinuousCurveLinear)     = 2
 number_of_shape_functions(curve_function::DiscontinuousCurveQuadratic)  = 3
-
 #==========================================================================================
-                        Overloading Base
+                                Overloading Base
 ==========================================================================================#
-Base.eltype(::Type{CurveLinear{T}})                 where {T} = T
-Base.eltype(::Type{CurveQuadratic{T}})              where {T} = T
+Base.eltype(::Type{ContinuousCurveLinear{T}})       where {T} = T
+Base.eltype(::Type{ContinuousCurveQuadratic{T}})    where {T} = T
 Base.eltype(::Type{DiscontinuousCurveConstant{T}})  where {T} = T
 Base.eltype(::Type{DiscontinuousCurveLinear{T}})    where {T} = T
 Base.eltype(::Type{DiscontinuousCurveQuadratic{T}}) where {T} = T
-
 #==========================================================================================
                         Modifications of CurveFunction structs 
 ==========================================================================================#
@@ -95,8 +96,8 @@ function interpolate_on_nodes!(curve_function::CurveFunction)
 end
 
 get_nodes(curve_function::CurveFunction)                     = curve_function.gauss
-get_nodal_nodes(curve_function::CurveLinear)                 = [-1.0; 1.0]
-get_nodal_nodes(curve_function::CurveQuadratic)              = [-1.0; 0.0; 1.0]
+get_nodal_nodes(curve_function::ContinuousCurveLinear)       = [-1.0; 1.0]
+get_nodal_nodes(curve_function::ContinuousCurveQuadratic)    = [-1.0; 0.0; 1.0]
 get_nodal_nodes(curve_function::DiscontinuousCurveConstant)  = [0.0]
 get_nodal_nodes(curve_function::DiscontinuousCurveLinear)    = [-curve_function.alpha; 
                                                                  curve_function.alpha]
