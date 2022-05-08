@@ -18,11 +18,12 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
 ForwardDiff = ">= 0.10"
-IterativeSolvers = ">= 0.9"
-LegendrePolynomials = ">=0.4"
 GaussQuadrature = ">= 0.5"
-ProgressMeter = ">= 1"
+IterativeSolvers = ">= 0.9"
+Jacobi = "0.5"
+LegendrePolynomials = ">=0.4"
 Meshes = ">= 0.22"
+ProgressMeter = ">= 1"
 julia = ">= 1.7"
 
 [extras]
