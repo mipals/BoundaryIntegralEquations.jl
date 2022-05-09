@@ -38,14 +38,14 @@ end
                                         1  5  2                                      
 ==========================================================================================#
 quadrilateralQuadraticLagrange(u,v) = [0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
-                               -0.25*u.*(1.0 .+ u).*v.*(1.0 .- v);
-                               -0.25*u.*(1.0 .- u).*v.*(1.0 .+ v);
-                                0.25*u.*(1.0 .+ u).*v.*(1.0 .+ v);
-                               -0.50*(1.0 .+ u).*(1.0 .- u).*v.*(1.0 .- v);
-                               -0.50*u.*(1.0 .- u).*(1.0 .+ v).*(1.0 .- v);
-                               (1.0 .- u.^2).*(1.0 .- v.^2);
-                                0.50*u.*(1.0 .+ u).*(1.0 .+ v).*(1.0 .- v);
-                                0.50*(1.0 .+ u).*(1.0 .- u).*(1.0 .+ v).*v]
+                                      -0.25*u.*(1.0 .+ u).*v.*(1.0 .- v);
+                                      -0.25*u.*(1.0 .- u).*v.*(1.0 .+ v);
+                                       0.25*u.*(1.0 .+ u).*v.*(1.0 .+ v);
+                                      -0.50*(1.0 .+ u).*(1.0 .- u).*v.*(1.0 .- v);
+                                      -0.50*u.*(1.0 .- u).*(1.0 .+ v).*(1.0 .- v);
+                                        (1.0 .- u.^2).*(1.0 .- v.^2);
+                                       0.50*u.*(1.0 .+ u).*(1.0 .+ v).*(1.0 .- v);
+                                       0.50*(1.0 .+ u).*(1.0 .- u).*(1.0 .+ v).*v]
 function basisFunction(surfaceFunction::QuadrilateralQuadraticLagrange,u,v)
     return quadrilateralQuadraticLagrange(u,v)
 end
@@ -95,6 +95,17 @@ function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
     return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.alpha)
 end
 #==========================================================================================
+                            QuadrilateralQuadraticLagrange (COMSOL Layout)
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
+                                        3  9  4                                      
+                                        6  7  8                                      
+                                        1  5  2                                      
+==========================================================================================#
+discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1.0-alpha),v./(1.0-alpha))
+function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
+    return discontinuousQuadrilateralQuadraticLagrange(u,v,surfaceFunction.alpha)
+end
+#==========================================================================================
                 QuadrilateralLegendre: See https://ieeexplore.ieee.org/document/1353496
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                           ---
@@ -116,17 +127,6 @@ function quadrilateralLegendre(N,M,u,v)
 end
 function basisFunction(surfaceFunction::QuadrilateralLegendre,ξ,η)
     return quadrilateralLegendre(surfaceFunction.N,surfaceFunction.M,ξ,η)
-end
-#==========================================================================================
-                            QuadrilateralQuadraticLagrange (COMSOL Layout)
- ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        3  9  4                                      
-                                        6  7  8                                      
-                                        1  5  2                                      
-==========================================================================================#
-discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1.0-alpha),v./(1.0-alpha))
-function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
-    return discontinuousQuadrilateralQuadraticLagrange(u,v,surfaceFunction.alpha)
 end
 #==========================================================================================
                     DiscontinuousQuadrilateralLagrange (Kronecker Layout)
@@ -217,7 +217,6 @@ end
 function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularLinear,u,v)
     return discontinuousTriangularLinearDerivatives(u,v,surfaceFunction.beta)
 end
-
 #==========================================================================================
                         DiscontinuousTriangularQuadratic Surface                             
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
@@ -235,15 +234,15 @@ function basisFunction(surfaceFunction::DiscontinuousTriangularQuadratic,u,v)
     return discontinuousTriangularQuadratic(u,v,surfaceFunction.beta)
 end
 function discontinuousTriangularQuadraticDerivatives(u,v,β)
-    dNu = [(4.0*psi3(u,v,β) .- 1.0) .* psi3m(u,v,β);
-            (4.0*psik(u,β)    .- 1.0) .* psikm(u,β);
+    dNu = [ (4.0*psi3(u,v,β) .- 1.0) .* psi3m(u,v,β);
+            (4.0*psik(u,β)   .- 1.0) .* psikm(u,β);
             zeros(1,length(u));
             4.0*psikm(u,β).*psi3(u,v,β) + 4.0*psik(u,β).*psi3m(u,v,β);
             4.0*psikm(u,β).*psik(v,β);
             4.0*psik(v,β).*psi3m(u,v,β)]
     dNv = [(4.0*psi3(u,v,β) .- 1.0) .* psi3m(u,v,β);
             zeros(1,length(v));
-            (4.0*psik(v,β)    .- 1.0) .* psikm(v,β);
+           (4.0*psik(v,β)   .- 1.0) .* psikm(v,β);
             4.0*psik(u,β).*psi3m(u,v,β);
             4.0*psik(u,β).*psikm(v,β);
             4.0*psikm(v,β).*psi3(u,v,β) + 4.0*psik(v,β).*psi3m(u,v,β)]

@@ -1,7 +1,7 @@
 #==========================================================================================
                                     Packages
 ==========================================================================================#
-using GaussQuadrature, LinearAlgebra, SpecialFunctions, FiniteDifferences, Dierckx, Plots
+using FastGaussQuadrature, LinearAlgebra, SpecialFunctions, FiniteDifferences, Dierckx, Plots
 #==========================================================================================
                                 Helper Functions                          
 ==========================================================================================#
@@ -16,8 +16,8 @@ normals!(n,dX)  = @inbounds for i = 1:size(n,2) n[1,i] = -dX[2,i];   n[2,i]=dX[1
 linear(ξ)    = [0.5*(1.0 .- ξ); 0.5*(1.0 .+ ξ)]
 quadratic(ξ) = [0.5 * ξ .* (ξ .- 1.0); 1.0 .- ξ .^2; 0.5 * ξ .* (ξ .+ 1.0)]
 constant(ξ)  = ones(1,length(ξ))
-β = legendre(2)[1][end]; discLinear(ξ)    = linear(ξ/β)
-δ = legendre(3)[1][end]; discQuadratic(ξ) = quadratic(ξ/δ)
+β = gausslegendre(2)[1][end]; discLinear(ξ)    = linear(ξ/β)
+δ = gausslegendre(3)[1][end]; discQuadratic(ξ) = quadratic(ξ/δ)
 #==========================================================================================
                                     Kernels                          
 ==========================================================================================#
@@ -56,8 +56,8 @@ end
 #==========================================================================================
                             Assembly - Spline
 ==========================================================================================#
-function scaledLegendre(n,a=0.0,b=1.0)
-    node, w = legendre(n)
+function scaledgausslegendre(n,a=0.0,b=1.0)
+    node, w = gausslegendre(n)
     return 0.5*node*(b-a) .+ 0.5*(b+a) , 0.5*(b-a)*w
 end
 function createPhysicsTopology(N,physicsOrder)
@@ -72,10 +72,10 @@ function assemble(spline,k,n;interior=false,gOn=true,fOn=true,cOn=true,
                           (physicsOrder ==  1 ? discLinear(ξ) : discQuadratic(ξ)))))
     nInterpolations = max(abs(physicsOrder),1)
     tInterp         = range(1,N,length=nInterpolations*nElements+1)
-    nodes,weights   = scaledLegendre(n,0.0,1.0)
+    nodes,weights   = scaledgausslegendre(n,0.0,1.0)
     physicsTopology = createPhysicsTopology(nElements,physicsOrder)
     # Compute stuff for every Gaussian node
-    physics_interpolation! = physics_function(legendre(n)[1]')
+    physics_interpolation! = physics_function(gausslegendre(n)[1]')
     tGauss = kron(ones(nElements),nodes) + kron(tInterp[1:nInterpolations:end-1],ones(n))
     Interpolation = spline(tGauss)
     DerivInterp   = derivative(spline,tGauss)
@@ -193,7 +193,7 @@ function compute_segment_lengths(spl,N)
     segment_lenths = zeros(length(t_knots)-1)
     jacobian = zeros(N)
     for idx = 1:length(segment_lenths)
-        nodes,weights=scaledLegendre(N,t_knots[idx],t_knots[idx+1])
+        nodes,weights=scaledgausslegendre(N,t_knots[idx],t_knots[idx+1])
         jacobian!(jacobian,derivative(spl,nodes))
         segment_lenths[idx] = dot(jacobian,weights)
     end
@@ -204,7 +204,7 @@ function re_meshing(spl,nControl,N=4000)
     knots = get_knots(spl)
     maxl = compute_arc_length(spl,10)/nControl
     
-    nodes,weights = scaledLegendre(N,knots[1],knots[end])
+    nodes,weights = scaledgausslegendre(N,knots[1],knots[end])
     tmp = 0.0
     nNodes = length(nodes)
     interps = 1

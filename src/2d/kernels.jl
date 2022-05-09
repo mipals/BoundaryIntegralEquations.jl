@@ -1,27 +1,18 @@
 #==========================================================================================
                              Kernels in 2D                                    
 ==========================================================================================#
-# Green's function
-function G_kernel2d(x,y,k,normals)
-    r = sqrt.((sum((x .- y).^2, dims=1)))
-    return im*0.25*hankelh1.(0,k*r)
-end
-# Directional derivative of the Green's function
-function F_kernel2d(x,y,k,normals)
-    r = sqrt.((sum((x .- y).^2, dims=1)))
-    return -im*0.25*k*hankelh1.(1,k*r) .* sum(normals .* (x .- y),dims=1)./r
+function G!(k,r,int)
+    @inbounds for i = 1:length(r) 
+        int[i] =  im*0.25*hankelh1.(0,k*r[i]) 
+    end
 end
 
-#==========================================================================================
-                            Mutating kernels in 2D                          
-==========================================================================================#
-# Green's function
-function G_kernel2d!(x,y,k,normals,r)
-    r .= sqrt.((sum((x .- y).^2, dims=1))) 
-    r .= im*0.25*hankelh1.(0,k*r)
+function F!(x,y,k,n,r,int)
+     @inbounds for i = 1:length(r) 
+        int[i] = -im*0.25*hankelh1.(1,k*r[i])*k.*(n[1,i]*(x[1,i]-y[1])+n[2,i]*(x[2,i]-y[2]))/r[i] 
+    end
 end
-# Directional derivative of the Green's function
-function F_kernel2d!(x,y,k,normals,r)
-    r .= sqrt.((sum((x .- y).^2, dims=1)))
-    r .= -im*0.25*k*hankelh1.(1,k*r) .* sum(normals .* (x .- y),dims=1)./r
+function C!(x,y,n,r,int)
+    @inbounds for i = 1:length(r) int[i] = (n[1,i]*(x[1,i]-y[1])+n[2,i]*(x[2,i]-y[2]))/(2π*r[i]^2) 
+    end
 end

@@ -178,21 +178,21 @@ end
                                     Utility functions
 ==========================================================================================#
 get_nodes(surface_function::SurfaceFunction)        = surface_function.gauss_u, 
-                                                    surface_function.gauss_v
+                                                      surface_function.gauss_v
 get_derivatives(surface_function::SurfaceFunction)  = surface_function.derivatives_u, 
-                                                    surface_function.derivatives_v
-number_of_shape_functions(surface_function::TriangularLinear)                             = 3
-number_of_shape_functions(surface_function::TriangularQuadratic)                          = 6
-number_of_shape_functions(surface_function::DiscontinuousTriangularConstant)              = 1
-number_of_shape_functions(surface_function::DiscontinuousTriangularLinear)                = 3
-number_of_shape_functions(surface_function::DiscontinuousTriangularQuadratic)             = 6
-number_of_shape_functions(surface_function::QuadrilateralLinearSerendipity)               = 4
-number_of_shape_functions(surface_function::QuadrilateralQuadratic)                       = 8
-number_of_shape_functions(surface_function::QuadrilateralLinear4)                         = 4
-number_of_shape_functions(surface_function::QuadrilateralQuadraticLagrange)               = 9
-number_of_shape_functions(surface_function::DiscontinuousQuadrilateralConstant)           = 1
-number_of_shape_functions(surface_function::DiscontinuousQuadrilateralLinear4)            = 4
-number_of_shape_functions(surface_function::DiscontinuousQuadrilateralQuadraticLagrange)  = 9
+                                                      surface_function.derivatives_v
+number_of_shape_functions(surface_function::TriangularLinear)                            = 3
+number_of_shape_functions(surface_function::TriangularQuadratic)                         = 6
+number_of_shape_functions(surface_function::DiscontinuousTriangularConstant)             = 1
+number_of_shape_functions(surface_function::DiscontinuousTriangularLinear)               = 3
+number_of_shape_functions(surface_function::DiscontinuousTriangularQuadratic)            = 6
+number_of_shape_functions(surface_function::QuadrilateralLinearSerendipity)              = 4
+number_of_shape_functions(surface_function::QuadrilateralQuadratic)                      = 8
+number_of_shape_functions(surface_function::QuadrilateralLinear4)                        = 4
+number_of_shape_functions(surface_function::QuadrilateralQuadraticLagrange)              = 9
+number_of_shape_functions(surface_function::DiscontinuousQuadrilateralConstant)          = 1
+number_of_shape_functions(surface_function::DiscontinuousQuadrilateralLinear4)           = 4
+number_of_shape_functions(surface_function::DiscontinuousQuadrilateralQuadraticLagrange) = 9
 
 Base.eltype(::Type{QuadrilateralQuadratic{T}})                      where {T} = T
 Base.eltype(::Type{QuadrilateralLinearSerendipity{T}})              where {T} = T
@@ -227,7 +227,6 @@ end
 function (*)(coordinates::AbstractArray,K::ShapeFunctionDerivative{T}) where {T <: SurfaceFunction}
     return coordinates * K.surface_function.derivatives_u, coordinates * K.surface_function.derivatives_v
 end
-
 #==========================================================================================
     Computing derivatives using ForwardDiff: Eases the implementation of new element
     Note: This is only used as a fallback if `basisFunctionDerivative` is not defined

@@ -48,22 +48,20 @@ function Base.show(io::IO, ::MIME"text/plain", curve_function::CurveFunction)
     println(io, "Number of basis functions:     \t $(length(curve_function))")
 end
 #==========================================================================================
-                         Introduction of some niceness features 
+                                Making structs callable
 ==========================================================================================#
-# Making the structs "callable"
 function (curve_function::CurveFunction)(ξ)
-    return basisFunction(shape_function,ξ)
+    return basisFunction(curve_function,ξ)
 end
 function (shape_function_derivative::ShapeFunctionDerivative{T})(ξ)   where {T <: CurveFunction}
     return basisFunctionDerivative(shape_function_derivative.shape_function,ξ)
 end
-
 function (*)(coordinates::AbstractArray,K::ShapeFunctionDerivative{T}) where {T <: CurveFunction}
     return coordinates * K.curve_function.derivatives
 end
-
-get_derivatives(curve_function::CurveFunction)    = curve_function.derivatives
-
+#==========================================================================================
+                            Getting number of shape function
+==========================================================================================#
 number_of_shape_functions(curve_function::ContinuousCurveLinear)        = 2
 number_of_shape_functions(curve_function::ContinuousCurveQuadratic)     = 3
 number_of_shape_functions(curve_function::DiscontinuousCurveConstant)   = 1
@@ -91,11 +89,21 @@ function set_interpolation_nodes!(curve_function::CurveFunction,physics_function
     set_interpolation_nodes!(shape_function,nodes)
 end
 function interpolate_on_nodes!(curve_function::CurveFunction)
-    curve_function.interpolation = shape_function(curve_function.gauss)
-    curve_function.derivatives   = shape_function'(curve_function.gauss')
+    curve_function.interpolation = curve_function(curve_function.gauss')
+    curve_function.derivatives   = curve_function'(curve_function.gauss')
 end
-
+function set_nodal_interpolation!(curve_function::CurveFunction)
+    curve_function.gauss = get_nodal_nodes(curve_function)
+    interpolate_on_nodes!(curve_function)
+end
+#==========================================================================================
+                    Show-hand for extraction of CurveFunction properties
+==========================================================================================#
+get_derivatives(curve_function::CurveFunction)               = curve_function.derivatives
 get_nodes(curve_function::CurveFunction)                     = curve_function.gauss
+#==========================================================================================
+                            Getting the interpolation nodes
+==========================================================================================#
 get_nodal_nodes(curve_function::ContinuousCurveLinear)       = [-1.0; 1.0]
 get_nodal_nodes(curve_function::ContinuousCurveQuadratic)    = [-1.0; 0.0; 1.0]
 get_nodal_nodes(curve_function::DiscontinuousCurveConstant)  = [0.0]

@@ -68,9 +68,6 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
     coordinates = initialCoordinates[:,usedNodes]
     sources = coordinates[:,sort(unique(topology))]
 
-    println("")
-    # Compute normals
-    # physicsElement = set_physics_element(physics_order,shape_function,beta_type)
     if physics_order == :geometry
         physicsElement = set_physics_element(physics_order,shape_function,beta_type)
         normals = get_element_normals(shape_function,coordinates,topology)
@@ -125,9 +122,6 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
     coordinates = initialCoordinates[:,usedNodes]
     sources = coordinates[:,sort(unique(topology))]
 
-    println("")
-    # Compute normals
-    # physicsElement = set_physics_element(physics_order,shape_function,beta_type)
     if physics_order == :geometry
         physicsElement = set_physics_element(physics_order,shape_function,beta_type)
         normals = get_element_normals(shape_function,coordinates,topology)
