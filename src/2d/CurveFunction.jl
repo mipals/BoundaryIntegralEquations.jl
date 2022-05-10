@@ -60,6 +60,18 @@ function (*)(coordinates::AbstractArray,K::ShapeFunctionDerivative{T}) where {T 
     return coordinates * K.curve_function.derivatives
 end
 #==========================================================================================
+                                Fallbacks for derivatives
+==========================================================================================#
+function basisFunctionDerivative(curve_function::CurveFunction,ξ::Number)
+    return ForwardDiff.derivative.(curve_function,ξ)
+end
+function basisFunctionDerivative(curve_function::CurveFunction,ξ)
+    return hcat(ForwardDiff.derivative.(Ref(curve_function),ξ)...)
+end
+function basisFunctionSecondOrderDerivative(curve_function::CurveFunction,nodes)
+    hcat(ForwardDiff.derivative.(x->ForwardDiff.derivative(curve_function,x),nodes)...)
+end
+#==========================================================================================
                             Getting number of shape function
 ==========================================================================================#
 number_of_shape_functions(curve_function::ContinuousCurveLinear)        = 2

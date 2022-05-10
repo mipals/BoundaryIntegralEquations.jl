@@ -58,3 +58,46 @@ using LinearAlgebra
 
 
 
+
+
+using IntegralEquations
+import IntegralEquations: basisFunctionSecondOrderDerivative
+TL = TriangularLinear(3,3)
+TQ = TriangularQuadratic(3,3)
+DTC = DiscontinuousTriangularConstant(TL)
+DTL = DiscontinuousTriangularLinear(TL,0.2)
+DTQ = DiscontinuousTriangularQuadratic(TL,0.2)
+
+QL = QuadrilateralLinear4(3,3)
+QQ = QuadrilateralQuadraticLagrange(3,3)
+DQC = DiscontinuousQuadrilateralConstant(3,3)
+DQL = DiscontinuousQuadrilateralLinear4(3,3)
+DQQ = DiscontinuousQuadrilateralQuadraticLagrange(3,3)
+
+x = rand(5)
+y = rand(5)
+
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(TL,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(TQ,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DTC,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DTL,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DTQ,x,y)
+
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(QL,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(QQ,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DQC,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DQL,x,y)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DQQ,x,y)
+
+
+CL = ContinuousCurveLinear(3)
+CQ = ContinuousCurveQuadratic(3)
+DCC = DiscontinuousCurveConstant(3)
+DCL = DiscontinuousCurveLinear(3)
+DCQ = DiscontinuousCurveQuadratic(3)
+
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(CL,x)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(CQ,x)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DCC,x)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DCL,x)
+d2x,d2y,d2xy=basisFunctionSecondOrderDerivative(DCQ,x)

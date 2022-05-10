@@ -245,6 +245,30 @@ function basisFunctionDerivative(surface_function::SurfaceFunction,nodes)
     jacobians = hcat(ForwardDiff.jacobian.(Ref(surface_function),nodes)...)
     return jacobians[:,1:2:end], jacobians[:,2:2:end] # Split into dξ and dη
 end
+# Work-in-progress
+function basisFunctionSecondOrderDerivative(surface_function::SurfaceFunction,ξ,η)
+    if length(ξ) != length(η)
+        throw(ArgumentError("Input does not have equal length."))
+    end
+    if length(ξ) == 1
+        return basisFunctionSecondOrderDerivative(surface_function,[[ξ η]])
+    else
+        return basisFunctionSecondOrderDerivative(surface_function,[[x y] for (x,y) in zip(ξ,η)])
+    end
+end
+function basisFunctionSecondOrderDerivative(surface_function::SurfaceFunction,nodes)
+    n_shape = number_of_shape_functions(surface_function)
+    d2dx    = zeros(n_shape,length(nodes))
+    d2dy    = zeros(n_shape,length(nodes))
+    d2dxdy  = zeros(n_shape,length(nodes))
+    for (i,node) in enumerate(nodes)
+        H = ForwardDiff.jacobian(x -> ForwardDiff.jacobian(surface_function,x)',node)
+        d2dx[:,i]   = H[1:2:end,1]
+        d2dy[:,i]   = H[2:2:end,2]
+        d2dxdy[:,i] = H[2:2:end,1]
+    end
+    return d2dx,d2dy,d2dxdy
+end
 #==========================================================================================
                         Setting interpolation nodes equal to the  
 ==========================================================================================#
