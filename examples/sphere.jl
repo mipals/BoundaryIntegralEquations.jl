@@ -40,7 +40,7 @@ pI = incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-Fp,Gp,Cp  = assemble_parallel!(mesh,k,mesh.sources);
+@time Fp,Gp,Cp  = assemble_parallel!(mesh,k,mesh.sources);
 #==========================================================================================
             Setting up a linear system and solving for the pressure
 ==========================================================================================#
@@ -60,7 +60,7 @@ title!("Frequency = $(freq) (Hz)")
 ==========================================================================================#
 # Defining CHIEF points inside of sphere
 x = collect(range(-radius*0.30,0.60*radius,length=5))
-y = collect(range(-radius*0.65,0.50*radius,length=5)) 
+y = collect(range(-radius*0.65,0.50*radius,length=5))
 z = collect(range(-radius*0.11,0.55*radius,length=5))
 xyzb_chief=[x y z]';
 # Computing incident pressure on nodes including CHIEF points
@@ -84,7 +84,7 @@ freqs = collect(1:10:1500)
 klist = freqs/340*2π
 angle = 0.0
 pscat12 = psca(2.0*radius,angle,klist;N=60,R=R)
-pinco12 = pinc(2.0*radius,angle,klist) 
+pinco12 = pinc(2.0*radius,angle,klist)
 ptot12 = pinco12 + pscat12
 plot(freqs,abs.(ptot12),label="Analytical Solution",legend=:topleft)
 ylims!((0.7,1.5))
@@ -96,7 +96,7 @@ ylabel!(L"p/p_0")
 ==========================================================================================#
 angle  = π
 pscat3 = psca(2.0*radius,angle,klist;N=60,R=radius)
-pinco3 = pinc(2.0*radius,angle,klist) 
+pinco3 = pinc(2.0*radius,angle,klist)
 ptot3 = pinco3 + pscat3
 plot(freqs,abs.(ptot3),label="Analytical Solution",legend=:topleft)
 ylims!((0.50,1.6))

@@ -6,9 +6,14 @@ abstract type Mesh end
 # abstract type Mesh3d end
 
 struct Mesh2d{T} <: Mesh where {T <: AbstractArray}
+    sources::T
     coordinates::T
     topology::AbstractArray{Int64,2}
+    normals::T
+    tangents::T
     shape_function::ShapeFunction
+    physics_function::ShapeFunction
+    physics_topology::AbstractArray{Int64,2}
 end
 struct Mesh3d{T} <: Mesh where {T <: AbstractArray}
     sources::T
@@ -37,8 +42,9 @@ get_tangents(mesh::Mesh3d)              = mesh.tangents,mesh.sangents
 ==========================================================================================#
 function Base.show(io::IO, ::MIME"text/plain", mesh::Mesh2d)
     println(io, "Number of elements: \t $(size(mesh.topology,2))")
-    println(io, "Number of unkowns:  \t $(size(mesh.coordinates,2))")
+    println(io, "Number of unkowns:  \t $(size(mesh.sources,2))")
     println(io, "Geometry defined by:\t $(typeof(mesh.shape_function))")
+    println(io, "Physics defined by: \t $(typeof(mesh.physics_function))")
 end
 function Base.show(io::IO, ::MIME"text/plain", mesh::Mesh3d)
     println(io, "Number of elements: \t $(size(mesh.topology,2))")

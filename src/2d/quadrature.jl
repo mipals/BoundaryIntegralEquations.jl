@@ -1,5 +1,5 @@
 #==========================================================================================
-                                Computing Quadrature Points 
+                                Computing Quadrature Points
 ==========================================================================================#
 # Scaling of legendre points to the interval [0,1]
 function curveLinearQuadpoints(n=4)

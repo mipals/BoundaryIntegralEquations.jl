@@ -3,9 +3,11 @@
 [![Build Status](https://github.com/mipals/IntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/IntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/mipals/IntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/IntegralEquations.jl)
 
-The focus of the package so far has been on the solution of the Kirchhoff–Helmholtz integral equation found in acoustical applications,
+The IntegralEquations.jl can be used to solve integral equations through the Boundary Element Methods (FEM). Currently, it only supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications,
 
-![](kirchoff_helmholtz.png)
+$$
+c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial\mathbf{n}_\mathbf{x}}p(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x} = \mathrm{i}\rho ck\int_\Gamma G(\mathbf{x},\mathbf{y})v_s(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x}.
+$$
 
 However, the package provides an easy-to-use API to the building blocks required for discretizing and solving general (surface) integral equations using the techniques of the Boundary Element Method (BEM). All the user has to define is a different integrand. 
 

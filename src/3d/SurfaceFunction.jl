@@ -4,7 +4,7 @@
 abstract type SurfaceFunction            <: ShapeFunction               end
 abstract type Triangular                 <: SurfaceFunction             end
 abstract type Quadrilateral              <: SurfaceFunction             end
-abstract type ConontinuousTriangular     <: Triangular                  end
+abstract type ContinuousTriangular       <: Triangular                  end
 abstract type DiscontinuousTriangular    <: Triangular                  end
 abstract type ContinuousQuadrilateral    <: Quadrilateral               end
 abstract type DiscontinuousQuadrilateral <: Quadrilateral               end
@@ -13,7 +13,7 @@ abstract type QuadrilateralSerendipity   <: ContinuousQuadrilateral     end
 #==========================================================================================
                                 Triangular Elements
 ==========================================================================================#
-mutable struct TriangularLinear{T<:AbstractFloat} <: ConontinuousTriangular
+mutable struct TriangularLinear{T<:AbstractFloat} <: ContinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -21,7 +21,7 @@ mutable struct TriangularLinear{T<:AbstractFloat} <: ConontinuousTriangular
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct TriangularQuadratic{T<:AbstractFloat} <: ConontinuousTriangular
+mutable struct TriangularQuadratic{T<:AbstractFloat} <: ContinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -29,7 +29,7 @@ mutable struct TriangularQuadratic{T<:AbstractFloat} <: ConontinuousTriangular
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct TriangularCubic{T<:AbstractFloat} <: ConontinuousTriangular
+mutable struct TriangularCubic{T<:AbstractFloat} <: ContinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -82,7 +82,7 @@ mutable struct QuadrilateralQuadratic{T<:AbstractFloat} <: QuadrilateralSerendip
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct QuadrilateralLinear4{T<:AbstractFloat} <: Quadrilateral
+mutable struct QuadrilateralLinear4{T<:AbstractFloat} <: ContinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}
@@ -135,7 +135,7 @@ end
 #==========================================================================================
                                     Legendre Elements 
 ==========================================================================================#
-mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: Quadrilateral
+mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: ContinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
     gauss_v::AbstractArray{T,1}

@@ -6,37 +6,37 @@ that a `coordinate` is connected to via `topology`.
 """
 function get_element_normals(shape_function::SurfaceFunction,coordinates, topology)
     # Copying geometry element and setting interpolation nodes to be at corners & midpoints
-    geometryElement = deepcopy(shape_function)
-    set_nodal_interpolation!(geometryElement)
+    surface_function = deepcopy(shape_function)
+    set_nodal_interpolation!(surface_function)
 
     # Getting number shape functions as well as number of elements
-    nShape = number_of_shape_functions(geometryElement)
-    nElements = size(topology,2)
+    n_shape = number_of_shape_functions(surface_function)
+    n_elements = size(topology,2)
 
     # Pre-Allocations
     normals  = zeros(size(coordinates))
     avg      = zeros(1,size(coordinates,2))
-    tangentX = zeros(3,nShape)
-    tangentY = zeros(3,nShape)
-    normal   = zeros(3,nShape)
+    tangentX = zeros(3,n_shape)
+    tangentY = zeros(3,n_shape)
+    normal   = zeros(3,n_shape)
 
-    for element = 1:nElements
+    for element = 1:n_elements
         # Extracting element properties (connectivity and coordinates)
-        elementNodes        = @view topology[:,element]
-        elementCoordinates  = @view coordinates[:,elementNodes]
+        element_nodes        = @view topology[:,element]
+        element_coordinates  = @view coordinates[:,element_nodes]
         # Computing tangential directions as well a a normal at each node
-        tangentX .= elementCoordinates * geometryElement.derivatives_u
-        tangentY .= elementCoordinates * geometryElement.derivatives_v
+        tangentX .= element_coordinates * surface_function.derivatives_u
+        tangentY .= element_coordinates * surface_function.derivatives_v
         cross_product!(normal,tangentX,tangentY)
         # Normalizing the normal before adding it to the list
-        normals[:,elementNodes] .+= normal ./ sqrt.(sum(normal.^2,dims=1))
+        normals[:,element_nodes] .+= normal ./ sqrt.(sum(normal.^2,dims=1))
         # Add one to average (Middle points are connected with maximum 2 elements. Corners more.)
-        avg[elementNodes]       .+= 1.0
+        avg[element_nodes]       .+= 1.0
     end
 
     # Averaging
     normals = normals ./ avg
- 
+
     return -normals ./ sqrt.(sum(abs2,normals,dims=1)) # Normalizing + fixing orientation
 end
 
@@ -73,34 +73,34 @@ function tangents!(normals, tangentX, tangentY)
     normalize_vector!(tangentY)
 end
 
-function compute_sources(shape_function,physicsElement,topology,coordinates)
-    nShapeFunctions = number_of_shape_functions(physicsElement)
-    nElements = size(topology,2)
-    nSources  = nShapeFunctions * nElements
-    sources   = zeros(3,nSources)
+function compute_sources(shape_function,physics_function,topology,coordinates)
+    n_shape_functions = number_of_shape_functions(physics_function)
+    n_elements = size(topology,2)
+    n_sources = n_shape_functions * n_elements
+    sources   = zeros(3,n_sources)
     normals   = similar(sources)
-    geometryElement = deepcopy(shape_function)
-    set_interpolation_nodes!(geometryElement,physicsElement)
-    dX = geometryElement.derivatives_u
-    dY = geometryElement.derivatives_v
-    
-    tangentX            = zeros(3,nShapeFunctions)
-    tangentY            = zeros(3,nShapeFunctions)
-    normal              = zeros(3,nShapeFunctions)
-    physicsTopology     = reshape(collect(1:nSources),nShapeFunctions,nElements)
-    @inbounds for element = 1:nElements
+    surface_function = deepcopy(shape_function)
+    set_interpolation_nodes!(surface_function,physics_function)
+    dX = surface_function.derivatives_u
+    dY = surface_function.derivatives_v
+
+    tangentX         = zeros(3,n_shape_functions)
+    tangentY         = zeros(3,n_shape_functions)
+    normal           = zeros(3,n_shape_functions)
+    physics_topology = reshape(collect(1:n_sources),n_shape_functions,n_elements)
+    @inbounds for element = 1:n_elements
         # Access element topology and coordinates
-        elementNodes        = @view topology[:,element]
-        elementCoordinates  = @view coordinates[:,elementNodes]
-        elementSources      = @view physicsTopology[:,element]
-        sources[:,elementSources] = elementCoordinates * geometryElement
-        tangentX .= elementCoordinates * dX
-        tangentY .= elementCoordinates * dY
+        element_nodes       = @view topology[:,element]
+        element_coordinates = @view coordinates[:,element_nodes]
+        element_sources     = @view physics_topology[:,element]
+        sources[:,element_sources] = element_coordinates * surface_function
+        tangentX .= element_coordinates * dX
+        tangentY .= element_coordinates * dY
         cross_product!(normal,tangentX,tangentY)
-        normals[:,elementSources] .= -normal ./ sqrt.(sum(normal.^2,dims=1))
+        normals[:,element_sources] .= -normal ./ sqrt.(sum(normal.^2,dims=1))
     end
 
-    return sources,normals,physicsTopology
+    return sources,normals,physics_topology
 end
 
 function get_beta_tri_linear(beta_type)
@@ -165,7 +165,7 @@ function set_physics_element(physics_order,shape_function,beta_type)
     elseif physics_order == :discquadquadratic
         beta = get_beta_tri_quadratic(beta_type)
         return DiscontinuousQuadrilateralQuadraticLagrange(shape_function,beta)
-    else 
+    else
         return deepcopy(shape_function)
     end
 end
@@ -184,9 +184,9 @@ function remove_unused_nodes(topology)
         offset[nz:end] .-= 1
     end
     new_topology = similar(topology)
-    nElementNodes, nElements = size(topology)
-    for i = 1:nElementNodes
-        for j = 1:nElements
+    nelement_nodes, n_elements = size(topology)
+    for i = 1:nelement_nodes
+        for j = 1:n_elements
             new_topology[i,j] = offset[topology[i,j]]
         end
     end

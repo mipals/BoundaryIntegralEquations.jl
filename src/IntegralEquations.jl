@@ -36,6 +36,7 @@ include("2d/curve_functions.jl")
 include("2d/quadrature.jl")
 include("2d/kernels.jl")
 include("2d/meshing.jl")
+include("2d/assembly_collocation.jl")
 #==========================================================================================
                                     3D Routines
 ==========================================================================================#
@@ -63,8 +64,12 @@ include("analytical/3d_scattering.jl")
 # Helper functions
 export adjoint, *
 
+# Abstract Shape Function Types
+export CurveFunction,ShapeFunction,SurfaceFunction
+
 # Utility functions
 export visco_thermal_constants, ambient_to_properties
+
 # Mesh-related functions
 export Mesh, Mesh3d, Mesh2d
 export load3dTriangularComsolMesh,load3dQuadComsolMesh, read_comsol_mesh
@@ -76,14 +81,14 @@ export ContinuousCurveLinear, ContinuousCurveQuadratic,
 # 2D element types (for 3D)
 export TriangularLinear, TriangularQuadratic, Triangular,
        DiscontinuousTriangularConstant, DiscontinuousTriangularLinear,
-       DiscontinuousTriangularQuadratic, DiscontinuousTriangular,
-       Quadrilateral, QuadrilateralLinear, QuadrilateralLinear4,
+       DiscontinuousTriangularQuadratic, DiscontinuousTriangular
+export Quadrilateral, QuadrilateralLinear, QuadrilateralLinear4,
        QuadrilateralQuadratic, QuadrilateralQuadraticLagrange,
        DiscontinuousQuadrilateralConstant, DiscontinuousQuadrilateralLinear4,
        DiscontinuousQuadrilateralQuadraticLagrange
 # Assembly
 export assemble_parallel!
 # visualizations
-export create_simple_mesh, create_bc_simple_mesh
+export create_simple_mesh, create_bc_simple_mesh, viz
 
 end

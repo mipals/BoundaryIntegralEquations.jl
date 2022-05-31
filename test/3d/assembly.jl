@@ -1,3 +1,14 @@
+#==========================================================================================
+                                Using relevant packages
+==========================================================================================#
+using IntegralEquations
+using LinearAlgebra
+using IterativeSolvers
+using Test
+import IntegralEquations: incoming_wave, plane_wave_scattering_sphere
+#==========================================================================================
+                                    Creating Tests
+==========================================================================================#
 @testset "Triangular Assembly" begin
     freq  = 100.0                                   # Frequency                 [Hz]
     c     = 340.0                                   # Speed of sound            [m/s]

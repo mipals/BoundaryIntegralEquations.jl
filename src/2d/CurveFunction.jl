@@ -7,7 +7,7 @@ abstract type DiscontinuousCurveFunction <: CurveFunction   end
 #==========================================================================================
                                 Curve elements for 2D
 ==========================================================================================#
-mutable struct ContinuousCurveLinear{T<:AbstractFloat} <: ContinuousCurveFunction 
+mutable struct ContinuousCurveLinear{T<:AbstractFloat} <: ContinuousCurveFunction
     weights::AbstractArray{T,1}
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
@@ -19,13 +19,13 @@ mutable struct ContinuousCurveQuadratic{T<:AbstractFloat} <: ContinuousCurveFunc
     derivatives::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct DiscontinuousCurveConstant{T<:AbstractFloat} <: DiscontinuousCurveFunction 
+mutable struct DiscontinuousCurveConstant{T<:AbstractFloat} <: DiscontinuousCurveFunction
     weights::AbstractArray{T,1}
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
-mutable struct DiscontinuousCurveLinear{T<:AbstractFloat} <: DiscontinuousCurveFunction 
+mutable struct DiscontinuousCurveLinear{T<:AbstractFloat} <: DiscontinuousCurveFunction
     weights::AbstractArray{T,1}
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
@@ -43,7 +43,7 @@ end
                                 Show
 ==========================================================================================#
 function Base.show(io::IO, ::MIME"text/plain", curve_function::CurveFunction)
-    println(io, "SurfaceFunction Defined by:    \t $(typeof(curve_function))")
+    println(io, "CurveFunction Defined by:      \t $(typeof(curve_function))")
     println(io, "Number of gauss nodes:         \t $(length(curve_function.gauss))")
     println(io, "Number of basis functions:     \t $(length(curve_function))")
 end
@@ -88,17 +88,17 @@ Base.eltype(::Type{DiscontinuousCurveConstant{T}})  where {T} = T
 Base.eltype(::Type{DiscontinuousCurveLinear{T}})    where {T} = T
 Base.eltype(::Type{DiscontinuousCurveQuadratic{T}}) where {T} = T
 #==========================================================================================
-                        Modifications of CurveFunction structs 
+                        Modifications of CurveFunction structs
 ==========================================================================================#
 function set_interpolation_nodes!(curve_function::CurveFunction,nodes)
-    curve_function.nodes         = nodes
-    curve_function.derivatives   = basisFunctionDerivative(shape_function,nodes')
-    curve_function.interpolation = basisFunction(shape_function,nodes')
+    curve_function.gauss         = nodes
+    curve_function.derivatives   = basisFunctionDerivative(curve_function,nodes')
+    curve_function.interpolation = basisFunction(curve_function,nodes')
 end
 function set_interpolation_nodes!(curve_function::CurveFunction,physics_function::CurveFunction)
     curve_function.weights = physics_function.weights
     nodes = get_nodal_nodes(physics_function)
-    set_interpolation_nodes!(shape_function,nodes)
+    set_interpolation_nodes!(curve_function,nodes)
 end
 function interpolate_on_nodes!(curve_function::CurveFunction)
     curve_function.interpolation = curve_function(curve_function.gauss')
@@ -119,7 +119,7 @@ get_nodes(curve_function::CurveFunction)                     = curve_function.ga
 get_nodal_nodes(curve_function::ContinuousCurveLinear)       = [-1.0; 1.0]
 get_nodal_nodes(curve_function::ContinuousCurveQuadratic)    = [-1.0; 0.0; 1.0]
 get_nodal_nodes(curve_function::DiscontinuousCurveConstant)  = [0.0]
-get_nodal_nodes(curve_function::DiscontinuousCurveLinear)    = [-curve_function.alpha; 
+get_nodal_nodes(curve_function::DiscontinuousCurveLinear)    = [-curve_function.alpha;
                                                                  curve_function.alpha]
-get_nodal_nodes(curve_function::DiscontinuousCurveQuadratic) = [-curve_function.alpha; 0.0; 
+get_nodal_nodes(curve_function::DiscontinuousCurveQuadratic) = [-curve_function.alpha; 0.0;
                                                                  curve_function.alpha]

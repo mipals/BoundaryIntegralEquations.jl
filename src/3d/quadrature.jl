@@ -1,5 +1,5 @@
 #==========================================================================================
-                    Qudrature points for the quadrilateral elements                     
+                    Qudrature points for the quadrilateral elements
 ==========================================================================================#
 """
     quadrilateralQuadpoints(n,m)
@@ -21,7 +21,7 @@ end
 
 
 #==========================================================================================
-                     Qudrature points for triangular elements                        
+                     Qudrature points for triangular elements
 ==========================================================================================#
 """
     duffyBasis(u,v)
@@ -49,7 +49,7 @@ Computes the Jacobian the duffy transformation of `u` and `v`.
 This determiant can be calculated analytically
 ```math
                 | 1       0 |
-                  | -v  1 - u | = 1 - u  
+                  | -v  1 - u | = 1 - u
 ```
 """
 function duffyJacobian(u,v)
@@ -63,9 +63,9 @@ Returns `m*n` integration points and `weights` for a triangule using a duffy tra
 
 The integration points are clustered around node "3" in the triangle:
 
-                                        3          
+                                        3
                                         | \\
-                                        1 - 2 
+                                        1 - 2
 """
 function triangularQuadpoints(n,m)
     nodex, wx = curveLinearQuadpoints(n) # Nodes in the interval [0, 1]
@@ -87,7 +87,7 @@ function getQuadpoints(elementType::Triangular,n=4,m=4)
 end
 
 #==========================================================================================
-                                 Rotation of integration points 
+                                 Rotation of integration points
 ==========================================================================================#
 """
     rotatedTriangularQuadpoints(n=4,m=4)
@@ -96,9 +96,9 @@ Returns `m*n` integration points and `weights` for a triangule using a duffy tra
 
 The integration points are clustered around node "1" in the triangle:
 
-                                    3          
+                                    3
                                     | \
-                                    1 - 2 
+                                    1 - 2
 """
 function rotated_triangular_quadpoints(n=4,m=4)
     nodex, wx = curveLinearQuadpoints(n) # Nodes in the interval [0, 1]

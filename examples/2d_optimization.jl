@@ -3,7 +3,7 @@
 ==========================================================================================#
 using FastGaussQuadrature, LinearAlgebra, SpecialFunctions, FiniteDifferences, Dierckx, Plots
 #==========================================================================================
-                                Helper Functions                          
+                                Helper Functions
 ==========================================================================================#
 JacMul!(j,w)    = @inbounds for i = 1:length(j) j[i]   = j[i]*w[i]                      end
 dist!(x,y,r)    = @inbounds for i = 1:length(r) r[i]   = hypot(x[1,i]-y[1],x[2,i]-y[2]) end
@@ -19,7 +19,7 @@ constant(ξ)  = ones(1,length(ξ))
 β = gausslegendre(2)[1][end]; discLinear(ξ)    = linear(ξ/β)
 δ = gausslegendre(3)[1][end]; discQuadratic(ξ) = quadratic(ξ/δ)
 #==========================================================================================
-                                    Kernels                          
+                                    Kernels
 ==========================================================================================#
 G!(k,r,int)       = @inbounds for i = 1:length(r) int[i] =  im*0.25*hankelh1.(0,k*r[i]) end
 F!(x,y,k,n,r,int) = @inbounds for i = 1:length(r) int[i] = -im*0.25*hankelh1.(1,k*r[i])*k.*(n[1,i]*(x[1,i]-y[1])+n[2,i]*(x[2,i]-y[2]))/r[i] end
@@ -33,7 +33,7 @@ function create_topology(ord,nElements)
     return top
 end
 #==========================================================================================
-                            Mesh interpolation routine                          
+                            Mesh interpolation routine
 ==========================================================================================#
 function compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpolation!,
                             source,k,r,normals,jacobian,integrand,gOn,fOn,cOn)
@@ -50,7 +50,7 @@ function compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpol
     end
     if cOn # Only compute c if you need it
         C!(interpolation,source,normals,r,integrand)            # Evaluate G₀
-        Cslice[1] += dot(integrand,jacobian)                    # Integration of G₀ 
+        Cslice[1] += dot(integrand,jacobian)                    # Integration of G₀
     end
 end
 #==========================================================================================
@@ -66,8 +66,8 @@ end
 function assemble(spline,k,n;interior=false,gOn=true,fOn=true,cOn=true,
                 physicsOrder=-1,fieldPoints=[],nElements=10,N=10)
     # Setting up element division of Spline
-    physics_function(ξ) = (physicsOrder == -2 ? quadratic(ξ)  : 
-                          (physicsOrder == -1 ? linear(ξ)     : 
+    physics_function(ξ) = (physicsOrder == -2 ? quadratic(ξ)  :
+                          (physicsOrder == -1 ? linear(ξ)     :
                           (physicsOrder ==  0 ? constant(ξ)   :
                           (physicsOrder ==  1 ? discLinear(ξ) : discQuadratic(ξ)))))
     nInterpolations = max(abs(physicsOrder),1)
@@ -85,12 +85,12 @@ function assemble(spline,k,n;interior=false,gOn=true,fOn=true,cOn=true,
     normalize!(Normals,Jacobian) # Normalizing using the Jacobian (length of normal)
     JacMul!(Jacobian,Weights)    # NB! Now jacobian = jacobian*weights (abuse of notation)
     # Computing the physics-nodes by interpolation of the spline
-    tInterp = (physicsOrder == 0 ?  tInterp[1:end-1]    .+ 0.5*(tInterp[2]-tInterp[1])       : 
+    tInterp = (physicsOrder == 0 ?  tInterp[1:end-1]    .+ 0.5*(tInterp[2]-tInterp[1])       :
               (physicsOrder == 1 ? [tInterp[1:end-1]'   .+ 0.5*(tInterp[2]-tInterp[1])*β     ;
-                                    tInterp[2:end]'     .- 0.5*(tInterp[2]-tInterp[1])*β][:] : 
+                                    tInterp[2:end]'     .- 0.5*(tInterp[2]-tInterp[1])*β][:] :
               (physicsOrder == 2 ? [tInterp[1:2:end-1]' .+ 0.5*(tInterp[3]-tInterp[1])*β     ;
                                     tInterp[2:2:end]'                                        ;
-                                    tInterp[3:2:end]'   .- 0.5*(tInterp[3]-tInterp[1])*β][:] 
+                                    tInterp[3:2:end]'   .- 0.5*(tInterp[3]-tInterp[1])*β][:]
                                     : tInterp[1:end-1])))
     fieldPoints = (isempty(fieldPoints) ? spline(tInterp) : fieldPoints)
     # Preallocation
@@ -117,7 +117,7 @@ end
 #==========================================================================================
                         Infinite Cylinder Helper Functions
 ==========================================================================================#
-pressure(mn,ka) = (mn == 0 ? atan(-besselj(1,ka)/bessely(1,ka)) : 
+pressure(mn,ka) = (mn == 0 ? atan(-besselj(1,ka)/bessely(1,ka)) :
             atan((besselj(mn-1,ka)-besselj(mn+1,ka))/(bessely(mn+1,ka)-bessely(mn-1,ka))))
 function createCircle(topology,radius=1.0)
     angles = collect(range(0,2π,length=1+length(unique(topology))))
@@ -126,8 +126,8 @@ end
 function cylscat(ϕ,ka,nterm=10)
     IntI,IntS = (ones(length(ϕ))*besselj(0,ka), zeros(length(ϕ)))
     for m=1:nterm-1; IntI = IntI + 2*im .^(m) * besselj(m,ka) .* cos.(m*(ϕ)) end
-    for m=0:nterm-1; 
-        IntS = IntS - (m == 0 ? 1.0 : 2.0)*im .^(m+1.0) * exp(-im*pressure(m,ka)) * 
+    for m=0:nterm-1;
+        IntS = IntS - (m == 0 ? 1.0 : 2.0)*im .^(m+1.0) * exp(-im*pressure(m,ka)) *
                     sin.(pressure(m,ka)) * (besselj(m,ka)+im*bessely(m,ka)) .* cos.(m*(ϕ))
     end
     return IntI + IntS
@@ -152,7 +152,7 @@ obj(x)     = objective(x,spline,k,n,fieldpoints;gOn=false,physicsOrder=physicsOr
 gradObj(x) = grad(central_fdm(2,1),obj,x)[1]
 
 
-freq = 200.0; c=340.0;k = 2.0*pi*freq/c; n = 6; nElements = 20; physicsOrder = 0; 
+freq = 200.0; c=340.0;k = 2.0*pi*freq/c; n = 6; nElements = 20; physicsOrder = 0;
 N = 19+1; coordinates = createCircle(collect(1:N-1)); coordinates = [coordinates coordinates[:,1]]
 spline = ParametricSpline(1:size(coordinates,2),coordinates;periodic=true)
 Nspline = size(spline.c,2)
@@ -203,7 +203,7 @@ compute_arc_length(spl,N) = sum(compute_segment_lengths(spl,N))
 function re_meshing(spl,nControl,N=4000)
     knots = get_knots(spl)
     maxl = compute_arc_length(spl,10)/nControl
-    
+
     nodes,weights = scaledgausslegendre(N,knots[1],knots[end])
     tmp = 0.0
     nNodes = length(nodes)

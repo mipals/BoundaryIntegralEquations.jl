@@ -59,39 +59,51 @@ IntegralEquations.tangents!(normals,tangentX,tangentY)
                                         Plotting
 ==========================================================================================#
 
-# using IntegralEquations
-# using Meshes
-# using MeshViz
-# import Makie as Mke
+using IntegralEquations
+using Meshes
+using MeshViz
+using WGLMakie
+set_theme!(resolution=(1200, 1200))
 
-# mesh_file = "examples/meshes/resonatorFinal"
-# tri_mesh = load3dTriangularComsolMesh(mesh_file)
-# # plot_mesh(tri_mesh)
+mesh_file = "examples/meshes/sphere_1m"
+tri_mesh = load3dTriangularComsolMesh(mesh_file)
 
-# quad_mesh_file = "examples/meshes/quad_cylinder"
-# quad_mesh = load3dQuadComsolMesh(quad_mesh_file)
+quad_mesh_file = "examples/meshes/quad_sphere"
+quad_mesh = load3dQuadComsolMesh(quad_mesh_file)
 
-# SP_lin  = create_simple_mesh(tri_mesh)
-# viz(SP_lin;showfacets=true)
-# # SP_quad = create_simple_mesh(quad_mesh)
-# bc_ents = [5]
-# SP_quad = create_bc_simple_mesh(quad_mesh_file,quad_mesh,quad_mesh.shape_function,bc_ents,false)
-# SP_bc   = create_bc_simple_mesh(quad_mesh_file,quad_mesh,quad_mesh.shape_function,bc_ents)
-# fig1, axis1, plot1 = viz(SP_quad;showfacets=true)
-# Mke.scatter!(axis1, [0.525], [0.00], [0.00],
-#     color = :red,markersize = 10.0,
-#     )
-# viz(SP_quad;showfacets=true)
-# viz!(SP_bc;showfacets=true,color=:red)
+SP_lin  = create_simple_mesh(tri_mesh)
+viz(SP_lin;showfacets=true)
+SP_quad = create_simple_mesh(quad_mesh)
+viz(SP_quad;showfacets=true)
+# SP_quad = create_simple_mesh(quad_mesh)
+bc_ents = [0,1]
+SP_quad = create_bc_simple_mesh(quad_mesh_file,quad_mesh,quad_mesh.shape_function,bc_ents,false)
+SP_bc   = create_bc_simple_mesh(quad_mesh_file,quad_mesh,quad_mesh.shape_function,bc_ents)
+viz(SP_quad;showfacets=true)
+viz!(SP_bc;showfacets=true,color=:red)
+current_figure()
+
+x = quad_mesh.sources[1,:]
+y = quad_mesh.sources[2,:]
+z = quad_mesh.sources[3,:]
+u = quad_mesh.normals[1,:]
+v = quad_mesh.normals[2,:]
+w = quad_mesh.normals[3,:]
+arrows(x, y, z, u, v, w)
+
 
 # _,topo,ents = read_comsol_mesh(quad_mesh_file,quad_mesh.shape_function)
+# fig1, axis1, plot1 = viz(SP_quad;showfacets=true)
+# scatter!(axis1, [0.525], [0.00], [0.00],
+#     color = :red,markersize = 10.0,
+#     )
 # # .!Bool.(sum(bc_ents .∈ ents,dims=1))[:]
 
 # verts = vertices(SP_lin)
 # connec = SP_lin.topology.connec
 # d1 = rand(length(verts))
 # d2 = tri_mesh.coordinates[tri_mesh.topology[2,:]]
-# md = meshdata(SP_lin, 
+# md = meshdata(SP_lin,
 #     Dict(0 => (temperature = d1,),
 #          2 => (pressure = d2,))
 # )
@@ -233,4 +245,3 @@ end
 # interpolation = ones(3,length(r))
 # freens3d!(Integrand,R,interpolation,sources,normals,1.0)
 # Integrand
-

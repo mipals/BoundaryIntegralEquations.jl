@@ -1,6 +1,14 @@
-import IntegralEquations: tangents!, number_of_shape_functions, 
-                            global_coordinate_shape_function_derivative
-
+#==========================================================================================
+                                Using relevant packages
+==========================================================================================#
+using IntegralEquations
+using LinearAlgebra
+using Test
+import IntegralEquations: tangents!, number_of_shape_functions
+import IntegralEquations: global_coordinate_shape_function_derivative
+#==========================================================================================
+                                    Creating Tests
+==========================================================================================#
 @testset "Triangular Mesh" begin
     # Relative path from the "runtests.jl" file (not the "meshing.jl" file)
     mesh_file = "../examples/meshes/sphere_1m"
@@ -16,7 +24,7 @@ import IntegralEquations: tangents!, number_of_shape_functions,
         # The number of sources should match the number of physics nodes
         @test size(mesh.sources)    == (3,length(unique(mesh.physics_topology)))
         # Checking if the number of geometrical elements is the same as physics elements
-        @test size(mesh.topology,2) == size(mesh.physics_topology,2) 
+        @test size(mesh.topology,2) == size(mesh.physics_topology,2)
         # Checking if the sizes of the normals and tangents are the same
         @test size(mesh.normals)    == size(mesh.tangents)
         @test size(mesh.tangents)   == size(mesh.sangents)
