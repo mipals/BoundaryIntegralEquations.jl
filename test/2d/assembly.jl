@@ -41,7 +41,7 @@ end
 
     for ge in geometric_elements, pe in physics_elements
         mesh = IntegralEquations.mesh_circle(ge,pe,n_elements;radius=r)
-        F,G,C=assemble_parallel!(mesh,k,mesh.sources;n=4,progress=false);
+        F,G,C=assemble_parallel!(mesh,k,mesh.sources;n=4,progress=false,gOn=false);
 
         ϕ = angle.(mesh.sources[1,:] + im*mesh.sources[2,:])
         p = IntegralEquations.plane_wave_scattering_circle(ϕ,k*r,10)
@@ -52,7 +52,7 @@ end
 
     for ge in geometric_elements
         mesh = IntegralEquations.mesh_circle(ge,n_elements;radius=r)
-        F,G,C=assemble_parallel!(mesh,k,mesh.sources;n=4,progress=false);
+        F,G,C=assemble_parallel!(mesh,k,mesh.sources;n=4,progress=false,gOn=false);
 
         ϕ = angle.(mesh.sources[1,:] + im*mesh.sources[2,:])
         p = IntegralEquations.plane_wave_scattering_circle(ϕ,k*r,10)

@@ -17,6 +17,7 @@ using SparseArrays
 using ForwardDiff
 using LegendrePolynomials
 using Meshes
+using LoopVectorization
 using Base.Threads
 #==========================================================================================
                             General Properties of Shape Functions

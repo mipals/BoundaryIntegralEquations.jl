@@ -1,16 +1,27 @@
 using IntegralEquations
 using LinearAlgebra
 using Plots
+using Meshes
+using MeshViz
+using GLMakie
+set_theme!(resolution=(1200, 1200))
 
-meshFile = "examples/meshes/cylinder"
-mesh = load3dTriangularComsolMesh(meshFile)
-mesh = load3dTriangularComsolMesh(meshFile;geometryType="TriLinear")
-mesh = load3dTriangularComsolMesh(meshFile;physicsType="linear")
+mesh_file = "examples/meshes/cylinder"
+mesh = load3dTriangularComsolMesh(mesh_file)
+simple_mesh = create_simple_mesh(mesh)
+viz(simple_mesh;showfacets=true)
 
-mesh = load3dTriangularComsolMesh(meshFile;physicsType="disctriconstant")
-mesh = load3dTriangularComsolMesh(meshFile;physicsType="disctrilinear")
-mesh = load3dTriangularComsolMesh(meshFile;physicsType="disctriquadratic")
 
+mesh = load3dTriangularComsolMesh(mesh_file;geometryType="TriLinear")
+mesh = load3dTriangularComsolMesh(mesh_file;physicsType="linear")
+
+mesh = load3dTriangularComsolMesh(mesh_file;physicsType="disctriconstant")
+mesh = load3dTriangularComsolMesh(mesh_file;physicsType="disctrilinear")
+mesh = load3dTriangularComsolMesh(mesh_file;physicsType="disctriquadratic")
+
+
+simple_mesh = create_simple_mesh(mesh)
+viz(simple_mesh;showfacets=true)
 
 element_interpolations = IntegralEquations.interpolate_elements(mesh)
 
@@ -23,7 +34,7 @@ S
 @time IntegralEquations.interpolate_elements(mesh);
 
 
-# quad_mesh = load3dTriangularComsolMesh(meshFile;geometryType="TriLinear")
+# quad_mesh = load3dTriangularComsolMesh(mesh_file;geometryType="TriLinear")
 quad_mesh = "examples/meshes/quad_cylinder"
 coords,topology,entities = read_comsol_mesh(quad_mesh,QuadrilateralQuadratic9(3,3))
 quadMesh = load3dQuadComsolMesh(quad_mesh)

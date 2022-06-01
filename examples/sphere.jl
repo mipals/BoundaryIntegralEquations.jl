@@ -11,14 +11,16 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
-# tri_mesh_file = "examples/meshes/sphere_1m_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                        physics_order=tri_physics_orders[2])
 # Quadrilateral Meshes
-quad_mesh_file = "examples/meshes/quad_sphere"
+# quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
-mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[2],
-                                            physics_order=quad_physics_orders[2])
+# mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[2],
+                                            # physics_order=quad_physics_orders[2])
 #==========================================================================================
             3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
 ==========================================================================================#
@@ -30,7 +32,7 @@ mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[2],
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq  = 100.0                                   # Frequency                 [Hz]
+freq  = 500.0                                   # Frequency                 [Hz]
 c     = 340.0                                   # Speed of sound            [m/s]
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
@@ -40,13 +42,14 @@ pI = incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-@time Fp,Gp,Cp  = assemble_parallel!(mesh,k,mesh.sources);
+@time Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources,n=3,m=3);
 #==========================================================================================
             Setting up a linear system and solving for the pressure
 ==========================================================================================#
 # Assembling linear system (we )
 Ap    = Fp + Diagonal(1.0 .- Cp)
-p_bem = gmres(Ap,pI;verbose=true)
+p_bem = gmres(Ap,pI;verbose=true);
+p_bem = Ap\pI
 ## Plotting pressure on surface nodes
 surface_angles = acos.(-mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
@@ -66,13 +69,14 @@ xyzb_chief=[x y z]';
 # Computing incident pressure on nodes including CHIEF points
 pI_chief  = incoming_wave(angles,1.0,[mesh.sources xyzb_chief],k)
 # Assembling field point matrices
-Fpc,Gpc,_ = assemble_parallel!(mesh,k,xyzb_chief;n=2,m=2);
+Fpc,Gpc,_ = assemble_parallel!(mesh,k,xyzb_chief;n=4,m=4);
 # Defining BEM systen
 A_chief = [Ap;Fpc]
 p_chief = A_chief\pI_chief
 
 ## Plotting pressure on surface nodes
 plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)
+# scatter!(surface_angles,abs.(p_chief),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],abs.(p_chief[perm]),label="BEM",linestyle=:dash,linewidth=2)
 title!("Frequency = $(freq) (Hz)")
 #==========================================================================================
