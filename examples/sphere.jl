@@ -11,16 +11,16 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
-tri_mesh_file = "examples/meshes/sphere_1m_fine"
-# tri_mesh_file = "examples/meshes/sphere_1m_finer"
+# tri_mesh_file = "examples/meshes/sphere_1m_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_finer"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                         physics_order=tri_physics_orders[2])
 # Quadrilateral Meshes
 # quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
-# quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
-# mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[2],
-                                            # physics_order=quad_physics_orders[2])
+quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
+mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[2],
+                                            physics_order=quad_physics_orders[2])
 #==========================================================================================
             3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
 ==========================================================================================#
@@ -42,7 +42,7 @@ pI = incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-@time Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources,n=3,m=3);
+@time Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources,n=4,m=4);
 #==========================================================================================
             Setting up a linear system and solving for the pressure
 ==========================================================================================#
