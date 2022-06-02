@@ -33,7 +33,7 @@ function interpolate_elements(mesh::Mesh2d,shape_function::CurveFunction)
 
     for element = 1:n_elements
         # Extracting element properties (connectivity and coordinates)
-        element_coordinates  = @view mesh.coordinates[:,mesh.topology[:,element]]
+        element_coordinates = @view mesh.coordinates[:,mesh.topology[:,element]]
         # Computing interpolation
         mul!(interps,element_coordinates,shape_function.interpolation)
         # Computing tangential directions as well a a normal at each node
@@ -130,13 +130,21 @@ function add_to_c!(C,integrand,weights)
 end
 
 function mygemm!(C, A, B)
-    # @fastmath @inbounds for m ∈ axes(A,1), n ∈ axes(B,2)
-        for m ∈ axes(A,1), n ∈ axes(B,2)
+    @inbounds @fastmath for m ∈ axes(A,1), n ∈ axes(B,2)
         Cmn = zero(eltype(C))
         for k ∈ axes(A,2)
             Cmn += A[m,k] * B[k,n]
         end
         C[m,n] += Cmn
+    end
+end
+function mygemm_vec!(C, A, B)
+    @inbounds @fastmath for n ∈ eachindex(C)
+        Cmn = zero(eltype(C))
+        for k ∈ eachindex(A)
+            Cmn += A[k] * B[k,n]
+        end
+        C[n] += Cmn
     end
 end
 
@@ -155,10 +163,9 @@ function compute_integrands!(Fslice,Gslice,Cslice,fOn,gOn,cOn,
         # Compute integrand = integrand .* jacobian .* weights
         integrand_mul_weights!(integrand,jac_mul_weights)
         # Integration with physics interpolation
-        # mul!(Gslice,integrand,physics_interpolation,true,true)
-        # mul!(Gslice,integrand,physics_interpolation)
-        # Gslice .+= integrand*physics_interpolation
-        mygemm!(Gslice,integrand,physics_interpolation)
+        # matmul!(Gslice,integrand,physics_interpolation,Octavian.StaticInt(1),Octavian.StaticInt(1))
+        # mygemm!(Gslice,integrand,physics_interpolation)
+        mygemm_vec!(Gslice,integrand,physics_interpolation)
     end
     if fOn # Only compute F if you need it
         # Evaluate ∂ₙGreens function
@@ -166,17 +173,14 @@ function compute_integrands!(Fslice,Gslice,Cslice,fOn,gOn,cOn,
         # Compute integrand = integrand .* jacobian .* weights
         integrand_mul_weights!(integrand,jac_mul_weights)
         # Integration with basis function
-        # mul!(Fslice,integrand,physics_interpolation,true,true)
-        # mul!(Fslice,integrand,physics_interpolation)
-        # Fslice .+= integrand*physics_interpolation
-        mygemm!(Fslice,integrand,physics_interpolation)
+        # matmul!(Fslice,integrand,physics_interpolation,Octavian.StaticInt(1),Octavian.StaticInt(1))
+        # mygemm!(Fslice,integrand,physics_interpolation)
+        mygemm_vec!(Fslice,integrand,physics_interpolation)
     end
     if cOn # Only compute c if you need it
-        C!(integrand,interpolation,source,normals,r)      # Evaluate G₀
+        # Evaluate G₀
+        C!(integrand,interpolation,source,normals,r)
         add_to_c!(Cslice,integrand,jac_mul_weights)
-        # Cslice .+= mydotavx(integrand,jac_mul_weights)
-        # Cslice[1] += dot(integrand,jac_mul_weights)  # Integration of G₀
-        # @muladd Cslice = Cslice + integrand*jac_mul_weights
     end
 end
 
@@ -184,7 +188,7 @@ end
 function assemble_parallel!(mesh::Mesh2d,k,in_sources;
                     gOn=true,fOn=true,cOn=true,interior=true,n=4,progress=true)
     return assemble_parallel!(mesh::Mesh2d,k,in_sources,mesh.shape_function;
-                        gOn=gOn,fOn=fOn,cOn=cOn,interior=interior,n=n,progress=progress)
+                    gOn=gOn,fOn=fOn,cOn=cOn,interior=interior,n=n,progress=progress)
 end
 
 function assemble_parallel!(mesh::Mesh2d,k,in_sources,shape_function::CurveFunction;
@@ -192,7 +196,8 @@ function assemble_parallel!(mesh::Mesh2d,k,in_sources,shape_function::CurveFunct
     # Extracting physics
     physics_topology      = mesh.physics_topology
     physics_function      = create_shape_function(mesh.physics_function;n=n)
-    physics_interpolation = convert.(ComplexF64,physics_function.interpolation')
+    # physics_interpolation = convert.(ComplexF64,physics_function.interpolation')
+    physics_interpolation = copy(physics_function.interpolation')
     # Grabbing sizes
     n_physics_functions   = number_of_shape_functions(physics_function)
     n_nodes     = size(mesh.sources,2)
@@ -209,23 +214,18 @@ function assemble_parallel!(mesh::Mesh2d,k,in_sources,shape_function::CurveFunct
         Cslice      = @view C[source:source]
         source_node = in_sources[:,source]
         r = zeros(1,n)
-        integrand     = zeros(ComplexF64,1,n)
+        integrand     = zeros(ComplexF64,n)
         physics_nodes = zeros(Int64,n_physics_functions)
-        # Fslice = zeros(ComplexF64,1,n_physics_functions)
-        # Gslice = zeros(ComplexF64,1,n_physics_functions)
         for element = 1:n_elements
             physics_nodes .= physics_topology[:,element]
-            Fslice         = @view F[source:source,physics_nodes]
-            Gslice         = @view G[source:source,physics_nodes]
+            Fslice         = @view F[source,physics_nodes]
+            Gslice         = @view G[source,physics_nodes]
             compute_integrands!(Fslice,Gslice,Cslice,
                                 fOn,gOn,cOn,
                                 physics_interpolation,interpolation_list[element],
                                 source_node,integrand,r,k)
-            # F[source:source,physics_nodes] .+= Fslice
-            # G[source:source,physics_nodes] .+= Gslice
         end
         if progress; next!(prog); end
     end
-    # return F,G,(interior ? C : 1.0 .+ C)
-    return F,G,C
+    return F,G,(interior ? C : 1.0 .+ C)
 end

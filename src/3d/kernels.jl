@@ -19,9 +19,9 @@ Normal derivative of the 3D Helmholtz Green's function with respect to interpola
 function freens3d!(integrand,r,interpolation,sources,normals,k)
     @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = -exp(-im*k*r[i,j])*(1.0 + im*k*r[i,j])*
-                        (normals[1,j]*(interpolation[1,j] - sources[1,i]) + 
-                         normals[2,j]*(interpolation[2,j] - sources[2,i]) + 
-                         normals[3,j]*(interpolation[3,j] - sources[3,i]))/(4.0*π*r[i,j]^3)
+                        (normals[1,i]*(interpolation[1,i] - sources[1,j]) +
+                         normals[2,i]*(interpolation[2,i] - sources[2,j]) +
+                         normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4.0*π*r[i,j]^3)
     end
 end
 """
@@ -31,18 +31,18 @@ freens3d! with k=0.
 """
 function freens3dk0!(integrand,r,interpolation,sources,normals)
     @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
-        integrand[i,j] = -(normals[1,j]*(interpolation[1,j] - sources[1,i]) + 
-                           normals[2,j]*(interpolation[2,j] - sources[2,i]) + 
-                           normals[3,j]*(interpolation[3,j] - sources[3,i]))/(4.0*π*r[i,j]^3)
+        integrand[i,j] = -(normals[1,i]*(interpolation[1,i] - sources[1,j]) +
+                           normals[2,i]*(interpolation[2,i] - sources[2,j]) +
+                           normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4.0*π*r[i,j]^3)
     end
 end
 #==========================================================================================
-                                    Kernels for debugging. 
+                                    Kernels for debugging.
 ==========================================================================================#
 """
     onefunction!
 
-Fills `integrand` with ones. Can be used to compute surface areas. 
+Fills `integrand` with ones. Can be used to compute surface areas.
 """
 onefunction!(integrand,r,k)                              = fill!(integrand,1.0)
 onefunction!(integrand,r,interpolation,source,normals)   = fill!(integrand,1.0)
@@ -71,8 +71,8 @@ onefunction!(integrand,r,interpolation,source,normals,k) = fill!(integrand,1.0)
 # function matrix_freens3d!(integrand,r,interpolation,sources,normals,k)
 #     @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
 #         integrand[i,j] = -exp(-im*k*r[i])*(1.0 + im*k*r[i])*
-#                         (normals[1,i]*(interpolation[1,i] - sources[1,j]) + 
-#                          normals[2,i]*(interpolation[2,i] - sources[2,j]) + 
+#                         (normals[1,i]*(interpolation[1,i] - sources[1,j]) +
+#                          normals[2,i]*(interpolation[2,i] - sources[2,j]) +
 #                          normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4.0*π*r[i,j]^3)
 #     end
 # end
@@ -83,8 +83,8 @@ onefunction!(integrand,r,interpolation,source,normals,k) = fill!(integrand,1.0)
 # """
 # function matrix_freens3dk0!(integrand,r,interpolation,sources,normals)
 #     @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
-#         integrand[i,j] = -(normals[1,i]*(interpolation[1,i] - sources[1,j]) + 
-#                            normals[2,i]*(interpolation[2,i] - sources[2,j]) + 
+#         integrand[i,j] = -(normals[1,i]*(interpolation[1,i] - sources[1,j]) +
+#                            normals[2,i]*(interpolation[2,i] - sources[2,j]) +
 #                            normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4.0*π*r[i,j]^3)
 #     end
 # end

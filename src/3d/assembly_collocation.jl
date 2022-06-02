@@ -73,9 +73,9 @@ end
 ==========================================================================================#
 function compute_distances!(r,interpolation,source)
     @inbounds for i = 1:size(r,1), j = 1:size(r,2)
-        r[i,j] = hypot(interpolation[1,j] - source[1,i],
-                       interpolation[2,j] - source[2,i],
-                       interpolation[3,j] - source[3,i])
+        r[i,j] = hypot(interpolation[1,i] - source[1,j],
+                       interpolation[2,i] - source[2,j],
+                       interpolation[3,i] - source[3,j])
     end
 end
 function integrand_mul!(integrand,jacobian)
@@ -113,7 +113,8 @@ function computing_integrals!(physics_interpolation,interpolation_element,
     # Computing the integrand
     integrand_mul!(integrand,jacobian_mul_weights)
     # Approximating integral and adding the value to the BEM matrix
-    mygemm!(submatrixF,integrand,Transpose(physics_interpolation))
+    # mygemm!(submatrixF,integrand,Transpose(physics_interpolation))
+    mygemm_vec!(submatrixF,integrand,physics_interpolation)
 
     ### Evaluating the G-kernel (single-layer kernel) at the global nodes
     greens3d!(integrand,r,k)
@@ -121,7 +122,9 @@ function computing_integrals!(physics_interpolation,interpolation_element,
     # Computing the integrand
     integrand_mul!(integrand,jacobian_mul_weights)
     # Approximating the integral and the adding the values to the BEM matrix
-    mygemm!(submatrixG,integrand,Transpose(physics_interpolation))
+    # mygemm!(submatrixG,integrand,Transpose(physics_interpolation))
+    mygemm_vec!(submatrixG,integrand,physics_interpolation)
+
 
     ### Evaluating the G0-kernel (used for computing the C-constant)
     # Recomputing integrand
@@ -175,14 +178,17 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
     interpolation_list3 = interpolate_elements(mesh,shape_function3)
 
     # Converting interpolation to complex numbers
-    physics_interpolation1 = convert.(Complex,physics_function1.interpolation)
-    physics_interpolation2 = convert.(Complex,physics_function2.interpolation)
-    physics_interpolation3 = convert.(Complex,physics_function3.interpolation)
+    # physics_interpolation1 = convert.(Complex,physics_function1.interpolation)
+    # physics_interpolation2 = convert.(Complex,physics_function2.interpolation)
+    # physics_interpolation3 = convert.(Complex,physics_function3.interpolation)
+    physics_interpolation1 = copy(physics_function1.interpolation')
+    physics_interpolation2 = copy(physics_function2.interpolation')
+    physics_interpolation3 = copy(physics_function3.interpolation')
 
     # Preallocation of return values
-    F = zeros(eltype(physics_interpolation1), n_sources, n_nodes)
-    G = zeros(eltype(physics_interpolation1), n_sources, n_nodes)
-    C = zeros(eltype(physics_interpolation1), n_sources)
+    F = zeros(ComplexF64, n_sources, n_nodes)
+    G = zeros(ComplexF64, n_sources, n_nodes)
+    C = zeros(ComplexF64, n_sources)
 
     # Assembly loop
     if progress; prog = Progress(n_sources, 0.2, "Assembling BEM matrices: \t", 50); end
@@ -190,16 +196,16 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
         # Access source
         source = sources[:,source_node]
         # Every thread has access to parts of the pre-allocated matrices
-        integrand = zeros(eltype(physics_interpolation1),1,n*m)
-        r         = zeros(eltype(physics_interpolation1),1,n*m)
+        integrand = zeros(ComplexF64,n*m)
+        r         = zeros(Float64,n*m)
         @inbounds for element = 1:n_elements
             # Access element topology and coordinates
             element_coordinates = @view coordinates[:,topology[:,element]]
             physics_nodes       = @view physics_topology[:,element]
             # Acces submatrix of the BEM matrix
-            submatrixF = @view F[source_node:source_node,physics_nodes]
-            submatrixG = @view G[source_node:source_node,physics_nodes]
-            subvectorC = @view C[source_node:source_node]
+            submatrixF = @view F[source_node,physics_nodes]
+            submatrixG = @view G[source_node,physics_nodes]
+            subvectorC = @view C[source_node]
             # Use quadrature point clustered around the closest vertex
             close_corner = find_closest_corner(source,element_coordinates)
             if close_corner == 1
@@ -226,8 +232,7 @@ end
 function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::SurfaceFunction;
                             m=4,n=4,progress=true)
     n_elements   = number_of_elements(mesh)
-    nThreads    = nthreads()
-    sources     = convert.(eltype(shape_function),in_sources)
+    sources      = convert.(eltype(shape_function),in_sources)
     n_sources    = size(in_sources,2)
     n_nodes      = size(mesh.sources,2)
     physics_topology = mesh.physics_topology
@@ -259,20 +264,20 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::SurfaceFun
     #======================================================================================
                                     Assembly
     ======================================================================================#
-    physics_interpolation = convert.(Complex,physics_function1.interpolation)
+    physics_interpolation = copy(physics_function1.interpolation')
     if progress; prog = Progress(n_sources, 0.2, "Assembling BEM matrices: \t", 50); end
     @inbounds @threads for source_node = 1:n_sources
         # Access source
         source    = sources[:,source_node]
         # Every thread has access to parts of the pre-allocated matrices
-        integrand = zeros(eltype(physics_interpolation),1,n*m)
-        r         = zeros(eltype(physics_interpolation),1,n*m)
+        integrand = zeros(ComplexF64,n*m)
+        r         = zeros(Float64,n*m)
         @inbounds for element = 1:n_elements
             physics_nodes = @view physics_topology[:,element]
             # Acces submatrix of the BEM matrix
-            submatrixF = @view F[source_node:source_node,physics_nodes]
-            submatrixG = @view G[source_node:source_node,physics_nodes]
-            subvectorC = @view C[source_node:source_node]
+            submatrixF = @view F[source_node,physics_nodes]
+            submatrixG = @view G[source_node,physics_nodes]
+            subvectorC = @view C[source_node]
             # Interpolating on the mesh.
             computing_integrals!(physics_interpolation,interpolation_list[element],
                                 submatrixF,submatrixG,subvectorC,k,
