@@ -44,6 +44,18 @@ function normalize!(normals,jacobian)
         normals[3,i] = -normals[3,i]/jacobian[i]
     end
 end
+
+function my_mul!(C, A, B)
+    @turbo for m ∈ axes(A,1), n ∈ axes(B,2)
+        Cmn = zero(eltype(C))
+        for k ∈ axes(A,2)
+            Cmn += A[m,k] * B[k,n]
+        end
+        C[m,n] = Cmn
+    end
+end
+
+
 """
     jacobian!(basisElement::SurfaceFunction,coordinates,normals,tangent,sangent,jacobian)
 
@@ -52,8 +64,9 @@ The results are saved in `tangent`, `sangent`, `normals` and `jacobian`.
 """
 function jacobian!(basisElement::SurfaceFunction,
                    coordinates,normals,tangent,sangent,jacobian)
-    mul!(tangent,coordinates,basisElement.derivatives_u)    # Computing tangent vector in X
-    mul!(sangent,coordinates,basisElement.derivatives_v)    # Computing tangent vector in Y
+    # my_mul! works only if coordinates are a stridedmatrix (i.e. @views dont work well)
+    my_mul!(tangent,coordinates,basisElement.derivatives_u) # Computing tangent vector in X
+    my_mul!(sangent,coordinates,basisElement.derivatives_v) # Computing tangent vector in Y
     cross_product!(normals,tangent,sangent)                 # Computing normal vector
     column_norms!(jacobian,normals)                         # Jacobian = length of the normal
     normalize!(normals,jacobian)

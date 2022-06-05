@@ -133,7 +133,7 @@ mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: 
     alpha::T
 end
 #==========================================================================================
-                                    Legendre Elements 
+                                    Legendre Elements
 ==========================================================================================#
 mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: ContinuousQuadrilateral
     weights::AbstractArray{T,1}
@@ -146,7 +146,7 @@ mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: ContinuousQuadrilatera
     N::Int64
 end
 #==========================================================================================
-            Generalized Elements: https://academic.csuohio.edu/duffy_s/CVE_512_11.pdf 
+            Generalized Elements: https://academic.csuohio.edu/duffy_s/CVE_512_11.pdf
 ==========================================================================================#
 mutable struct QuadrilateralLagrangeM{T<:AbstractFloat} <: QuadrilateralLagrange
     weights::AbstractArray{T,1}
@@ -177,22 +177,22 @@ end
 #==========================================================================================
                                     Utility functions
 ==========================================================================================#
-get_nodes(surface_function::SurfaceFunction)        = surface_function.gauss_u, 
+get_nodes(surface_function::SurfaceFunction)        = surface_function.gauss_u,
                                                       surface_function.gauss_v
-get_derivatives(surface_function::SurfaceFunction)  = surface_function.derivatives_u, 
+get_derivatives(surface_function::SurfaceFunction)  = surface_function.derivatives_u,
                                                       surface_function.derivatives_v
-number_of_shape_functions(surface_function::TriangularLinear)                            = 3
-number_of_shape_functions(surface_function::TriangularQuadratic)                         = 6
-number_of_shape_functions(surface_function::DiscontinuousTriangularConstant)             = 1
-number_of_shape_functions(surface_function::DiscontinuousTriangularLinear)               = 3
-number_of_shape_functions(surface_function::DiscontinuousTriangularQuadratic)            = 6
-number_of_shape_functions(surface_function::QuadrilateralLinearSerendipity)              = 4
-number_of_shape_functions(surface_function::QuadrilateralQuadratic)                      = 8
-number_of_shape_functions(surface_function::QuadrilateralLinear4)                        = 4
-number_of_shape_functions(surface_function::QuadrilateralQuadraticLagrange)              = 9
-number_of_shape_functions(surface_function::DiscontinuousQuadrilateralConstant)          = 1
-number_of_shape_functions(surface_function::DiscontinuousQuadrilateralLinear4)           = 4
-number_of_shape_functions(surface_function::DiscontinuousQuadrilateralQuadraticLagrange) = 9
+number_of_shape_functions(::TriangularLinear)                            = 3
+number_of_shape_functions(::TriangularQuadratic)                         = 6
+number_of_shape_functions(::DiscontinuousTriangularConstant)             = 1
+number_of_shape_functions(::DiscontinuousTriangularLinear)               = 3
+number_of_shape_functions(::DiscontinuousTriangularQuadratic)            = 6
+number_of_shape_functions(::QuadrilateralLinearSerendipity)              = 4
+number_of_shape_functions(::QuadrilateralQuadratic)                      = 8
+number_of_shape_functions(::QuadrilateralLinear4)                        = 4
+number_of_shape_functions(::QuadrilateralQuadraticLagrange)              = 9
+number_of_shape_functions(::DiscontinuousQuadrilateralConstant)          = 1
+number_of_shape_functions(::DiscontinuousQuadrilateralLinear4)           = 4
+number_of_shape_functions(::DiscontinuousQuadrilateralQuadraticLagrange) = 9
 
 Base.eltype(::Type{QuadrilateralQuadratic{T}})                      where {T} = T
 Base.eltype(::Type{QuadrilateralLinearSerendipity{T}})              where {T} = T
@@ -207,7 +207,7 @@ Base.eltype(::Type{DiscontinuousQuadrilateralConstant{T}})          where {T} = 
 Base.eltype(::Type{DiscontinuousQuadrilateralLinear4{T}})           where {T} = T
 Base.eltype(::Type{DiscontinuousQuadrilateralQuadraticLagrange{T}}) where {T} = T
 #==========================================================================================
-                         Introduction of some niceness features 
+                         Introduction of some niceness features
 ==========================================================================================#
 function (surface_function::SurfaceFunction)(ξ,η)
     if length(ξ) != length(η)
@@ -270,34 +270,50 @@ function basisFunctionSecondOrderDerivative(surface_function::SurfaceFunction,no
     return d2dx,d2dy,d2dxdy
 end
 #==========================================================================================
-                        Setting interpolation nodes equal to the  
+                        Setting interpolation nodes equal to the
 ==========================================================================================#
 # Triangular Elements
-get_nodal_nodes_u(sf::TriangularLinear)     = [0.0; 1.0; 0.0]
-get_nodal_nodes_v(sf::TriangularLinear)     = [0.0; 0.0; 1.0]
-get_nodal_nodes_u(sf::TriangularQuadratic)  = [0.0; 1.0; 0.0; 0.5; 0.5; 0.0]
-get_nodal_nodes_v(sf::TriangularQuadratic)  = [0.0; 0.0; 1.0; 0.0; 0.5; 0.5]
-get_nodal_nodes_u(sf::DiscontinuousTriangularConstant)  = [1.0/3.0]
-get_nodal_nodes_v(sf::DiscontinuousTriangularConstant)  = [1.0/3.0]
-get_nodal_nodes_u(sf::DiscontinuousTriangularLinear)    = [sf.beta; 1.0-2.0*sf.beta; sf.beta]
-get_nodal_nodes_v(sf::DiscontinuousTriangularLinear)    = [sf.beta; sf.beta; 1.0-2.0*sf.beta]
-get_nodal_nodes_u(sf::DiscontinuousTriangularQuadratic) = [sf.beta; 1.0-2.0*sf.beta; sf.beta; (1.0-sf.beta)/2.0; (1.0-sf.beta)/2.0; sf.beta]
-get_nodal_nodes_v(sf::DiscontinuousTriangularQuadratic) = [sf.beta; sf.beta; 1.0-2.0*sf.beta; sf.beta; (1.0-sf.beta)/2.0; (1.0-sf.beta)/2.0]
+get_nodal_nodes_u(::TriangularLinear)    = [0.0; 1.0; 0.0]
+get_nodal_nodes_v(::TriangularLinear)    = [0.0; 0.0; 1.0]
+get_nodal_nodes_u(::TriangularQuadratic) = [0.0; 1.0; 0.0; 0.5; 0.5; 0.0]
+get_nodal_nodes_v(::TriangularQuadratic) = [0.0; 0.0; 1.0; 0.0; 0.5; 0.5]
+get_nodal_nodes_u(::DiscontinuousTriangularConstant) = [1/3]
+get_nodal_nodes_v(::DiscontinuousTriangularConstant) = [1/3]
+get_nodal_nodes_u(sf::DiscontinuousTriangularLinear) = [sf.beta; 1-2*sf.beta; sf.beta]
+get_nodal_nodes_v(sf::DiscontinuousTriangularLinear) = [sf.beta; sf.beta; 1-2*sf.beta]
+function get_nodal_nodes_u(sf::DiscontinuousTriangularQuadratic)
+    return [sf.beta; 1-2*sf.beta; sf.beta; (1-sf.beta)/2; (1-sf.beta)/2; sf.beta]
+end
+function get_nodal_nodes_v(sf::DiscontinuousTriangularQuadratic)
+    return [sf.beta; sf.beta; 1-2*sf.beta; sf.beta; (1-sf.beta)/2; (1-sf.beta)/2]
+end
 # Quadrilateral Elements
-get_nodal_nodes_u(sf::QuadrilateralLinearSerendipity)       = [-1.0; 1.0; 1.0;-1.0]
-get_nodal_nodes_v(sf::QuadrilateralLinearSerendipity)       = [-1.0;-1.0; 1.0; 1.0]
-get_nodal_nodes_u(sf::QuadrilateralLinear4)                 = [-1.0; 1.0;-1.0; 1.0]
-get_nodal_nodes_v(sf::QuadrilateralLinear4)                 = [-1.0;-1.0; 1.0; 1.0]
-get_nodal_nodes_u(sf::QuadrilateralQuadratic)  = [-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0;-1.0]
-get_nodal_nodes_v(sf::QuadrilateralQuadratic)  = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0]
-get_nodal_nodes_u(sf::QuadrilateralQuadraticLagrange) = [-1.0; 1.0;-1.0; 1.0; 0.0;-1.0; 0.0; 1.0; 0.0]
-get_nodal_nodes_v(sf::QuadrilateralQuadraticLagrange) = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 0.0; 0.0; 1.0]
-get_nodal_nodes_u(sf::DiscontinuousQuadrilateralConstant)   = [0.0]
-get_nodal_nodes_v(sf::DiscontinuousQuadrilateralConstant)   = [0.0]
-get_nodal_nodes_u(sf::DiscontinuousQuadrilateralLinear4)    = [sf.alpha-1.0; 1.0-sf.alpha; sf.alpha-1.0; 1.0-sf.alpha]
-get_nodal_nodes_v(sf::DiscontinuousQuadrilateralLinear4)    = [sf.alpha-1.0; sf.alpha-1.0; 1.0-sf.alpha; 1.0-sf.alpha]
-get_nodal_nodes_u(sf::DiscontinuousQuadrilateralQuadraticLagrange) = [sf.alpha-1.0; 1.0-sf.alpha; sf.alpha-1.0; 1.0-sf.alpha;          0.0; sf.alpha-1.0; 0.0; 1.0-sf.alpha; 0.0]
-get_nodal_nodes_v(sf::DiscontinuousQuadrilateralQuadraticLagrange) = [sf.alpha-1.0; sf.alpha-1.0; 1.0-sf.alpha; 1.0-sf.alpha; sf.alpha-1.0;          0.0; 0.0;          0.0; 1.0-sf.alpha]
+get_nodal_nodes_u(::QuadrilateralLinearSerendipity) = [-1.0; 1.0; 1.0;-1.0]
+get_nodal_nodes_v(::QuadrilateralLinearSerendipity) = [-1.0;-1.0; 1.0; 1.0]
+get_nodal_nodes_u(::QuadrilateralLinear4)           = [-1.0; 1.0;-1.0; 1.0]
+get_nodal_nodes_v(::QuadrilateralLinear4)           = [-1.0;-1.0; 1.0; 1.0]
+get_nodal_nodes_u(::QuadrilateralQuadratic)  = [-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0;-1.0]
+get_nodal_nodes_v(::QuadrilateralQuadratic)  = [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 1.0; 0.0]
+get_nodal_nodes_u(::DiscontinuousQuadrilateralConstant)  = [0.0]
+get_nodal_nodes_v(::DiscontinuousQuadrilateralConstant)  = [0.0]
+function get_nodal_nodes_u(::QuadrilateralQuadraticLagrange)
+    return [-1.0; 1.0;-1.0; 1.0; 0.0;-1.0; 0.0; 1.0; 0.0]
+end
+function get_nodal_nodes_v(::QuadrilateralQuadraticLagrange)
+    return [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 0.0; 0.0; 1.0]
+end
+function get_nodal_nodes_u(sf::DiscontinuousQuadrilateralLinear4)
+    return [sf.alpha-1; 1-sf.alpha; sf.alpha-1; 1-sf.alpha]
+end
+function get_nodal_nodes_v(sf::DiscontinuousQuadrilateralLinear4)
+    return [sf.alpha-1; sf.alpha-1; 1-sf.alpha; 1-sf.alpha]
+end
+function get_nodal_nodes_u(sf::DiscontinuousQuadrilateralQuadraticLagrange)
+    return [sf.alpha-1; 1-sf.alpha; sf.alpha-1; 1-sf.alpha; 0; sf.alpha-1; 0; 1-sf.alpha; 0]
+end
+function get_nodal_nodes_v(sf::DiscontinuousQuadrilateralQuadraticLagrange)
+    return [sf.alpha-1; sf.alpha-1; 1-sf.alpha; 1-sf.alpha; sf.alpha-1; 0; 0; 0; 1-sf.alpha]
+end
 """
     setInterpolationNodal!(surface_function::SurfaceFunction)
 Sets the interpolation nodes `shape_function` to be the nodal positions.
@@ -322,6 +338,10 @@ function set_interpolation_nodes!(surface_function::SurfaceFunction,physics_func
     nodes_v = get_nodal_nodes_v(physics_function)
     set_interpolation_nodes!(surface_function,nodes_u,nodes_v)
 end
+function set_interpolation_nodes!(surface_function::SurfaceFunction,gauss_u,gauss_v,weights)
+    surface_function.weights = weights
+    set_interpolation_nodes!(surface_function,gauss_u,gauss_v)
+end
 """
     copy_interpolation_nodes!(physics_function::SurfaceFunction,surfaceFunction::Triangular)
 
@@ -334,6 +354,10 @@ function copy_interpolation_nodes!(physics_function::SurfaceFunction,surface_fun
     interpolate_on_nodes!(physics_function)
 end
 function interpolate_on_nodes!(physics_function::SurfaceFunction)
-    physics_function.interpolation = physics_function(physics_function.gauss_u',physics_function.gauss_v')
-    physics_function.derivatives_u, physics_function.derivatives_v = physics_function'(physics_function.gauss_u',physics_function.gauss_v')
+    physics_function.interpolation = physics_function(physics_function.gauss_u',
+                                                      physics_function.gauss_v')
+    physics_function.derivatives_u, physics_function.derivatives_v = physics_function'(
+                                                                physics_function.gauss_u',
+                                                                physics_function.gauss_v'
+                                                                )
 end

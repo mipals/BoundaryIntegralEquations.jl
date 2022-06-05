@@ -35,7 +35,7 @@ function read_comsol_mesh(meshName,elementType)
             end
         end
     end
-        
+
     close(fid)
     topology = topology .+ 1             # Fixing 0-index
     if typeof(elementType) <: TriangularQuadratic
@@ -76,8 +76,9 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
         physicsElement = TriangularLinear(3,3)
         normals = get_element_normals(shape_function,coordinates,topology)
         physicsTopology = topology[1:3,:]
-        normals = normals[:,unique(topology[1:3,:])]
-        sources = coordinates[:,unique(topology[1:3,:])]
+        used_nodes = sort(unique(physicsTopology))
+        normals = normals[:,used_nodes]
+        sources = coordinates[:,used_nodes]
     else
         physicsElement = set_physics_element(physics_order,shape_function,beta_type)
         sources,normals,physicsTopology = compute_sources(shape_function,
@@ -90,7 +91,7 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
     tangentX = similar(normals)
     tangentY = similar(normals)
     tangents!(normals,tangentX,tangentY)
-    
+
     # Create mesh
     mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,shape_function,
                  physicsElement,physicsTopology)
@@ -146,7 +147,7 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
     tangentX = similar(normals)
     tangentY = similar(normals)
     tangents!(normals,tangentX,tangentY)
-    
+
     # Create mesh
     mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,shape_function,
                  physicsElement,physicsTopology)

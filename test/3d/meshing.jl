@@ -38,6 +38,9 @@ import IntegralEquations: global_coordinate_shape_function_derivative
         @test isapprox(sum(abs.(Dx*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
         @test isapprox(sum(abs.(Dy*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
         @test isapprox(sum(abs.(Dz*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
+        if go == :linear && po == :linear
+            @test mesh.coordinates ≈ mesh.sources
+        end
     end
 end
 

@@ -7,7 +7,7 @@
 Green's function for the Helmholtz Equation in 3d.
 """
 function greens3d!(integrand,r,k)
-    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+    @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = exp(-im*k*r[i,j])/(4.0*π*r[i,j])
     end
 end
@@ -17,11 +17,11 @@ end
 Normal derivative of the 3D Helmholtz Green's function with respect to interpolation nodes.
 """
 function freens3d!(integrand,r,interpolation,sources,normals,k)
-    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
-        integrand[i,j] = -exp(-im*k*r[i,j])*(1.0 + im*k*r[i,j])*
+    @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+        integrand[i,j] = -exp(-im*k*r[i,j])*(1 + im*k*r[i,j])*
                         (normals[1,i]*(interpolation[1,i] - sources[1,j]) +
                          normals[2,i]*(interpolation[2,i] - sources[2,j]) +
-                         normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4.0*π*r[i,j]^3)
+                         normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
     end
 end
 """
@@ -30,12 +30,23 @@ end
 freens3d! with k=0.
 """
 function freens3dk0!(integrand,r,interpolation,sources,normals)
-    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+    @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = -(normals[1,i]*(interpolation[1,i] - sources[1,j]) +
                            normals[2,i]*(interpolation[2,i] - sources[2,j]) +
-                           normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4.0*π*r[i,j]^3)
+                           normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
     end
 end
+"""
+    freens3dk0_to_freens3d!(integrand,r,k)
+
+Multiplies each term in `integrand` from `freens3dk0!` such that they equal `freens3d!`.
+"""
+function freens3dk0_to_freens3d!(integrand,r,k)
+    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+        integrand[i,j] = integrand[i,j]*exp(-im*k*r[i,j])*(1 + im*k*r[i,j])
+    end
+end
+
 #==========================================================================================
                                     Kernels for debugging.
 ==========================================================================================#

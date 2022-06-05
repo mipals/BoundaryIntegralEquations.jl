@@ -39,19 +39,19 @@ function l_GH_r!(G,luG,H,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true,uselu=fals
         ldiv!(luG,tmp2)     # Solve "G*x = tmp2" using lu-factorization of G
     else
         tmp1 .= tmp2
-        gmres!(tmp2,G,tmp1) # Solve "G*x = tmp2" gmres 
+        gmres!(tmp2,G,tmp1) # Solve "G*x = tmp2" gmres
     end
     l_mul_r!(y,lz,tmp2) # Add to sum
 end
 """
-    l_D_r!(D,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true) 
+    l_D_r!(D,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true)
 
 Computing the product
            ((lx*rx' + ly*ry' + lz*rz')∘D)*x
 Without performing the hadamard product by applying the following three times
           ((l*r')∘D)*x = (diag(l)*D*diag(r))*x
 """
-function l_D_r!(D,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true) 
+function l_D_r!(D,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true)
     # Compute ((lx*rx')∘D)*x
     tmp1 .= rx.*x
     mul!(tmp2,D,tmp1)
@@ -74,10 +74,10 @@ end
 
 Memory efficient representation of the matrix
 (n₁n₁ᵀ + n₂n₂ᵀ + n₃n₃ᵀ)∘(Gᵥ⁻Hᵥ) + (t₁n₁ᵀ + t₂n₂ᵀ + t₃n₃ᵀ)∘Dt₁ + (s₁n₁ᵀ + s₂n₂ᵀ + s₃n₃ᵀ)∘Dt₂,
-which is part of the LossyOneVariableOuter{T}. 
+which is part of the LossyOneVariableOuter{T}.
 
-Multiplication with the struct is implemented and can therefore be used memory efficiently 
-solve linear systems using an iterative solver. 
+Multiplication with the struct is implemented and can therefore be used memory efficiently
+solve linear systems using an iterative solver.
 """
 struct LossyOneVariableInner{T} <: LinearMaps.LinearMap{T}
     N::Int64                # The matrix is of size N × N
@@ -90,8 +90,8 @@ struct LossyOneVariableInner{T} <: LinearMaps.LinearMap{T}
     Dt2::AbstractArray{T}   # Tangential derivative in tangent direction 2
     # Normals components
     nx::AbstractArray       # x-coordinates of normal direction
-    ny::AbstractArray       # y-coordinates of normal direction      
-    nz::AbstractArray       # z-coordinates of normal direction      
+    ny::AbstractArray       # y-coordinates of normal direction
+    nz::AbstractArray       # z-coordinates of normal direction
     # Tangent components
     tx::AbstractArray       # x-coordinates of 1st tangent direction
     ty::AbstractArray       # y-coordinates of 1st tangent direction
@@ -101,9 +101,9 @@ struct LossyOneVariableInner{T} <: LinearMaps.LinearMap{T}
     sy::AbstractArray       # y-coordinates of 2nd tangent direction
     sz::AbstractArray       # z-coordinates of 2nd tangent direction
     # Temporary vectors - To avoid allocation when multiplying
-    tmp1::AbstractArray{T} 
-    tmp2::AbstractArray{T} 
-    # How to solve 
+    tmp1::AbstractArray{T}
+    tmp2::AbstractArray{T}
+    # How to solve
     lu_on::Bool
 end
 
@@ -111,8 +111,8 @@ end
 Base.size(A::LossyOneVariableInner) = (A.N, A.N)
 
 # Standard Multiplication
-function LinearAlgebra.mul!(y::AbstractVecOrMat{T}, 
-                              A::LossyOneVariableInner{T}, 
+function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
+                              A::LossyOneVariableInner{T},
                               x::AbstractVector) where {T <: ComplexF64}
     LinearMaps.check_dim_mul(y, A, x)
     l_GH_r!(A.Gv,A.luGv, A.Hv, A.nx, A.ny, A.nz, A.nx, A.ny, A.nz,   A.tmp1, A.tmp2, y, x, true, A.lu_on)
@@ -125,7 +125,7 @@ end
 """
     LossyOneVariableOuter{T}
 
-Struct representing the system matrix (A) in the 1-variable system: A*pₐ = b. 
+Struct representing the system matrix (A) in the 1-variable system: A*pₐ = b.
 """
 struct LossyOneVariableOuter{T} <: LinearMaps.LinearMap{T}
     N::Int64                            # Total system size (10n
@@ -140,13 +140,13 @@ struct LossyOneVariableOuter{T} <: LinearMaps.LinearMap{T}
     Hv::AbstractArray{T}                # Viscous BEM H
     Gv::AbstractArray{T}                # Viscous BEM G
     luGv::Factorization{T}              # Factorization of Viscous BEM G
-    # The inner matrix 
+    # The inner matrix
     inner::LossyOneVariableInner{T}
     # Derivative matrices
     Dt1::AbstractArray{T}               # Tangential derivative in direction 1
     Dt2::AbstractArray{T}               # Tangential derivative in direction 2
     # Normals components
-    nx::AbstractArray                   # x-coordinates of normal direction      
+    nx::AbstractArray                   # x-coordinates of normal direction
     ny::AbstractArray                   # y-coordinates of normal direction
     nz::AbstractArray                   # z-coordinates of normal direction
     # Tangent components
@@ -168,7 +168,7 @@ struct LossyOneVariableOuter{T} <: LinearMaps.LinearMap{T}
     res::AbstractArray{T}
     x1::AbstractArray{T}
     x2::AbstractArray{T}
-    # Solving 
+    # Solving
     lu_on::Bool
     # Saving frequency
     freq
@@ -178,18 +178,18 @@ end
 Base.size(A::LossyOneVariableOuter) = (A.N, A.N)
 
 # Standard Multiplication
-function LinearAlgebra.mul!(y::AbstractVecOrMat{T}, 
-                              A::LossyOneVariableOuter{T}, 
+function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
+                              A::LossyOneVariableOuter{T},
                               x::AbstractVector) where {T <: ComplexF64}
     LinearMaps.check_dim_mul(y, A, x)
     # First mulitplication
     mul!(A.x1,A.Dt1,x)
-    l_GH_r!(A.Gv,A.luGv, A.Hv, A.nx, A.ny, A.nz, A.tx, A.ty, A.tz,   A.tmp1, A.tmp2, A.res, A.x1, true, A.lu_on)  
+    l_GH_r!(A.Gv,A.luGv, A.Hv, A.nx, A.ny, A.nz, A.tx, A.ty, A.tz,   A.tmp1, A.tmp2, A.res, A.x1, true, A.lu_on)
     l_D_r!(A.Dt1,        A.tx, A.ty, A.tz, A.tx, A.ty, A.tz, A.tmp1, A.tmp2,         A.res, A.x1, false)
     l_D_r!(A.Dt2,        A.sx, A.sy, A.sz, A.tx, A.ty, A.tz, A.tmp1, A.tmp2,         A.res, A.x1, false)
     # Second multiplication
     mul!(A.x2,A.Dt2,x)
-    l_GH_r!(A.Gv, A.luGv, A.Hv, A.nx, A.ny, A.nz, A.sx, A.sy, A.sz,   A.tmp1, A.tmp2, A.res, A.x2, false, A.lu_on)  
+    l_GH_r!(A.Gv, A.luGv, A.Hv, A.nx, A.ny, A.nz, A.sx, A.sy, A.sz,   A.tmp1, A.tmp2, A.res, A.x2, false, A.lu_on)
     l_D_r!(A.Dt1,         A.tx, A.ty, A.tz, A.sx, A.sy, A.sz, A.tmp1, A.tmp2,         A.res, A.x2, false)
     l_D_r!(A.Dt2,         A.sx, A.sy, A.sz, A.sx, A.sy, A.sz, A.tmp1, A.tmp2,         A.res, A.x2, false)
     # Solving the inner system
@@ -215,16 +215,71 @@ l_D_r(D,lx,ly,lz,rx,ry,rz,x)    = lx.*(D*   (rx.*x))  + ly.*(   D*(ry.*x))  + lz
     compute_lossy_rhs(A::LossyOneVariableOuter,vbn,vt1,vt2)
 
 Computes the right-hand-side of the final 1-variable lossy system.
-Requires normal and tangential velocities. 
+Requires normal and tangential velocities.
 """
 function compute_lossy_rhs(A::LossyOneVariableOuter,vbn,vt1,vt2)
     # First multiplication
-    l_GH_r!(A.Gv,A.luGv, A.Hv, A.nx, A.ny, A.nz, A.tx, A.ty, A.tz,   A.tmp1, A.tmp2, A.x1, vt1, true, A.lu_on)  
+    l_GH_r!(A.Gv,A.luGv, A.Hv, A.nx, A.ny, A.nz, A.tx, A.ty, A.tz,   A.tmp1, A.tmp2, A.x1, vt1, true, A.lu_on)
     l_D_r!(A.Dt1,        A.tx, A.ty, A.tz, A.tx, A.ty, A.tz, A.tmp1, A.tmp2,         A.x1, vt1, false)
     l_D_r!(A.Dt2,        A.sx, A.sy, A.sz, A.tx, A.ty, A.tz, A.tmp1, A.tmp2,         A.x1, vt1, false)
     # Second multiplication
-    l_GH_r!(A.Gv, A.luGv, A.Hv, A.nx, A.ny, A.nz, A.sx, A.sy, A.sz,   A.tmp1, A.tmp2, A.x2, vt2, true, A.lu_on)  
+    l_GH_r!(A.Gv, A.luGv, A.Hv, A.nx, A.ny, A.nz, A.sx, A.sy, A.sz,   A.tmp1, A.tmp2, A.x2, vt2, true, A.lu_on)
     l_D_r!(A.Dt1,         A.tx, A.ty, A.tz, A.sx, A.sy, A.sz, A.tmp1, A.tmp2,         A.x2, vt2, false)
     l_D_r!(A.Dt2,         A.sx, A.sy, A.sz, A.sx, A.sy, A.sz, A.tmp1, A.tmp2,         A.x2, vt2, false)
     return A.Ga*(vbn + gmres(A.inner,A.x1 + A.x2;verbose=true))
+end
+
+#===========================================================================================
+                                Constructors
+===========================================================================================#
+function LossyOneVariableOuter(mesh::Mesh3d,freq;lu_on=false)
+    # Computing relevant BEM-matrices
+    BB = LossyBlockMatrix(mesh,freq;blockoutput=true)
+    # Computing relevant constants
+    return LossyOneVariableOuter(mesh,BB,freq;lu_on=lu_on)
+end
+
+function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;lu_on=false)
+    τₐ = BB.τₐ
+    τₕ = BB.τₕ
+    ϕₐ = BB.ϕₐ
+    ϕₕ = BB.ϕₕ
+    # Extracting local (n,t,s) coordinate systems
+    nx = mesh.normals[1,:]
+    ny = mesh.normals[2,:]
+    nz = mesh.normals[3,:]
+    tx = mesh.tangents[1,:]
+    ty = mesh.tangents[2,:]
+    tz = mesh.tangents[3,:]
+    sx = mesh.sangents[1,:]
+    sy = mesh.sangents[2,:]
+    sz = mesh.sangents[3,:]
+    N = length(nx)
+
+    # Allocating memory used for saving intermediate values when multiplying with the struct
+    inner_tmp1 = zeros(ComplexF64,N)
+    inner_tmp2 = similar(inner_tmp1)
+    outer_tmp1 = similar(inner_tmp1)
+    outer_tmp2 = similar(inner_tmp1)
+    outer_res  = similar(inner_tmp1)
+    outer_x1   = similar(inner_tmp1)
+    outer_x2   = similar(inner_tmp1)
+
+    # Given that Bᵥ and Bₕ in some limited tets has been found to be VERY well conditioned
+    # the lu-factorization is disabled by default. Instead gmres is used.
+    if lu_on
+        luGv = lu(BB.Bᵥ)
+        luGh = lu(BB.Bₕ)
+    else
+        luGv = lu(rand(ComplexF64,2,2)) # Junk factorization
+        luGh = lu(rand(ComplexF64,2,2)) # Junk factorization
+    end
+    inner = LossyOneVariableInner(N,BB.Aᵥ,BB.Bᵥ,luGv,BB.Dt₁,BB.Dt₂,nx,ny,nz,tx,ty,tz,sx,sy,sz,
+                                    inner_tmp1, inner_tmp2,lu_on)
+
+    outer = LossyOneVariableOuter(N,BB.Aₐ,BB.Bₐ,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
+                            luGv,inner,BB.Dt₁,BB.Dt₂,
+                            nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,
+                            outer_tmp1,outer_tmp2,outer_res,outer_x1,outer_x2,lu_on,freq)
+    return outer
 end

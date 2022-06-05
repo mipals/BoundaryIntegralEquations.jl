@@ -1,9 +1,9 @@
 #==========================================================================================
-                                QuadrilateralLinear Surface                            
+                                QuadrilateralLinear Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        4 -- 3                                      
-                                        |    |                                      
-                                        1 -- 2                                       
+                                        4 -- 3
+                                        |    |
+                                        1 -- 2
 ==========================================================================================#
 quadrilateralLinearSerendipity(u,v) =  [0.25*(1.0 .- u).*(1.0 .- v);
                                         0.25*(1.0 .+ u).*(1.0 .- v);
@@ -13,14 +13,14 @@ function basisFunction(surfaceFunction::QuadrilateralLinearSerendipity,u,v)
     return quadrilateralLinearSerendipity(u,v)
 end
 #==========================================================================================
-                                QuadrilateralQuadratic Surface                          
+                                QuadrilateralQuadratic Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        4  7  3                                      
-                                        8     6                                      
-                                        1  5  2                                      
+                                        4  7  3
+                                        8     6
+                                        1  5  2
 ==========================================================================================#
 quadrilateralQuadratic(u,v) = [0.25*(1.0 .- u).*(v .- 1.0).*(u + v .+ 1.0);
-                               0.25*(1.0 .+ u).*(v .- 1.0).*(v - u .+ 1.0); 
+                               0.25*(1.0 .+ u).*(v .- 1.0).*(v - u .+ 1.0);
                                0.25*(1.0 .+ u).*(v .+ 1.0).*(u + v .- 1.0);
                                0.25*(u .- 1.0).*(v .+ 1.0).*(u - v .+ 1.0);
                                0.50*(1.0 .- v).*(1.0 .- u.^2);
@@ -55,9 +55,9 @@ end
 #==========================================================================================
                             QuadrilateralQuadraticLagrange (COMSOL Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        3  9  4                                      
-                                        6  7  8                                      
-                                        1  5  2                                      
+                                        3  9  4
+                                        6  7  8
+                                        1  5  2
 ==========================================================================================#
 quadrilateralQuadraticLagrange(u,v) = [0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
                                       -0.25*u.*(1.0 .+ u).*v.*(1.0 .- v);
@@ -74,9 +74,9 @@ end
 #==========================================================================================
                             QuadrilateralQuadratic4 (COMSOL Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        3 --- 4                                      
-                                        |     |                                      
-                                        1 --- 2                                      
+                                        3 --- 4
+                                        |     |
+                                        1 --- 2
 ==========================================================================================#
 quadrilateralLinear4(u,v) = [0.25*(1.0 .- u).*(1.0 .- v);
                              0.25*(1.0 .+ u).*(1.0 .- v);
@@ -102,12 +102,12 @@ end
 #==========================================================================================
                         DiscontinuousQuadrilateralConstant
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                          ---                                       
-                                        |  1  |                                      
-                                          ---                                       
+                                          ---
+                                        |  1  |
+                                          ---
 ==========================================================================================#
 discontinuousQuadrilateralConstant(u,v) = ones(1,length(u))
-function basisFunction(surfaceFunction::DiscontinuousQuadrilateralConstant,u,v) 
+function basisFunction(surfaceFunction::DiscontinuousQuadrilateralConstant,u,v)
     return discontinuousQuadrilateralConstant(u,v)
 end
 function discontinuousQuadrilateralConstantDerivatives(u,v)
@@ -122,12 +122,12 @@ end
                             DiscontinuousQuadrilateralLinear4
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                           ---
-                                        | 3 4 |                                      
-                                        | 1 2 |                                      
-                                          ---                                       
+                                        | 3 4 |
+                                        | 1 2 |
+                                          ---
 ==========================================================================================#
 discontinuousQuadrilateralLinear4(u,v,alpha) = quadrilateralLinear4(u./(1.0-alpha),v./(1.0-alpha))
-function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v) 
+function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
     return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.alpha)
 end
 function discontinuousQuadrilateralLinear4Derivatives(u,v,alpha)
@@ -139,9 +139,9 @@ end
 #==========================================================================================
                             DiscontinuousQuadrilateralQuadraticLagrange (COMSOL Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        3  9  4                                      
-                                        6  7  8                                      
-                                        1  5  2                                      
+                                        3  9  4
+                                        6  7  8
+                                        1  5  2
 ==========================================================================================#
 discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1.0-alpha),v./(1.0-alpha))
 function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
@@ -157,9 +157,9 @@ end
                 QuadrilateralLegendre: See https://ieeexplore.ieee.org/document/1353496
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                           ---
-                                        | ... |                                      
-                                        | ... |                                      
-                                          ---                                       
+                                        | ... |
+                                        | ... |
+                                          ---
 ==========================================================================================#
 function quadrilateralLegendre(N,M,u,v)
     @assert N >= 2
@@ -179,20 +179,20 @@ end
 #==========================================================================================
                     DiscontinuousQuadrilateralLagrange (Kronecker Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                        3    4     7  8  9     
+                                        3    4     7  8  9
                                 1   ->         ->  4  5  6     ....
-                                        1    2     1  2  3 
+                                        1    2     1  2  3
 ==========================================================================================#
 quadrilateralLagrange(u,v,M) = error("QuadrilateralLagrange elements not implemented yet.")
 function basisFunction(surfaceFunction::QuadrilateralLagrange,u,v)
     return discontinuousQuadrilateralLagrange(u,v,surfaceFunction.M)
 end
 #==========================================================================================
-                                   TriangularLinear Surface                             
+                                   TriangularLinear Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                          3                                             
-                                          .  .                                          
-                                          1  .  2                                        
+                                          3
+                                          .  .
+                                          1  .  2
 ==========================================================================================#
 triangularLinear(u,v) = [1.0 .- u .- v; u; v];
 function basisFunction(surfaceFunction::TriangularLinear,u,v)
@@ -204,11 +204,11 @@ function basisFunctionDerivative(surfaceFunction::TriangularLinear,u,v)
     return triangularLinearDerivatives(u,v)
 end
 #==========================================================================================
-                                TriangularQuadratic Surface                             
+                                TriangularQuadratic Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                          3                                             
-                                          6  5                                          
-                                          1  4  2                                       
+                                          3
+                                          6  5
+                                          1  4  2
 ==========================================================================================#
 triangularQuadratic(u,v) = [(1.0 .- v .- u).*(1.0 .- 2.0*v .- 2.0*u);
                             u.*(2.0*u .- 1.0);
@@ -238,15 +238,15 @@ function basisFunctionDerivative(surfaceFunction::TriangularQuadratic,u,v)
     return triangularQuadraticDerivatives(u,v)
 end
 #==========================================================================================
-                            DiscontinuousConstant Surface                             
- ——————————————————————————————————————  Grid  ——————————————————————————————————————————— 
+                            DiscontinuousConstant Surface
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                           .
-                                          . .                                            
+                                          . .
                                           . 1 .
                                           . .  .
 ==========================================================================================#
 discontinuousTriangularConstant(u,v) = ones(1,length(u))
-function basisFunction(surfaceFunction::DiscontinuousTriangularConstant,u,v) 
+function basisFunction(surfaceFunction::DiscontinuousTriangularConstant,u,v)
     return discontinuousTriangularConstant(u,v)
 end
 function discontinuousTriangularConstantDerivatives(u,v)
@@ -258,11 +258,11 @@ function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularConstan
     return discontinuousTriangularConstantDerivatives(u,v)
 end
 #==========================================================================================
-                            DiscontinuousTriangularLinear Surface                             
- ——————————————————————————————————————  Grid  ——————————————————————————————————————————— 
-                                        3     
-                                        | \                                            
-                                        1 - 2                                          
+                            DiscontinuousTriangularLinear Surface
+ ——————————————————————————————————————  Grid  ———————————————————————————————————————————
+                                        3
+                                        | \
+                                        1 - 2
 ==========================================================================================#
 gamma3(u,v)  = 1.0 .- u .- v
 psik(s,β)    = (s .- β)/(1.0 - 3.0*β)
@@ -289,11 +289,11 @@ function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularLinear,
     return discontinuousTriangularLinearDerivatives(u,v,surfaceFunction.beta)
 end
 #==========================================================================================
-                        DiscontinuousTriangularQuadratic Surface                             
+                        DiscontinuousTriangularQuadratic Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
-                                          3                                             
-                                          6  5                                          
-                                          1  4  2                                       
+                                          3
+                                          6  5
+                                          1  4  2
 ==========================================================================================#
 discontinuousTriangularQuadratic(u,v,β) = [psi3(u,v,β).*(2.0*psi3(u,v,β) .- 1.0);
                                             psik(u,β).*(2.0*psik(u,β) .- 1.0);
@@ -323,7 +323,7 @@ function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularQuadrat
     return discontinuousTriangularQuadraticDerivatives(u,v,surfaceFunction.beta)
 end
 #==========================================================================================
-                                Triangular Constructors                                 
+                                Triangular Constructors
 ==========================================================================================#
 function TriangularLinear(n::Real,m::Real)
     nodes_u, nodes_v, weights = triangularQuadpoints(n,m)
@@ -384,7 +384,7 @@ function DiscontinuousTriangularQuadratic(SF::Triangular,beta)
 end
 
 #==========================================================================================
-                            Quadrilateral Constructors                                 
+                            Quadrilateral Constructors
 ==========================================================================================#
 function QuadrilateralLinearSerendipity(n::Real,m::Real)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)

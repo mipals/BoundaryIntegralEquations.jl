@@ -1,7 +1,7 @@
 using IntegralEquations,Plots,LinearAlgebra
 
-n_elements = 1000
-freq  = 1000.0                                  # Frequency                 [Hz]
+n_elements = 500
+freq  = 100.0                                  # Frequency                 [Hz]
 c     = 340.0                                   # Speed of sound            [m/s]
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 r = 1.0
@@ -23,4 +23,4 @@ p = IntegralEquations.plane_wave_scattering_circle(ϕ,k*r,150)
 pB = (F + Diagonal(C .- 1.0))\pI
 
 plot(ϕ,abs.(p),label="Analytical")
-plot!(ϕ,abs.(pB),label="BEM")
+plot!(ϕ,abs.(pB),label="BEM",linestyle=:dash,)

@@ -85,12 +85,12 @@ Computes the normal by rotating of the normal 90 degrees in the plane.
 """
 function tangent_to_normal!(normals,tangent;clockwise=true)
     if clockwise
-        @inbounds for i = 1:size(normals,2)
+        @turbo for i = 1:size(normals,2)
             normals[1,i] =  tangent[2,i]
             normals[2,i] = -tangent[1,i]
         end
     else
-        @inbounds for i = 1:size(normals,2)
+        @turbo for i = 1:size(normals,2)
             normals[1,i] = -tangent[2,i]
             normals[2,i] =  tangent[1,i]
         end
@@ -138,6 +138,7 @@ function mygemm!(C, A, B)
         C[m,n] += Cmn
     end
 end
+
 function mygemm_vec!(C, A, B)
     @inbounds @fastmath for n ∈ eachindex(C)
         Cmn = zero(eltype(C))
@@ -163,27 +164,34 @@ function compute_integrands!(Fslice,Gslice,Cslice,fOn,gOn,cOn,
         # Compute integrand = integrand .* jacobian .* weights
         integrand_mul_weights!(integrand,jac_mul_weights)
         # Integration with physics interpolation
-        # matmul!(Gslice,integrand,physics_interpolation,Octavian.StaticInt(1),Octavian.StaticInt(1))
-        # mygemm!(Gslice,integrand,physics_interpolation)
         mygemm_vec!(Gslice,integrand,physics_interpolation)
     end
-    if fOn # Only compute F if you need it
+    if cOn # Only compute c if you need it
+        # Evaluate G₀
+        C!(integrand,interpolation,source,normals,r)
+        # Multiply with jacobian
+        integrand_mul_weights!(integrand,jac_mul_weights)
+        #
+        sum_to_c!(Cslice,integrand)
+        # add_to_c!(Cslice,integrand,jac_mul_weights)
+    end
+    # Only compute F if you need it
+    if fOn && cOn
+        # Evaluate ∂ₙGreens function
+        C_to_F!(integrand,k,r)
+        # Compute integrand = integrand .* jacobian .* weights
+        # integrand_mul_weights!(integrand,jac_mul_weights)
+        # Integration with basis function
+        mygemm_vec!(Fslice,integrand,physics_interpolation)
+    elseif fOn
         # Evaluate ∂ₙGreens function
         F!(integrand,interpolation,source,k,normals,r)
         # Compute integrand = integrand .* jacobian .* weights
         integrand_mul_weights!(integrand,jac_mul_weights)
         # Integration with basis function
-        # matmul!(Fslice,integrand,physics_interpolation,Octavian.StaticInt(1),Octavian.StaticInt(1))
-        # mygemm!(Fslice,integrand,physics_interpolation)
         mygemm_vec!(Fslice,integrand,physics_interpolation)
     end
-    if cOn # Only compute c if you need it
-        # Evaluate G₀
-        C!(integrand,interpolation,source,normals,r)
-        add_to_c!(Cslice,integrand,jac_mul_weights)
-    end
 end
-
 
 function assemble_parallel!(mesh::Mesh2d,k,in_sources;
                     gOn=true,fOn=true,cOn=true,interior=true,n=4,progress=true)

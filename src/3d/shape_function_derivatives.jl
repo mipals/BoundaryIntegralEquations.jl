@@ -29,11 +29,11 @@ end
 
 Computes the tangential derivative using the shape function derivative.
 """
-function shapeFunctionDerivative(mesh)
+function shape_function_derivatives(mesh)
     Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
 
-    Ts = mesh.tangentsX
-    Tt = mesh.tangentsY
+    Ts = mesh.tangents
+    Tt = mesh.sangents
 
     return  Dx .* Ts[1,:] + Dy .* Ts[2,:] + Dz .* Ts[3,:],
             Dx .* Tt[1,:] + Dy .* Tt[2,:] + Dz .* Tt[3,:]
@@ -43,7 +43,7 @@ end
     global_coordinate_shape_function_derivative(mesh)
 
 Returns derivative matrics of the 'physics_function', menaing that such that
-∂p∂x = Dx*p, ∂p∂y = Dy*p, ∂p∂z = Dz*p & ∂pₙ∂x = Dx*pₙ, ∂pₙ∂y = Dy*pₙ, ∂pₙ∂z = Dz*pₙ, 
+∂p∂x = Dx*p, ∂p∂y = Dy*p, ∂p∂z = Dz*p & ∂pₙ∂x = Dx*pₙ, ∂pₙ∂y = Dy*pₙ, ∂pₙ∂z = Dz*pₙ,
 """
 
 function global_coordinate_shape_function_derivative(mesh)
@@ -56,27 +56,27 @@ function global_coordinate_shape_function_derivative(mesh)
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
 
-    # Setting interpolations to be at the nodal positions 
+    # Setting interpolations to be at the nodal positions
     # (since this is where we want to compute the derivatives)
     set_nodal_interpolation!(physics_function)
     copy_interpolation_nodes!(shape_function,physics_function)
     # Finding the number of shape functions. Used to distribute derivatives/gradients
     n_shape = number_of_shape_functions(physics_function)
-    n_elements_pr_node = count_elements_pr_node(mesh) 
-    # Pre-Allocation 
-    global_gradients    = zeros(3,n_shape)   # ∇ₓ 
+    n_elements_pr_node = count_elements_pr_node(mesh)
+    # Pre-Allocation
+    global_gradients    = zeros(3,n_shape)   # ∇ₓ
     local_gradients     = zeros(3,n_shape)   # ∇ξ
     change_of_variables = zeros(3,3)         # COV-matrix
     dX  = zeros(3,n_shape) # X-Derivatives
     dY  = zeros(3,n_shape) # Y-Derivatives
     dZ  = zeros(3,n_shape) # Z-Derivatives
 
-    Dx  = spzeros(n_sources,n_sources)  # ∂x 
-    Dy  = spzeros(n_sources,n_sources)  # ∂y 
-    Dz  = spzeros(n_sources,n_sources)  # ∂z 
+    Dx  = spzeros(n_sources,n_sources)  # ∂x
+    Dy  = spzeros(n_sources,n_sources)  # ∂y
+    Dz  = spzeros(n_sources,n_sources)  # ∂z
 
     for element = 1:nElements
-        # Extract element and compute 
+        # Extract element and compute
         element_nodes        = @view topology[:,element]
         element_coordinates  = @view coordinates[:,element_nodes]
         mul!(dX,element_coordinates,shape_function.derivatives_u)
@@ -92,12 +92,12 @@ function global_coordinate_shape_function_derivative(mesh)
             local_gradients[1,:]    .= physics_function.derivatives_u[:,node]
             local_gradients[2,:]    .= physics_function.derivatives_v[:,node]
             global_gradients        .= change_of_variables\local_gradients
-            
-            Dx[physics_nodes[node],physics_nodes] += global_gradients[1,:] ./ 
+
+            Dx[physics_nodes[node],physics_nodes] += global_gradients[1,:] ./
                                                      n_elements_pr_node[physics_nodes[node]]
-            Dy[physics_nodes[node],physics_nodes] += global_gradients[2,:] ./ 
+            Dy[physics_nodes[node],physics_nodes] += global_gradients[2,:] ./
                                                      n_elements_pr_node[physics_nodes[node]]
-            Dz[physics_nodes[node],physics_nodes] += global_gradients[3,:] ./ 
+            Dz[physics_nodes[node],physics_nodes] += global_gradients[3,:] ./
                                                      n_elements_pr_node[physics_nodes[node]]
         end
     end
@@ -128,14 +128,14 @@ NOTE: It also normalized "dX" which it uses as the tangential direction of choic
 """
 function get_tangential_derivative_matrix!(physics_function,dZ,dX,dY)
     # Finding the number of shape functions. Used to distribute derivatives/gradients
-    n_shape = number_of_shape_functions(physics_function) 
+    n_shape = number_of_shape_functions(physics_function)
     n_gauss_points = length(physics_function.weights)
-    
-    # Pre-Allocation 
-    global_gradients      = MMatrix{3,n_shape}(zeros(3,n_shape)) # ∇ₓ 
+
+    # Pre-Allocation
+    global_gradients      = MMatrix{3,n_shape}(zeros(3,n_shape)) # ∇ₓ
     local_gradients       = MMatrix{3,n_shape}(zeros(3,n_shape)) # ∇ξ
     change_of_variables   = MMatrix{3,3}(zeros(3,3))           # COV-matrix
-    gauss_point_gradients = zeros(n_gauss_points,n_shape)         # ∂x,∂y,∂z 
+    gauss_point_gradients = zeros(n_gauss_points,n_shape)         # ∂x,∂y,∂z
 
     for gauss_node = 1:n_gauss_points
         dXg = @view dX[:,gauss_node]
@@ -145,18 +145,18 @@ function get_tangential_derivative_matrix!(physics_function,dZ,dX,dY)
         change_of_variables[1,:] = dXg
         change_of_variables[2,:] = dYg
         change_of_variables[3,:] = dZg
-        
+
         # Computing global gradient
         local_gradients[1,:] = physics_function.derivatives_u[:,gauss_node]
         local_gradients[2,:] = physics_function.derivatives_v[:,gauss_node]
         global_gradients     = change_of_variables\local_gradients
-        
+
         # Getting gradient in tangent direction
         tangents!(dZg,dXg,dYg)
         gauss_point_gradients[gauss_node:gauss_node,:] = dZg'*global_gradients
     end
 
-    # Return tangential derivative matrix at each gauss point 
+    # Return tangential derivative matrix at each gauss point
     return gauss_point_gradients
 
 end

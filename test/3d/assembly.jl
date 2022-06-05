@@ -31,8 +31,8 @@ import IntegralEquations: incoming_wave, plane_wave_scattering_sphere
         #===================================================================================
                                         Assembling
         ===================================================================================#
-        Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources;progress=false)
-        pI       = incoming_wave(angles,1.0,mesh.sources,k)
+        Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources;progress=false,gOn=false)
+        pI      = incoming_wave(angles,1.0,mesh.sources,k)
         #===================================================================================
                     Setting up a linear system and solving for the pressure
         ===================================================================================#
@@ -66,8 +66,8 @@ end
         #===================================================================================
                                         Assembling
         ===================================================================================#
-        Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources;progress=false)
-        pI       = incoming_wave(angles,1.0,mesh.sources,k)
+        Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources;progress=false,gOn=false)
+        pI      = incoming_wave(angles,1.0,mesh.sources,k)
         #===================================================================================
                     Setting up a linear system and solving for the pressure
         ===================================================================================#

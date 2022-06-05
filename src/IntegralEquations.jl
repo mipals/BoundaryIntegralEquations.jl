@@ -18,6 +18,8 @@ using ForwardDiff
 using LegendrePolynomials
 using Meshes
 using LoopVectorization
+using LinearMaps
+using IterativeSolvers
 using Base.Threads
 #==========================================================================================
                             General Properties of Shape Functions
@@ -52,6 +54,10 @@ include("3d/read_comsol.jl")
 include("3d/adaptive_integration.jl")
 include("3d/triangular_modifications.jl")
 include("3d/assembly_collocation.jl")
+include("3d/assembly_collocation_losses.jl")
+include("3d/LossyBlockMatrix.jl")
+include("3d/LossyBlockMatrixCompact.jl")
+include("3d/LossyInexactKrylov.jl")
 include("3d/assembly_galerkin.jl")
 include("3d/visualizations.jl")
 #==========================================================================================
@@ -59,6 +65,7 @@ include("3d/visualizations.jl")
 ==========================================================================================#
 include("analytical/2d_scattering.jl")
 include("analytical/3d_scattering.jl")
+include("analytical/sphere_first_order.jl")
 #==========================================================================================
                                 Exporting relevant function
 ==========================================================================================#
@@ -89,7 +96,12 @@ export Quadrilateral, QuadrilateralLinear, QuadrilateralLinear4,
        DiscontinuousQuadrilateralQuadraticLagrange
 # Assembly
 export assemble_parallel!
+
 # visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz
+
+# Losses
+export LossyBlockMatrix, LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter
+export compute_lossy_rhs
 
 end
