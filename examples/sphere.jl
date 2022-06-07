@@ -13,8 +13,8 @@ quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:disc
 tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 tri_mesh_file = "examples/meshes/sphere_1m_finer"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
-                                        physics_order=tri_physics_orders[2])
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
+                                        physics_order=tri_physics_orders[1])
 # Quadrilateral Meshes
 # quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"

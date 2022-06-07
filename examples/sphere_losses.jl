@@ -34,7 +34,7 @@ radius = 1.0                                    # Radius of sphere_1m       [m]
                             Assembling BEM matrices
 ==========================================================================================#
 # @time Fs,Gs = assemble_parallel!(mesh,k,mesh.sources;sparse=true);
-BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true)
+@time BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true)
 Av = BB.Aᵥ
 Bv = BB.Bᵥ
 Aa = BB.Aₐ
