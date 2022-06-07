@@ -23,31 +23,31 @@ shape_connections(::QuadrilateralQuadraticLagrange) = [[1 2],[1 3],[1 2 3 4],[2 
 shape_connections(::QuadrilateralQuadratic) = [[1 2],[2 3],[3 4],[4 1]]
 
 
-function connected_sources(mesh,depth=1)
-    @assert depth ∈ [1, 2]
+function connected_sources(mesh,depth=0)
+    @assert depth ∈ [0, 1, 2]
     n_sources = size(mesh.sources,2)
     source_connections  = [zeros(Int64,0) for i = 1:n_sources]
     element_connections = [zeros(Int64,0) for i = 1:n_sources]
     # Maybe we should use actual topology for this to work?
+    physics_topology = mesh.physics_topology
     n_corners = number_of_corners(mesh.physics_function)
     n_shape_functions = size(mesh.physics_topology,1)
     for element = 1:size(mesh.topology,2)
         for i = 1:n_shape_functions
-            append!(element_connections[mesh.physics_topology[i,element]],element)
-            append!(source_connections[mesh.physics_topology[i,element]],mesh.physics_topology[:,element])
+            append!(element_connections[physics_topology[i,element]],element)
+            append!(source_connections[physics_topology[i,element]],physics_topology[:,element])
         end
     end
     if depth == 1
         conns = shape_connections(mesh.physics_function)
-        for element = 1:size(mesh.physics_topology,2)
+        for element = 1:size(physics_topology,2)
             for idx = (n_corners + 1):n_shape_functions
                 for j ∈ conns[idx-n_corners]
-                    append!(element_connections[mesh.physics_topology[idx,element]],element_connections[mesh.physics_topology[j,element]])
-                    append!(source_connections[mesh.physics_topology[idx,element]],  source_connections[mesh.physics_topology[j,element]])
+                    append!(element_connections[physics_topology[idx,element]],element_connections[[j,element]])
+                    append!(source_connections[physics_topology[idx,element]],  source_connections[[j,element]])
                 end
             end
         end
-        return sort!.(unique.(element_connections)), sort!.(unique.(source_connections))
     elseif depth == 2
         element_connections2 = [zeros(Int64,0) for i = 1:n_sources]
         source_connections2  = [zeros(Int64,0) for i = 1:n_sources]
@@ -57,9 +57,8 @@ function connected_sources(mesh,depth=1)
                 append!(source_connections2[source],source_connections[idx])
             end
         end
-        return sort!.(unique.(element_connections2)), sort!.(unique.(source_connections2))
     end
-
+    return sort!.(unique.(element_connections)), sort!.(unique.(source_connections))
 end
 
 function create_row_indices(lengths,total_counts)
@@ -158,9 +157,9 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=
 
     # Connections
     element_connections, source_connections = connected_sources(mesh,2)
-    dict = [Dict(zip(source_connections[i],1:length(source_connections[i]))) for i = 1:length(source_connections)]
-
     lengths = length.(source_connections)
+    dict = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
+
     idx = [0; cumsum(lengths)]
     # Preallocation of return values
     F = zeros(ComplexF64, idx[end])
@@ -415,7 +414,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=
                                             middle_normals,middle_tangents,middle_sangents,
                                             middle_interpolation,middle_jacobian,middle_r,
                                             middle_integrand,element_coordinates,
-                                            fOn,gOn,submatrixF,submatrixG,k,source)
+                                         fOn,gOn,submatrixF,submatrixG,k,source)
             else
                 sparse_computing_integrals!(physics_interpolation6,shape_function6,
                                             middle_normals,middle_tangents,middle_sangents,

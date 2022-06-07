@@ -24,29 +24,29 @@ end
 #==========================================================================================
             Computing shape function derivatives at each node as the average
 ==========================================================================================#
-"""
-    shapeFunctionDerivative(mesh)
+# """
+#     shapeFunctionDerivative(mesh)
 
-Computes the tangential derivative using the shape function derivative.
-"""
+# Computes the tangential derivative using the shape function derivative.
+# """
 function shape_function_derivatives(mesh)
     Dx,Dy,Dz = global_coordinate_shape_function_derivative(mesh)
 
-    Ts = mesh.tangents
-    Tt = mesh.sangents
+    Ts = mesh.sangents
+    Tt = mesh.tangents
 
-    return  Dx .* Ts[1,:] + Dy .* Ts[2,:] + Dz .* Ts[3,:],
-            Dx .* Tt[1,:] + Dy .* Tt[2,:] + Dz .* Tt[3,:]
+    return  Dx .* Tt[1,:] + Dy .* Tt[2,:] + Dz .* Tt[3,:],
+            Dx .* Ts[1,:] + Dy .* Ts[2,:] + Dz .* Ts[3,:]
 end
 
 """
-    global_coordinate_shape_function_derivative(mesh)
+    shape_function_derivatives(mesh)
 
 Returns derivative matrics of the 'physics_function', menaing that such that
 ∂p∂x = Dx*p, ∂p∂y = Dy*p, ∂p∂z = Dz*p & ∂pₙ∂x = Dx*pₙ, ∂pₙ∂y = Dy*pₙ, ∂pₙ∂z = Dz*pₙ,
 """
 
-function global_coordinate_shape_function_derivative(mesh)
+function shape_function_derivatives(mesh;global_derivatives=false)
     topology    = mesh.topology
     coordinates = mesh.coordinates
     nElements   = number_of_elements(mesh)
@@ -55,7 +55,7 @@ function global_coordinate_shape_function_derivative(mesh)
     # Making a copy of the element type
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
-
+    physics_topology = mesh.physics_topology
     # Setting interpolations to be at the nodal positions
     # (since this is where we want to compute the derivatives)
     set_nodal_interpolation!(physics_function)
@@ -75,17 +75,37 @@ function global_coordinate_shape_function_derivative(mesh)
     Dy  = spzeros(n_sources,n_sources)  # ∂y
     Dz  = spzeros(n_sources,n_sources)  # ∂z
 
+    element_coordinates = zeros(3,n_shape)
+    derivatives_u = shape_function.derivatives_u
+    derivatives_v = shape_function.derivatives_v
+
+    element_connections, source_connections = connected_sources(mesh,0)
+    lengths = length.(source_connections)
+    dict = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
+
+    # Preallocation of return values
+    idx = [0; cumsum(lengths)]
+    Dx = zeros(idx[end])
+    Dy = zeros(idx[end])
+    Dz = zeros(idx[end])
+    # Ds = zeros(idx[end])
+    # Dt = zeros(idx[end])
+
+
     for element = 1:nElements
         # Extract element and compute
-        element_nodes        = @view topology[:,element]
-        element_coordinates  = @view coordinates[:,element_nodes]
-        mul!(dX,element_coordinates,shape_function.derivatives_u)
-        mul!(dY,element_coordinates,shape_function.derivatives_v)
+        element_coordinates  .= coordinates[:,topology[:,element]]
+        my_mul!(dX,element_coordinates,derivatives_u)
+        my_mul!(dY,element_coordinates,derivatives_v)
         cross_product!(dZ,dX,dY)
 
-        physics_nodes = @view mesh.physics_topology[:,element]
+        source_nodes = @view physics_topology[:,element]
         # Add nodal gradients to the shape function derivatives
+        physics_nodes = zeros(Int64, n_shape)
         for node = 1:n_shape
+            source_node = source_nodes[node]
+            di = dict[source_node]
+            find_physics_nodes!(physics_nodes,idx[source_node],di,physics_topology[:,element])
             change_of_variables[1,:] = dX[:,node]
             change_of_variables[2,:] = dY[:,node]
             change_of_variables[3,:] = dZ[:,node]
@@ -93,16 +113,35 @@ function global_coordinate_shape_function_derivative(mesh)
             local_gradients[2,:]    .= physics_function.derivatives_v[:,node]
             global_gradients        .= change_of_variables\local_gradients
 
-            Dx[physics_nodes[node],physics_nodes] += global_gradients[1,:] ./
-                                                     n_elements_pr_node[physics_nodes[node]]
-            Dy[physics_nodes[node],physics_nodes] += global_gradients[2,:] ./
-                                                     n_elements_pr_node[physics_nodes[node]]
-            Dz[physics_nodes[node],physics_nodes] += global_gradients[3,:] ./
-                                                     n_elements_pr_node[physics_nodes[node]]
+            Dx[physics_nodes] += global_gradients[1,:] ./ n_elements_pr_node[source_node]
+            Dy[physics_nodes] += global_gradients[2,:] ./ n_elements_pr_node[source_node]
+            Dz[physics_nodes] += global_gradients[3,:] ./ n_elements_pr_node[source_node]
+            # Dt[physics_nodes] += Dx[physics_nodes] * T1[source_node] +
+            #                      Dy[physics_nodes] * T2[source_node] +
+            #                      Dz[physics_nodes] * T3[source_node]
+            # Ds[physics_nodes] += Dx[physics_nodes] * S1[source_node] +
+            #                      Dy[physics_nodes] * S2[source_node] +
+            #                      Dz[physics_nodes] * S3[source_node]
         end
     end
 
-    return Dx, Dy, Dz
+    I = create_row_indices(lengths,idx[end])
+    J = vcat(source_connections...)
+
+    if global_derivatives
+        return sparse(I,J,Dx), sparse(I,J,Dy), sparse(I,J,Dz)
+    else
+        T1 = inverse_rle(mesh.tangents[1,:],lengths)
+        T2 = inverse_rle(mesh.tangents[2,:],lengths)
+        T3 = inverse_rle(mesh.tangents[3,:],lengths)
+
+        S1 = inverse_rle(mesh.sangents[1,:],lengths)
+        S2 = inverse_rle(mesh.sangents[2,:],lengths)
+        S3 = inverse_rle(mesh.sangents[3,:],lengths)
+        Dt = Dx .* T1 + Dy .* T2 + Dz .* T3
+        Ds = Dx .* S1 + Dy .* S2 + Dz .* S3
+        return sparse(I,J,Dt), sparse(I,J,Ds)
+    end
 
 end
 

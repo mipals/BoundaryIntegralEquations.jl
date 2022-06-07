@@ -20,6 +20,7 @@ using Meshes
 using LoopVectorization
 using LinearMaps
 using IterativeSolvers
+using StatsBase
 using Base.Threads
 #==========================================================================================
                             General Properties of Shape Functions
