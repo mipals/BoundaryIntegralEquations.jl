@@ -10,17 +10,17 @@ geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
 # Triangular Meshes
-# tri_mesh_file = "examples/meshes/sphere_1m"
+tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 tri_mesh_file = "examples/meshes/sphere_1m_finer"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                        physics_order=tri_physics_orders[1])
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                        physics_order=tri_physics_orders[2])
 # Quadrilateral Meshes
-quad_mesh_file = "examples/meshes/quad_sphere"
+# quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
-mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[1],
-                                            physics_order=quad_physics_orders[1])
+# mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[1],
+#                                             physics_order=quad_physics_orders[1])
 #==========================================================================================
             3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
 ==========================================================================================#

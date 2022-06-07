@@ -2,7 +2,6 @@
                             Adding Related Packages
 ==========================================================================================#
 using SpecialFunctions, LinearAlgebra, IntegralEquations, Plots, IterativeSolvers
-import IntegralEquations: incoming_wave, plane_wave_scattering_sphere, psca, pinc
 #==========================================================================================
                 Loading Mesh + Visualization (viz seems broken on M1 chips :/ )
 ==========================================================================================#
@@ -25,7 +24,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq  = 750.0                                   # Frequency                 [Hz]
+freq  = 1750.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=-1)
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
@@ -34,6 +33,7 @@ radius = 1.0                                    # Radius of sphere_1m       [m]
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
+# @time Fs,Gs = assemble_parallel!(mesh,k,mesh.sources;sparse=true);
 BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true)
 Av = BB.Aᵥ
 Bv = BB.Bᵥ
@@ -104,13 +104,29 @@ ang_axis = acos.(xyzb[3,:]/radius)*180.0/pi
 perm = sortperm(ang_axis)
 
 # Plotting
-plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:yellow)
+# plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:yellow)
+scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:yellow)
 ylabel!("|p|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",markersize=2)
 title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:yellow)
+# plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:yellow)
+scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:yellow)
 ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(v_rAN_V[perm]),label="Analytical",markersize=2)
 # ylims!((0,1e-5))
-plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:yellow)
+# plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:yellow)
+scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:yellow)
 plot!(ang_axis[perm],abs.(v_thetaAN_V[perm]),label="Analytical",markersize=2)
 xlabel!("Angle"); ylabel!("|Vt|")
-plt = plot(plt1,plt2,plt3,layout=(3,1),dpi=500)
+# plot(plt1,plt2,plt3,layout=(3,1))
+# plt = plot(plt1,plt2,plt3,layout=(3,1),dpi=300)
+
+
+###
+physics_function = mesh.physics_function
+beta = IntegralEquations.get_beta(physics_function)
+tmp  = DiscontinuousTriangularLinear(physics_function,beta)
+offr = IntegralEquations.get_offset(physics_function)
+offr = 0.05
+# Dealing with corners
+nodesX4,nodesY4,weights4 = IntegralEquations.singular_triangle_integration(tmp,3,[0.50;0.50;offr],Diagonal(ones(3)),1e-6)
+nodesX5,nodesY5,weights5 = IntegralEquations.singular_triangle_integration(tmp,3,[offr;0.50;0.50],Diagonal(ones(3)),1e-6)
+nodesX6,nodesY6,weights6 = IntegralEquations.singular_triangle_integration(tmp,3,[0.50;offr;0.50],Diagonal(ones(3)),1e-6)
