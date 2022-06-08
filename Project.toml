@@ -28,6 +28,7 @@ LegendrePolynomials = "0.4"
 Meshes = "0.22"
 ProgressMeter = "1"
 SpecialFunctions = "1.8,2"
+StatsBase = "0.33"
 julia = "1.7"
 
 [extras]
