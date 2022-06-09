@@ -73,8 +73,8 @@ end
 function compute_center(element_coordinates)
     return sum(element_coordinates,dims=2)/3.0;
 end
-function singularity_check(p,coords,singCheck,factor)
-    if singCheck
+function singularity_check(p,coords,sing_check,factor=2.0)
+    if sing_check
         max_node_dist = max_node_distance(coords)
         max_dist      = max_distance(coords,p)
         if max_dist > max_node_dist*factor

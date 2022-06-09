@@ -29,6 +29,7 @@ function connected_sources(mesh,depth=0)
     source_connections  = [zeros(Int64,0) for i = 1:n_sources]
     element_connections = [zeros(Int64,0) for i = 1:n_sources]
     # Maybe we should use actual topology for this to work?
+    topology = mesh.topology
     physics_topology = mesh.physics_topology
     n_corners = number_of_corners(mesh.physics_function)
     n_shape_functions = size(mesh.physics_topology,1)
@@ -57,6 +58,7 @@ function connected_sources(mesh,depth=0)
                 append!(source_connections2[source],source_connections[idx])
             end
         end
+        return sort!.(unique.(element_connections2)), sort!.(unique.(source_connections2))
     end
     return sort!.(unique.(element_connections)), sort!.(unique.(source_connections))
 end
@@ -110,7 +112,8 @@ function find_physics_nodes!(physics_nodes,idxs,di,physics_top)
     # [(idx[source_node] + di[t]) for t in physics_topology[:,element]]
 end
 
-function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=true,gOn=true,
+function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
+        fOn=true,gOn=true,depth=2,
         progress=true) where {T <: Union{TriangularLinear,DiscontinuousTriangularLinear}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
@@ -156,7 +159,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=
     physics_interpolation3 = copy(physics_function3.interpolation')
 
     # Connections
-    element_connections, source_connections = connected_sources(mesh,2)
+    element_connections, source_connections = connected_sources(mesh,depth)
     lengths = length.(source_connections)
     dict = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
 
@@ -240,7 +243,8 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=
 end
 
 
-function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=true,gOn=true,
+function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
+    fOn=true,gOn=true,depth=2,
     progress=true) where {T <: Union{TriangularQuadratic,DiscontinuousTriangularQuadratic}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
@@ -305,7 +309,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;fOn=
     physics_interpolation6 = copy(physics_function6.interpolation')
 
     # Connections
-    element_connections, source_connections = connected_sources(mesh,2)
+    element_connections, source_connections = connected_sources(mesh,depth)
     lengths = length.(source_connections)
     dict = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
 

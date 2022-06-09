@@ -195,10 +195,10 @@ end
 Assembles the BEM matrices for F, G and G0 kernels over the elements on the mesh.
 """
 function assemble_parallel!(mesh::Mesh3d,k,in_sources;fOn=true,gOn=true,cOn=true,
-                            sparse=false,singular=false,m=4,n=4,progress=true)
+                            sparse=false,m=4,n=4,progress=true,depth=2)
     if sparse
         return sparse_assemble_parallel!(mesh,k,in_sources,mesh.shape_function;
-                                fOn=fOn,gOn=gOn,progress=progress)
+                                fOn=fOn,gOn=gOn,progress=progress,depth=depth)
     else
         return assemble_parallel!(mesh::Mesh3d,k,in_sources,mesh.shape_function;
                                 fOn=fOn,gOn=gOn,cOn=cOn,m=m,n=n,progress=progress)
@@ -261,14 +261,13 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
         # element_coordinates = zeros(3,n_physics_functions)
         @inbounds for element = 1:n_elements
             # Access element topology and coordinates
-            # element_coordinates .= coordinates[:,topology[:,element]]
-            element_coordinates  = @view coordinates[:,topology[:,element]]
             physics_nodes        = @view physics_topology[:,element]
+            physics_coordinates  = @view sources[:,physics_nodes]
             # Acces submatrix of the BEM matrix
             submatrixF = @view F[source_node,physics_nodes]
             submatrixG = @view G[source_node,physics_nodes]
             # Use quadrature point clustered around the closest vertex
-            close_corner = find_closest_corner(source,element_coordinates)
+            close_corner = find_closest_corner(source,physics_coordinates)
             if close_corner == 1
                 computing_integrals!(physics_interpolation1,interpolation_list1[element],
                                         fOn,gOn,cOn,
@@ -284,6 +283,137 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
                                         fOn,gOn,cOn,
                                         submatrixF,submatrixG,subvectorC,k,
                                         source,integrand,r)
+            end
+        end
+        if progress; next!(prog); end # For the progress meter
+    end
+
+    return F, G, C
+
+end
+
+function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
+                                fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
+    topology    = get_topology(mesh)
+    n_elements  = number_of_elements(mesh)
+    sources     = convert.(eltype(shape_function),in_sources)
+    n_sources   = size(in_sources,2)
+    n_nodes     = size(mesh.sources,2)
+    coordinates = convert.(eltype(shape_function),get_coordinates(mesh))
+    physics_topology = mesh.physics_topology
+    physics_function = mesh.physics_function
+    # n_physics_functions = number_of_shape_functions(physics_function)
+    #======================================================================================
+        Introducing three elements: (The hope here is to compute singular integrals)
+        The numbers corresponds to the corner for which the GP-points are clustered
+        As such choose the clustering that are closest to the source point
+     ————————————————————————————————————  Grid  ————————————————————————————————————————
+                                           3
+                                           | \
+                                           1 - 2
+    ======================================================================================#
+    shape_function1 = create_rotated_element(shape_function,n,m,1)
+    shape_function2 = create_rotated_element(shape_function,n,m,2)
+    shape_function3 = create_rotated_element(shape_function,n,m,3)
+    physics_function1 = deepcopy(physics_function)
+    physics_function2 = deepcopy(physics_function)
+    physics_function3 = deepcopy(physics_function)
+    copy_interpolation_nodes!(physics_function1,shape_function1)
+    copy_interpolation_nodes!(physics_function2,shape_function2)
+    copy_interpolation_nodes!(physics_function3,shape_function3)
+
+    nodesX4,nodesY4,weights4 = getpolar_gaussian(n,4)
+    nodesX5,nodesY5,weights5 = getpolar_gaussian(n,5)
+    nodesX6,nodesY6,weights6 = getpolar_gaussian(n,6)
+    physics_function4 = deepcopy(physics_function)
+    physics_function5 = deepcopy(physics_function)
+    physics_function6 = deepcopy(physics_function)
+    shape_function4 = deepcopy(shape_function)
+    shape_function5 = deepcopy(shape_function)
+    shape_function6 = deepcopy(shape_function)
+    set_interpolation_nodes!(shape_function4,nodesX4,nodesY4,weights4)
+    set_interpolation_nodes!(shape_function5,nodesX5,nodesY5,weights5)
+    set_interpolation_nodes!(shape_function6,nodesX6,nodesY6,weights6)
+    copy_interpolation_nodes!(physics_function4,shape_function4)
+    copy_interpolation_nodes!(physics_function5,shape_function5)
+    copy_interpolation_nodes!(physics_function6,shape_function6)
+
+
+    # Computing interpolation on each element
+    interpolation_list1 = interpolate_elements(mesh,shape_function1)
+    interpolation_list2 = interpolate_elements(mesh,shape_function2)
+    interpolation_list3 = interpolate_elements(mesh,shape_function3)
+    interpolation_list4 = interpolate_elements(mesh,shape_function4)
+    interpolation_list5 = interpolate_elements(mesh,shape_function5)
+    interpolation_list6 = interpolate_elements(mesh,shape_function6)
+
+    # Copying interpolation of physics functions1
+    physics_interpolation1 = copy(physics_function1.interpolation')
+    physics_interpolation2 = copy(physics_function2.interpolation')
+    physics_interpolation3 = copy(physics_function3.interpolation')
+    physics_interpolation4 = copy(physics_function4.interpolation')
+    physics_interpolation5 = copy(physics_function5.interpolation')
+    physics_interpolation6 = copy(physics_function6.interpolation')
+
+    # Preallocation of return values
+    F = zeros(ComplexF64, n_sources, n_nodes)
+    G = zeros(ComplexF64, n_sources, n_nodes)
+    C = zeros(ComplexF64, n_sources)
+
+    # Assembly loop
+    if progress; prog = Progress(n_sources, 0.2, "Assembling BEM matrices: \t", 50); end
+    @inbounds @threads for source_node = 1:n_sources
+        # Access source
+        source = sources[:,source_node]
+        # Every thread has access to parts of the pre-allocated matrices
+        integrand  = zeros(ComplexF64,n*m)
+        r          = zeros(Float64,n*m)
+        mid_integrand = zeros(ComplexF64,length(nodesX4))
+        mid_r         = zeros(Float64,length(nodesX4))
+        subvectorC    = @view C[source_node]
+        # if source_node == 1
+        #     println("hey")
+        # end
+        # element_coordinates = zeros(3,n_physics_functions)
+        @inbounds for element = 1:n_elements
+            # Access element topology and coordinates
+            physics_nodes        = @view physics_topology[:,element]
+            physics_coordinates  = @view sources[:,physics_nodes]
+            # Acces submatrix of the BEM matrix
+            submatrixF = @view F[source_node,physics_nodes]
+            submatrixG = @view G[source_node,physics_nodes]
+            # Use quadrature point clustered around the closest vertex
+            close_corner = find_closest_corner(source,physics_coordinates)
+            if close_corner == 1
+                computing_integrals!(physics_interpolation1,interpolation_list1[element],
+                                        fOn,gOn,cOn,
+                                        submatrixF,submatrixG,subvectorC,k,
+                                        source,integrand,r)
+            elseif close_corner == 2
+                computing_integrals!(physics_interpolation2,interpolation_list2[element],
+                                        fOn,gOn,cOn,
+                                        submatrixF,submatrixG,subvectorC,k,
+                                        source,integrand,r)
+            elseif close_corner == 3
+                computing_integrals!(physics_interpolation3,interpolation_list3[element],
+                                        fOn,gOn,cOn,
+                                        submatrixF,submatrixG,subvectorC,k,
+                                        source,integrand,r)
+            elseif close_corner == 4
+                computing_integrals!(physics_interpolation4,interpolation_list4[element],
+                                        fOn,gOn,cOn,
+                                        submatrixF,submatrixG,subvectorC,k,
+                                        source,mid_integrand,mid_r)
+            elseif close_corner == 5
+                computing_integrals!(physics_interpolation5,interpolation_list5[element],
+                                    fOn,gOn,cOn,
+                                    submatrixF,submatrixG,subvectorC,k,
+                                    source,mid_integrand,mid_r)
+            else
+                computing_integrals!(physics_interpolation6,interpolation_list6[element],
+                                        fOn,gOn,cOn,
+                                        submatrixF,submatrixG,subvectorC,k,
+                                        source,mid_integrand,mid_r)
             end
         end
         if progress; next!(prog); end # For the progress meter

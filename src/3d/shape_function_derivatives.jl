@@ -4,7 +4,7 @@
 """
     count_elements_pr_node(mesh)
 
-Counting the no. elements that each node is part of
+Counting the number of elements that each node is part of
 (Cornes can have various of numbers. Midpoints only 2.)
 """
 function count_elements_pr_node(mesh)
@@ -12,7 +12,6 @@ function count_elements_pr_node(mesh)
     N = size(mesh.sources,2)
     T = zeros(eltype(topology), N)
     m,n = size(topology)
-
     for j=1:n
         for i=1:m
             T[topology[i,j]] += 1
@@ -30,11 +29,10 @@ end
 Returns derivative matrics of the 'physics_function', menaing that such that
 ∂p∂x = Dx*p, ∂p∂y = Dy*p, ∂p∂z = Dz*p & ∂pₙ∂x = Dx*pₙ, ∂pₙ∂y = Dy*pₙ, ∂pₙ∂z = Dz*pₙ,
 """
-
 function shape_function_derivatives(mesh;global_derivatives=false)
     topology    = mesh.topology
     coordinates = mesh.coordinates
-    nElements   = number_of_elements(mesh)
+    n_elemenrts = number_of_elements(mesh)
     n_sources   = size(mesh.sources,2)
 
     # Making a copy of the element type
@@ -65,9 +63,9 @@ function shape_function_derivatives(mesh;global_derivatives=false)
     derivatives_u = shape_function.derivatives_u
     derivatives_v = shape_function.derivatives_v
 
-    element_connections, source_connections = connected_sources(mesh,0)
+    _, source_connections = connected_sources(mesh,0)
     lengths = length.(source_connections)
-    dict = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
+    dict    = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
 
     # Preallocation of return values
     idx = [0; cumsum(lengths)]
@@ -75,7 +73,7 @@ function shape_function_derivatives(mesh;global_derivatives=false)
     Dy = zeros(idx[end])
     Dz = zeros(idx[end])
 
-    for element = 1:nElements
+    for element = 1:n_elemenrts
         # Extract element and compute
         element_coordinates  .= coordinates[:,topology[:,element]]
         my_mul!(dX,element_coordinates,derivatives_u)
@@ -108,18 +106,18 @@ function shape_function_derivatives(mesh;global_derivatives=false)
     if global_derivatives
         return sparse(I,J,Dx), sparse(I,J,Dy), sparse(I,J,Dz)
     else
+        # Repeating coordinate `i` lengths[i] times using StatsBase function `inverse_rle`
         T1 = inverse_rle(mesh.tangents[1,:],lengths)
         T2 = inverse_rle(mesh.tangents[2,:],lengths)
         T3 = inverse_rle(mesh.tangents[3,:],lengths)
-
         S1 = inverse_rle(mesh.sangents[1,:],lengths)
         S2 = inverse_rle(mesh.sangents[2,:],lengths)
         S3 = inverse_rle(mesh.sangents[3,:],lengths)
+        # From global to local coordinates (this is essentially directional derivatives)
         Dt = Dx .* T1 + Dy .* T2 + Dz .* T3
         Ds = Dx .* S1 + Dy .* S2 + Dz .* S3
         return sparse(I,J,Dt), sparse(I,J,Ds)
     end
-
 end
 
 function mesh_gradients(mesh,p)
@@ -171,8 +169,6 @@ function get_tangential_derivative_matrix!(physics_function,dZ,dX,dY)
         tangents!(dZg,dXg,dYg)
         gauss_point_gradients[gauss_node:gauss_node,:] = dZg'*global_gradients
     end
-
     # Return tangential derivative matrix at each gauss point
     return gauss_point_gradients
-
 end

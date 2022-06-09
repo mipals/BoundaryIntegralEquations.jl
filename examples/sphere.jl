@@ -10,11 +10,12 @@ geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
 # Triangular Meshes
-tri_mesh_file = "examples/meshes/sphere_1m"
+# tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 tri_mesh_file = "examples/meshes/sphere_1m_finer"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                        physics_order=tri_physics_orders[1])
+# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                        physics_order=tri_physics_orders[2])
 # Quadrilateral Meshes
 # quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
@@ -38,7 +39,7 @@ k     = 2*π*freq/c                              # Wavenumber                [1/
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
 radius = 1.0                                    # Radius of sphere_1m       [m]
 # Computing incident pressure
-pI = incoming_wave(angles,1.0,mesh.sources,k)
+pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
@@ -53,10 +54,13 @@ p_bem = gmres(Ap,pI;verbose=true);
 ## Plotting pressure on surface nodes
 surface_angles = acos.(-mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
-p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
+p_analytical, _ = IntegralEquations.plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
+# using UnicodePlots
+# plt = scatterplot(surface_angles[perm], abs.(p_analytical[perm]),name="Analytical")
+# lineplot!(plt,surface_angles[perm],abs.(p_bem[perm]),name="BEM",)
 plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],abs.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
-title!("Frequency = $(freq) (Hz)")
+# title!("Frequency = $(freq) (Hz)")
 # norm(p_analytical - conj(p_bem))/norm(p_analytical)
 #==========================================================================================
                             Adding CHIEF points

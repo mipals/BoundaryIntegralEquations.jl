@@ -97,7 +97,7 @@ Returns `m*n` integration points and `weights` for a triangule using a duffy tra
 The integration points are clustered around node "1" in the triangle:
 
                                     3
-                                    | \
+                                    | \\
                                     1 - 2
 """
 function rotated_triangular_quadpoints(n=4,m=4)
@@ -114,4 +114,118 @@ function rotated_triangular_quadpoints(n=4,m=4)
     weights = w .* v
 
     return ξ,η,weights
+end
+
+#==========================================================================================
+                                Spherical Coordinates
+==========================================================================================#
+"""
+    linear_quadrature_transformation(gp,w,a,b)
+
+Transforms Guassian quadrature points `gp` and weights `w` from the interval [-1,1] to [a,b]
+"""
+function linear_quadrature_transformation(gp,w,a,b)
+    gp = (a .+ b)/2.0 .+ (b .- a)/2.0.*gp
+    w  = (b .- a)/2.0.*w
+    return gp,w
+end
+max_rad1(x) = 1.0 ./ (cos.(x) + sin.(x))             #
+max_rad2(x) = 0.5 * sec.(x)                          # Per. definition of secant: 1/cos(x)
+max_rad3(x) = sin.(π/4.0) ./ sin.(x .- π/4.0)*0.5    # Sinus relation
+"""
+    polar_quadrature
+
+Returns the `n_rad` radii and `n_ang` angles of polar coordinates of a triangle defined by
+the values `minAngle`, `maxAngle`, `minRadius` and the `maxRadius` function.
+"""
+function polar_quadrature(n_rad,n_ang=0,minAngle=0.0,maxAngle=π/2.0,minRadius=0.0,maxRad=max_rad1)
+    # Getting standard Gaussian Points
+    gp_ang, w_ang = gausslegendre(n_ang)
+    gp_rad, w_rad = gausslegendre(n_rad)
+
+    # Angles from 0 to π/2
+    theta,thetaW = linear_quadrature_transformation(gp_ang,w_ang,minAngle,maxAngle)
+    thetaW = kron(thetaW,ones(n_rad))
+
+    # The corresponding radius depends on the angles.
+    maxRadius = maxRad(theta)
+    radius  = zeros(n_ang*n_rad)
+    radiusW = zeros(n_ang*n_rad)
+
+    for i = 1:n_ang
+        rad,radW = linear_quadrature_transformation(gp_rad,w_rad,minRadius,maxRadius[i])
+        radius[(i-1)*n_rad + 1:i*n_rad]  = rad
+        radiusW[(i-1)*n_rad + 1:i*n_rad] = radW .* rad # rad is the jacobian
+    end
+    angles = kron(theta,ones(n_rad))
+    w      = thetaW .* radiusW
+    return angles,radius,w
+end
+"""
+    polar_gaussian(n)
+
+Returns `n^2` x,y-coordinates and weights for quadrature on a triangle with a singularity
+on vertex 1.
+"""
+function polar_gaussian(n_rad)
+    n_rad = Int(ceil(n_rad/2.0))*2
+    n_ang = n_rad
+
+    # NOTE: Things go anti-clockwise here
+    angles,radius,w = polar_quadrature(n_rad,n_ang,0.0,π/2,0,max_rad1)
+    x = radius .* cos.(angles)
+    y = radius .* sin.(angles)
+
+    return x,y,w
+
+end
+"""
+    polar_gaussianMidpoint(n)
+
+Returns `n^2` x,y-coordinates and weights for quadrature on a triangle with a singularity
+on vertex 4 (i.e. vertex between vertex 1 and 2).
+"""
+function polar_gaussianMidpoint(n_rad)
+    n_rad = Int(ceil(n_rad/2.0))*2
+    n_ang = Int(n_rad/2)
+
+    # NOTE: The angles go clockwise here
+    angles1,radius1,w1 = polar_quadrature(n_rad,n_ang,0.0,atan(2),0.0,max_rad2)
+    x1 = radius1 .* cos.(π .- angles1)
+    y1 = radius1 .* sin.(π .- angles1)
+
+    angles2,radius2,w2 = polar_quadrature(n_rad,n_ang,atan(2),π,0.0,max_rad3)
+    x2 = radius2 .* cos.(π .- angles2)
+    y2 = radius2 .* sin.(π .- angles2)
+
+    return [x1;x2] .+ 0.5, [y1;y2], [w1; w2]
+end
+
+"""
+    getpolar_gaussian(n,vertexNumber)
+
+Returns `n^2` x,y-coordinates and weights for quadrature on a triangle with a singularity
+on vertex number `vertexNumber`. Currently only vertex numbers between 1 and 6 is supported.
+"""
+function getpolar_gaussian(n,vertexNumber)
+    if vertexNumber == 1
+        return polar_gaussian(n)
+    elseif vertexNumber == 2
+        X,Y,W = polar_gaussian(n)
+        return 1.0 .- X - Y, X, W
+    elseif vertexNumber == 3
+        X,Y,W = polar_gaussian(n)
+        return Y, 1.0 .- X .- Y,W
+    elseif vertexNumber == 4
+        return polar_gaussianMidpoint(n)
+    elseif vertexNumber == 5
+        X,Y,W = polar_gaussianMidpoint(n)
+        return 1.0 .- X - Y, X, W
+    elseif vertexNumber == 6
+        X,Y,W = polar_gaussianMidpoint(n)
+        return Y, 1.0 .- X .- Y,W
+    else
+        error("Node number does not lie in range 1-6")
+    end
+
 end

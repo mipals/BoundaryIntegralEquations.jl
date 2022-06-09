@@ -71,38 +71,39 @@ include("analytical/sphere_first_order.jl")
                                 Exporting relevant function
 ==========================================================================================#
 # Helper functions
-export adjoint, *
+export adjoint,*
 
 # Abstract Shape Function Types
 export CurveFunction,ShapeFunction,SurfaceFunction
 
 # Utility functions
-export visco_thermal_constants, ambient_to_properties
+export visco_thermal_constants,ambient_to_properties
 
 # Mesh-related functions
-export Mesh, Mesh3d, Mesh2d
-export load3dTriangularComsolMesh,load3dQuadComsolMesh, read_comsol_mesh
+export Mesh,Mesh3d,Mesh2d
+export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh
 
 # 1D element types (for 2D)
-export ContinuousCurveLinear, ContinuousCurveQuadratic,
-       DiscontinuousCurveConstant, DiscontinuousCurveLinear, DiscontinuousCurveQuadratic
+export ContinuousCurveLinear,ContinuousCurveQuadratic,
+       DiscontinuousCurveConstant,DiscontinuousCurveLinear,DiscontinuousCurveQuadratic
 
 # 2D element types (for 3D)
-export TriangularLinear, TriangularQuadratic, Triangular,
-       DiscontinuousTriangularConstant, DiscontinuousTriangularLinear,
-       DiscontinuousTriangularQuadratic, DiscontinuousTriangular
-export Quadrilateral, QuadrilateralLinear, QuadrilateralLinear4,
-       QuadrilateralQuadratic, QuadrilateralQuadraticLagrange,
-       DiscontinuousQuadrilateralConstant, DiscontinuousQuadrilateralLinear4,
+export TriangularLinear,TriangularQuadratic,Triangular,
+       DiscontinuousTriangularConstant,DiscontinuousTriangularLinear,
+       DiscontinuousTriangularQuadratic,DiscontinuousTriangular
+export Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
+       QuadrilateralQuadratic,QuadrilateralQuadraticLagrange,
+       DiscontinuousQuadrilateralConstant,DiscontinuousQuadrilateralLinear4,
        DiscontinuousQuadrilateralQuadraticLagrange
+
 # Assembly
 export assemble_parallel!
 
-# visualizations
+# Visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz
 
 # Losses
-export LossyBlockMatrix, LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter
+export LossyBlockMatrix,LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter
 export compute_lossy_rhs
 
 end

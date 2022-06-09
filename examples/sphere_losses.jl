@@ -12,9 +12,9 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 tri_mesh_file = "examples/meshes/sphere_1m_finer"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                        physics_order=tri_physics_orders[1])
+                                                physics_order=tri_physics_orders[1])
 #==========================================================================================
-            3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
+        3d Visualization - Seems highly unstable on M1 chips. Problems with GLMakie?
 ==========================================================================================#
 # using Meshes, MeshViz
 # ##choose a Makie backend
@@ -24,17 +24,16 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq  = 1750.0                                   # Frequency                 [Hz]
+freq  = 250.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=-1)
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
 radius = 1.0                                    # Radius of sphere_1m       [m]
-# Computing incident pressure
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
 # @time Fs,Gs = assemble_parallel!(mesh,k,mesh.sources;sparse=true);
-@time BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true)
+@time BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true,depth=0)
 Av = BB.Aᵥ
 Bv = BB.Bᵥ
 Aa = BB.Aₐ
@@ -67,7 +66,6 @@ outer = LossyOneVariableOuter(mesh,BB,freq)
 bt    = compute_lossy_rhs(outer,vn0,vt10,vt20)
 # Solving the problem using the "outer" struct
 @time pa,pa_hist = gmres(outer,bt;verbose=true,log=true)
-
 #===========================================================================================
                                 Checking results
 ===========================================================================================#
@@ -130,3 +128,19 @@ offr = 0.05
 nodesX4,nodesY4,weights4 = IntegralEquations.singular_triangle_integration(tmp,3,[0.50;0.50;offr],Diagonal(ones(3)),1e-6)
 nodesX5,nodesY5,weights5 = IntegralEquations.singular_triangle_integration(tmp,3,[offr;0.50;0.50],Diagonal(ones(3)),1e-6)
 nodesX6,nodesY6,weights6 = IntegralEquations.singular_triangle_integration(tmp,3,[0.50;offr;0.50],Diagonal(ones(3)),1e-6)
+
+scatter(nodesX4,nodesY4)
+scatter(nodesX5,nodesY5)
+scatter(nodesX6,nodesY6)
+
+
+beta = 0.0
+tmp  = DiscontinuousTriangularLinear(physics_function,beta)
+offset = 0.50
+nodesX,nodesY,weights  = IntegralEquations.singular_triangle_integration(tmp,3,[1.0/3.0;1.0/3.0;offset],[[0.0 1.0 0.0];[0.0 0.0 1.0];[0.0 0.0 0.0]],1e-6)
+scatter(nodesX,nodesY)
+
+
+
+gauss_u,gauss_v,w=IntegralEquations.getpolar_gaussian(3,6)
+scatter(gauss_u,gauss_v)
