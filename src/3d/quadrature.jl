@@ -119,6 +119,46 @@ end
 #==========================================================================================
                                 Spherical Coordinates
 ==========================================================================================#
+function duffyBasis2(u,v)
+    return 0.5*u, v.*(1.0 .- u)
+end
+function duffyJacobian2(u,v)
+    return 0.5*(1.0 .- u)
+end
+function duffyBasis3(u,v)
+    return (u .- 0.5).*v.+ 0.5, v.*(1.0 .- u)
+end
+function duffyJacobian3(u,v)
+    return 0.5*v
+end
+function rotated_midpoint_triangular_quadpoints(n,m,vertex_number)
+    m = Int(ceil(m/2.0))*2
+
+    nodex, wx = curveLinearQuadpoints(n) # Nodes in the interval [0, 1]
+    nodey, wy = curveLinearQuadpoints(m) # Nodes in the interval [0, 1]
+
+    u = kron(ones(m),nodex)
+    v = kron(nodey,ones(n))
+    w = kron(wy,wx)
+
+    u2,v2 = duffyBasis2(u,v)
+    u3,v3 = duffyBasis3(u,v)
+    X = [u2;u3]
+    Y = [v2;v3]
+    W = [w.*duffyJacobian2(u,v); w.*duffyJacobian3(u,v)]
+
+    if vertex_number == 4
+        return X,Y,W
+    elseif vertex_number == 5
+        return 1.0 .- X - Y, X, W
+    elseif vertex_number == 6
+        return Y, 1.0 .- X .- Y,W
+    end
+end
+
+#==========================================================================================
+                                Spherical Coordinates
+==========================================================================================#
 """
     linear_quadrature_transformation(gp,w,a,b)
 

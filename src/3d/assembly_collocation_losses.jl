@@ -23,7 +23,55 @@ shape_connections(::QuadrilateralQuadraticLagrange) = [[1 2],[1 3],[1 2 3 4],[2 
 shape_connections(::QuadrilateralQuadratic) = [[1 2],[2 3],[3 4],[4 1]]
 
 
+function connected_topology(mesh)
+    n_coordinates = size(mesh.coordinates,2)
+    source_connections  = [zeros(Int64,0) for i = 1:n_coordinates]
+    element_connections = [zeros(Int64,0) for i = 1:n_coordinates]
+    # Maybe we should use actual topology for this to work?
+    topology = mesh.topology
+    n_physics_functions,n_elements = size(mesh.topology)
+    for element = 1:n_elements
+        for i = 1:3
+            append!(element_connections[topology[i,element]],element)
+        end
+    end
+    return sort!.(unique.(element_connections))
+end
+
+function connected_sources(mesh,depth,physics_function::DiscontinuousTriangular)
+    cone = connected_topology(mesh)
+    topology = mesh.topology
+    physics_topology = mesh.physics_topology
+    n_physics,n_elements = size(mesh.physics_topology)
+    element_connections = [zeros(Int64,0) for i = 1:n_elements]
+    for element = 1:n_elements
+        for i = 1:3
+
+            append!(element_connections[element], cone[topology[i,element]])
+        end
+    end
+
+    n_sources = size(mesh.sources,2)
+    source_connections  = [zeros(Int64,0) for i = 1:n_sources]
+    for element = 1:n_elements
+        for elm ∈ element_connections[element]
+            for i = 1:n_physics
+                append!(source_connections[physics_topology[i,element]],physics_topology[:,elm])
+            end
+        end
+    end
+
+    cone = inverse_rle(element_connections,n_physics*ones(Int64,length(element_connections)))
+
+    return cone, sort!.(unique.(source_connections))
+end
+
+
 function connected_sources(mesh,depth=0)
+    return connected_sources(mesh,depth,mesh.physics_function)
+end
+
+function connected_sources(mesh,depth,physics_function::ContinuousTriangular)
     @assert depth ∈ [0, 1, 2]
     n_sources = size(mesh.sources,2)
     source_connections  = [zeros(Int64,0) for i = 1:n_sources]
@@ -32,17 +80,17 @@ function connected_sources(mesh,depth=0)
     topology = mesh.topology
     physics_topology = mesh.physics_topology
     n_corners = number_of_corners(mesh.physics_function)
-    n_shape_functions = size(mesh.physics_topology,1)
-    for element = 1:size(mesh.topology,2)
-        for i = 1:n_shape_functions
+    n_physics_functions,n_elements = size(mesh.physics_topology)
+    for element = 1:n_elements
+        for i = 1:n_physics_functions
             append!(element_connections[physics_topology[i,element]],element)
             append!(source_connections[physics_topology[i,element]],physics_topology[:,element])
         end
     end
     if depth == 1
         conns = shape_connections(mesh.physics_function)
-        for element = 1:size(physics_topology,2)
-            for idx = (n_corners + 1):n_shape_functions
+        for element = 1:n_elements
+            for idx = (n_corners + 1):n_physics_functions
                 for j ∈ conns[idx-n_corners]
                     append!(element_connections[physics_topology[idx,element]],element_connections[[j,element]])
                     append!(source_connections[physics_topology[idx,element]],  source_connections[[j,element]])
@@ -136,6 +184,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     beta = get_beta(physics_function)
     tmp  = DiscontinuousTriangularLinear(physics_function,beta)
     offr = get_offset(physics_function)
+    # offr = 0.0
     # Dealing with corners
     nodesX1,nodesY1,weights1 = singular_triangle_integration(tmp,3,[1.00;offr;offr],Diagonal(ones(3)),1e-6)
     nodesX2,nodesY2,weights2 = singular_triangle_integration(tmp,3,[offr;1.00;offr],Diagonal(ones(3)),1e-6)
@@ -186,13 +235,6 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         # Access source
         source     = sources[:,source_node]
         # Every thread has access to parts of the pre-allocated matrices
-        # normals       = zeros(3, mn)
-        # tangents      = zeros(3, mn)
-        # sangents      = zeros(3, mn)
-        # interpolation = zeros(3, mn)
-        # jacobian      = zeros(mn)
-        # r             = zeros(mn)
-        # integrand     = zeros(ComplexF64, mn)
         normals       = @view Normals[:,((threadid()-1)*mn+1):threadid()*mn]
         tangents      = @view Tangents[:,((threadid()-1)*mn+1):threadid()*mn]
         sangents      = @view Sangents[:,((threadid()-1)*mn+1):threadid()*mn]
@@ -202,7 +244,6 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         integrand     = @view Integrand[:,threadid()]
         di = dict[source_node]
         physics_nodes = zeros(Int64, n_physics_functions)
-        # physics_nodes = [1;2;3]
         element_coordinates = zeros(3,n_shape_functions)
         @inbounds for element ∈ element_connections[source_node]
             # Access element topology and coordinates

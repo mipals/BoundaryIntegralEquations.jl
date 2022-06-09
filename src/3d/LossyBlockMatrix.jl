@@ -72,12 +72,12 @@ function LossyBlockMatrix(mesh::Mesh,freq;depth=2,
     # Thermal matrices
     println("Thermal Matrices:")
     Fₕ,Bₕ, = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
-    Aₕ = sparse(exterior ? Fₕ + Diagonal(1.0 .- C₀) : Fₕ - Diagonal(C₀))
+    Aₕ = (exterior ? Fₕ + Diagonal(1.0 .- C₀) : Fₕ - Diagonal(C₀))
     Bₕ = (exterior ? Bₕ : Bₕ)
     # Viscous matrices
     println("Viscous matrices:")
     Fᵥ,Bᵥ  = assemble_parallel!(mesh,kₕ,sources;sparse=true,depth=depth);
-    Aᵥ = sparse(exterior ? Fᵥ + Diagonal(1.0 .- C₀) : Fᵥ - Diagonal(C₀))
+    Aᵥ = (exterior ? Fᵥ + Diagonal(1.0 .- C₀) : Fᵥ - Diagonal(C₀))
     Bᵥ = (exterior ? Bᵥ : Bᵥ)
 
     #### Extracting the normal and tangent direction

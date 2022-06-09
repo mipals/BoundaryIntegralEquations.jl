@@ -292,7 +292,7 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
 
 end
 
-function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
+function quad_assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
                                 fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
     topology    = get_topology(mesh)
     n_elements  = number_of_elements(mesh)
@@ -322,9 +322,12 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
     copy_interpolation_nodes!(physics_function2,shape_function2)
     copy_interpolation_nodes!(physics_function3,shape_function3)
 
-    nodesX4,nodesY4,weights4 = getpolar_gaussian(n,4)
-    nodesX5,nodesY5,weights5 = getpolar_gaussian(n,5)
-    nodesX6,nodesY6,weights6 = getpolar_gaussian(n,6)
+    # nodesX4,nodesY4,weights4 = getpolar_gaussian(n,4)
+    # nodesX5,nodesY5,weights5 = getpolar_gaussian(n,5)
+    # nodesX6,nodesY6,weights6 = getpolar_gaussian(n,6)
+    nodesX4,nodesY4,weights4 = rotated_midpoint_triangular_quadpoints(n,m,4)
+    nodesX5,nodesY5,weights5 = rotated_midpoint_triangular_quadpoints(n,m,5)
+    nodesX6,nodesY6,weights6 = rotated_midpoint_triangular_quadpoints(n,m,6)
     physics_function4 = deepcopy(physics_function)
     physics_function5 = deepcopy(physics_function)
     physics_function6 = deepcopy(physics_function)

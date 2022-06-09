@@ -32,7 +32,7 @@ Returns derivative matrics of the 'physics_function', menaing that such that
 function shape_function_derivatives(mesh;global_derivatives=false)
     topology    = mesh.topology
     coordinates = mesh.coordinates
-    n_elemenrts = number_of_elements(mesh)
+    n_elements  = number_of_elements(mesh)
     n_sources   = size(mesh.sources,2)
 
     # Making a copy of the element type
@@ -55,10 +55,6 @@ function shape_function_derivatives(mesh;global_derivatives=false)
     dY  = zeros(3,n_physics) # Y-Derivatives
     dZ  = zeros(3,n_physics) # Z-Derivatives
 
-    Dx  = spzeros(n_sources,n_sources)  # ∂x
-    Dy  = spzeros(n_sources,n_sources)  # ∂y
-    Dz  = spzeros(n_sources,n_sources)  # ∂z
-
     element_coordinates = zeros(3,n_shape)
     derivatives_u = shape_function.derivatives_u
     derivatives_v = shape_function.derivatives_v
@@ -73,7 +69,7 @@ function shape_function_derivatives(mesh;global_derivatives=false)
     Dy = zeros(idx[end])
     Dz = zeros(idx[end])
 
-    for element = 1:n_elemenrts
+    for element = 1:n_elements
         # Extract element and compute
         element_coordinates  .= coordinates[:,topology[:,element]]
         my_mul!(dX,element_coordinates,derivatives_u)
@@ -97,6 +93,9 @@ function shape_function_derivatives(mesh;global_derivatives=false)
             Dx[physics_nodes] += global_gradients[1,:] ./ n_elements_pr_node[source_node]
             Dy[physics_nodes] += global_gradients[2,:] ./ n_elements_pr_node[source_node]
             Dz[physics_nodes] += global_gradients[3,:] ./ n_elements_pr_node[source_node]
+            # Dx[physics_nodes] += global_gradients[1,:]
+            # Dy[physics_nodes] += global_gradients[2,:]
+            # Dz[physics_nodes] += global_gradients[3,:]
         end
     end
 
@@ -116,6 +115,9 @@ function shape_function_derivatives(mesh;global_derivatives=false)
         # From global to local coordinates (this is essentially directional derivatives)
         Dt = Dx .* T1 + Dy .* T2 + Dz .* T3
         Ds = Dx .* S1 + Dy .* S2 + Dz .* S3
+        #
+        # averanging = inverse_rle(n_elements_pr_node,lengths)
+        # return sparse(I,J,Dt./averanging), sparse(I,J,Ds./averanging)
         return sparse(I,J,Dt), sparse(I,J,Ds)
     end
 end
