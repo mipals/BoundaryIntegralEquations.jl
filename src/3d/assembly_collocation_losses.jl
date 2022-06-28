@@ -38,15 +38,16 @@ function connected_topology(mesh)
     return sort!.(unique.(element_connections))
 end
 
-function connected_sources(mesh,depth,physics_function::DiscontinuousTriangular)
+function connected_sources(mesh,depth,physics_function::T) where
+        {T <: Union{DiscontinuousTriangular,DiscontinuousQuadrilateral}}
     cone = connected_topology(mesh)
     topology = mesh.topology
     physics_topology = mesh.physics_topology
     n_physics,n_elements = size(mesh.physics_topology)
     element_connections = [zeros(Int64,0) for i = 1:n_elements]
+    n_corners = number_of_corners(physics_function)
     for element = 1:n_elements
-        for i = 1:3
-
+        for i = 1:n_corners
             append!(element_connections[element], cone[topology[i,element]])
         end
     end
@@ -71,7 +72,8 @@ function connected_sources(mesh,depth=0)
     return connected_sources(mesh,depth,mesh.physics_function)
 end
 
-function connected_sources(mesh,depth,physics_function::ContinuousTriangular)
+function connected_sources(mesh,depth,physics_function::T) where
+    {T <: Union{ContinuousTriangular,ContinuousQuadrilateral}}
     @assert depth ∈ [0, 1, 2]
     n_sources = size(mesh.sources,2)
     source_connections  = [zeros(Int64,0) for i = 1:n_sources]

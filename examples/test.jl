@@ -13,3 +13,7 @@ Dt,Ds    = IntegralEquations.shape_function_derivatives(mesh);
 
 @time Dt,Ds    = IntegralEquations.shape_function_derivatives(mesh);
 @time Dx,Dy,Dz = IntegralEquations.global_coordinate_shape_function_derivative(mesh);
+
+
+using Pkg
+Pkg.add(PackageSpec(url="https://github.com/flatironinstitute/FMM3D.git", subdir="julia"))

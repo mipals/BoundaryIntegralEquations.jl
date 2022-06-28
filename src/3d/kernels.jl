@@ -8,7 +8,7 @@ Green's function for the Helmholtz Equation in 3d.
 """
 function greens3d!(integrand,r,k)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
-        integrand[i,j] = exp(-im*k*r[i,j])/(4.0*π*r[i,j])
+        integrand[i,j] = exp(im*k*r[i,j])/(4.0*π*r[i,j])
     end
 end
 """
@@ -18,7 +18,7 @@ Normal derivative of the 3D Helmholtz Green's function with respect to interpola
 """
 function freens3d!(integrand,r,interpolation,sources,normals,k)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
-        integrand[i,j] = -exp(-im*k*r[i,j])*(1 + im*k*r[i,j])*
+        integrand[i,j] = exp(im*k*r[i,j])*(1 - im*k*r[i,j])*
                         (normals[1,i]*(interpolation[1,i] - sources[1,j]) +
                          normals[2,i]*(interpolation[2,i] - sources[2,j]) +
                          normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
@@ -43,7 +43,7 @@ Multiplies each term in `integrand` from `freens3dk0!` such that they equal `fre
 """
 function freens3dk0_to_freens3d!(integrand,r,k)
     @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
-        integrand[i,j] = integrand[i,j]*exp(-im*k*r[i,j])*(1 + im*k*r[i,j])
+        integrand[i,j] = integrand[i,j]*exp(im*k*r[i,j])*(1 - im*k*r[i,j])
     end
 end
 

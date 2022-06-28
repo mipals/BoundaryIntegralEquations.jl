@@ -13,15 +13,16 @@ quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:disc
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
-                                        physics_order=tri_physics_orders[2])
+# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+# tri_mesh_file = "examples/meshes/cylinder"
+# mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
+                                        # physics_order=tri_physics_orders[3])
 # Quadrilateral Meshes
-# quad_mesh_file = "examples/meshes/quad_sphere"
+quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
-# mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[1],
-#                                             physics_order=quad_physics_orders[1])
+mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[1],
+                                            physics_order=quad_physics_orders[4])
 #==========================================================================================
             3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
 ==========================================================================================#
@@ -33,7 +34,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq  = 1000.0                                  # Frequency                 [Hz]
+freq  = 100.0                                   # Frequency                 [Hz]
 c     = 340.0                                   # Speed of sound            [m/s]
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
@@ -43,7 +44,7 @@ pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-@time Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources,n=3,m=3,gOn=false,sparse=false);
+@time Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,gOn=false,sparse=false);
 #==========================================================================================
             Setting up a linear system and solving for the pressure
 ==========================================================================================#
@@ -52,16 +53,13 @@ Ap    = Fp + Diagonal(1.0 .- Cp)
 p_bem = gmres(Ap,pI;verbose=true);
 # p_bem = Ap\pI
 ## Plotting pressure on surface nodes
-surface_angles = acos.(-mesh.sources[1,:]/radius)
+surface_angles = acos.(mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
 p_analytical, _ = IntegralEquations.plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
-# using UnicodePlots
-# plt = scatterplot(surface_angles[perm], abs.(p_analytical[perm]),name="Analytical")
-# lineplot!(plt,surface_angles[perm],abs.(p_bem[perm]),name="BEM",)
-plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)
-plot!(surface_angles[perm],abs.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
-# title!("Frequency = $(freq) (Hz)")
-# norm(p_analytical - conj(p_bem))/norm(p_analytical)
+plot(surface_angles[perm], real.(p_analytical[perm]),label="Analytical",linewidth=2)
+plot!(surface_angles[perm],real.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
+plot(surface_angles[perm], imag.(p_analytical[perm]),label="Analytical",linewidth=2)
+plot!(surface_angles[perm],imag.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 #==========================================================================================
                             Adding CHIEF points
 ==========================================================================================#

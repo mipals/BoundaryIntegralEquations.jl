@@ -87,6 +87,7 @@ function LossyBlockMatrix(mesh::Mesh,freq;depth=2,
 
     ### Computing tangential derivatives
     Dt₁, Dt₂ = shape_function_derivatives(mesh)
+    # Dt₁, Dt₂ = shapeFunctionDerivative(mesh)
     Dt₁ = convert.(eltype(Bᵥ),Dt₁)
     Dt₂ = convert.(eltype(Bᵥ),Dt₂)
 
