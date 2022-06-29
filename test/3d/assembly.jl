@@ -39,9 +39,9 @@ import IntegralEquations: incoming_wave, plane_wave_scattering_sphere
         Ap    = Fp + Diagonal(1.0 .- Cp)
         p_bem = gmres(Ap,pI)
         ## Computing analytical solution
-        surface_angles  = acos.(-mesh.sources[1,:]/radius)
+        surface_angles  = acos.(mesh.sources[1,:]/radius)
         p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
-        @test isapprox(norm(p_analytical - conj(p_bem))/norm(p_analytical),0.0,atol=errors[i,j])
+        @test isapprox(norm(p_analytical - p_bem)/norm(p_analytical),0.0,atol=errors[i,j])
     end
 end
 
@@ -57,7 +57,7 @@ end
     geometry_orders = [:linear,:quadratic]
     physics_orders  = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
     errors = [0.012 0.012 0.014 0.009 0.008;
-              0.004 2.8e-5 0.0019 0.003 3.1e-5]
+              0.004 2.8e-5 0.0019 0.003 3.2e-5]
     for (i,go) in enumerate(geometry_orders), (j,po) in enumerate(physics_orders)
         if go == :linear && po == :geometry
             continue
@@ -74,8 +74,8 @@ end
         Ap    = Fp + Diagonal(1.0 .- Cp)
         p_bem = gmres(Ap,pI)
         ## Computing analytical solution
-        surface_angles  = acos.(-mesh.sources[1,:]/radius)
+        surface_angles  = acos.(mesh.sources[1,:]/radius)
         p_analytical, _ = plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
-        @test isapprox(norm(p_analytical - conj(p_bem))/norm(p_analytical),0.0,atol=errors[i,j])
+        @test isapprox(norm(p_analytical - p_bem)/norm(p_analytical),0.0,atol=errors[i,j])
     end
 end
