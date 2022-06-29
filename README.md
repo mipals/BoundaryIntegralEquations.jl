@@ -11,6 +11,8 @@ $$
 
 However, the package provides an easy-to-use API to the building blocks required for discretizing and solving general (surface) integral equations using the techniques of the Boundary Element Method (BEM). All the user has to define is a different integrand. 
 
+For the Fast Multipole Method this package is depended on the Julia API for the [Flatiron Institute Fast Multipole Libraries](https://github.com/flatironinstitute/FMM3D).
+
 ## Supported Element Types
 * Continuous (Linear and Quadratic) Triangular Elements
 * Continuous (Linear and Quadratic) Quadrilateral Elements
