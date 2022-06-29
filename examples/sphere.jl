@@ -12,23 +12,22 @@ quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:disc
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
-# tri_mesh_file = "examples/meshes/sphere_1m_finer"
+tri_mesh_file = "examples/meshes/sphere_1m_finer"
 # tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
-# tri_mesh_file = "examples/meshes/cylinder"
-# mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                        # physics_order=tri_physics_orders[3])
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
+                                        physics_order=tri_physics_orders[5])
 # Quadrilateral Meshes
-quad_mesh_file = "examples/meshes/quad_sphere"
+# quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_finer"
-mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[1],
-                                            physics_order=quad_physics_orders[4])
+# mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=geometry_orders[1],
+                                            # physics_order=quad_physics_orders[5])
 #==========================================================================================
             3d Visualization - Seems highly unstable on M1. Problems with GLMakie?
 ==========================================================================================#
 # using Meshes, MeshViz
-# ##choose a Makie backend
-# import GLMakie as Mke
+# # ##choose a Makie backend
+# # import GLMakie as Mke
 # simple_mesh = create_simple_mesh(mesh)
 # viz(simple_mesh, showfacets = true)
 #==========================================================================================

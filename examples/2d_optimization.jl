@@ -32,6 +32,17 @@ function create_topology(ord,nElements)
     for i = 1:ord+1; top[i,1:length(i:ord:ord*nElements)] = i:ord:ord*nElements end
     return top
 end
+# Test
+using LoopVectorization
+function mygemm_vec!(C, A, B)
+    @inbounds @fastmath for n ∈ eachindex(C)
+        Cmn = zero(eltype(C))
+        for k ∈ eachindex(A)
+            Cmn += A[k] * B[k,n]
+        end
+        C[n] += Cmn
+    end
+end
 #==========================================================================================
                             Mesh interpolation routine
 ==========================================================================================#
@@ -41,12 +52,14 @@ function compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpol
     if gOn # Only compute G if you need it
         G!(k,r,integrand)                                       # Evaluate Greens function
         JacMul!(integrand,jacobian)                             # Multiply by jacobian*weights
-        mul!(Gslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
+        # mul!(Gslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
+        mygemm_vec!(Gslice,integrand,physics_interpolation!')
     end
     if fOn # Only compute F if you need it
         F!(interpolation,source,k,normals,r,integrand)          # Evaluate ∂ₙGreens function
         JacMul!(integrand,jacobian)                             # Multiply by jacobian*weights
-        mul!(Fslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
+        # mul!(Fslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
+        mygemm_vec!(Fslice,integrand,physics_interpolation!')
     end
     if cOn # Only compute c if you need it
         C!(interpolation,source,normals,r,integrand)            # Evaluate G₀
@@ -161,7 +174,7 @@ y = range(-0.1, 0.1,length=5)
 fieldpoints = [kron(x,ones(length(y)))'; kron(ones(length(x)),y)']
 x0 = (spline.c[:,2:size(spline.c,2)-2])[:]
 # anim = Plots.Animation()
-for i = 1:20
+for i = 1:10
     x0 = x0 + 0.002*gradObj(x0)
     spline.c[:,2:Nspline-2] = reshape(x0,2,Nspline-3)
     spline.c[:,[1 Nspline-1 Nspline]] = spline.c[:,[Nspline-2 2 3]]

@@ -26,16 +26,16 @@ function computing_galerkin_integrals!(test_physics,test_interpolation,
                                         basis_physics,basis_interpolation,
                                         submatrixF,submatrixG,submatrixC,k,integrand,r,
                                         Nywy,wxNx)
-    # Note that everything here has been written to avoid re-allocating things. 
+    # Note that everything here has been written to avoid re-allocating things.
     compute_distances!(r,test_interpolation.interpolation,basis_interpolation.interpolation)
-    
-    ### Evaluating the F-kernel (double-layer kernel) at the global nodes 
+
+    ### Evaluating the F-kernel (double-layer kernel) at the global nodes
     freens3d!(integrand,r,basis_interpolation.interpolation,test_interpolation.interpolation,basis_interpolation.normals,k)
     # Computing the integrand
     computing_integrand!(submatrixF,integrand,
                         test_physics.interpolation, test_interpolation.jacobian_mul_weights,
                         basis_physics.interpolation,basis_interpolation.jacobian_mul_weights)
-    
+
     ### Evaluating the G-kernel (single-layer kernel) at the global nodes
     greens3d!(integrand,r,k)
     # Computing the integrand
@@ -104,7 +104,7 @@ function assemble_parallel_galerkin!(mesh::Mesh3d,k,shape_function::SurfaceFunct
             submatrixF = @view F[test_nodes,basis_nodes]
             submatrixG = @view G[test_nodes,basis_nodes]
             submatrixC = @view C[test_nodes,basis_nodes]
-            # Interpolating on the mesh. 
+            # Interpolating on the mesh.
             # test_physics,test_interpolation,
             #  basis_physics,basis_interpolation,
             #  submatrixF,submatrixG,subvectorC,k,integrand,r)
@@ -120,6 +120,6 @@ function assemble_parallel_galerkin!(mesh::Mesh3d,k,shape_function::SurfaceFunct
         if progress; next!(prog); end # For the progress meter
     end
 
-    return F, G, C 
+    return F, G, C
 
 end

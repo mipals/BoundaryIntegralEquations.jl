@@ -2,21 +2,19 @@
 # Pkg.add(PackageSpec(url="https://github.com/flatironinstitute/FMM3D.git", subdir="julia"))
 
 mutable struct HelmholtzVals
-    pot
-    grad
+    potential
+    gradient
 
-    pottarg
-    gradtarg
+    target_potential
+    target_gradient
 
-    ier
-
-    zk
+    wavenumber
 
     pgt
 end
 
 function HelmholtzVals()
-    return HelmholtzVals(nothing, nothing, nothing, nothing, nothing, nothing, nothing)
+    return HelmholtzVals(nothing, nothing, nothing, nothing, nothing, nothing)
 end
 
 
@@ -32,7 +30,6 @@ function h3ddir!(vals::HelmholtzVals,sources::Array{Float64},
     zk = complex(vals.zk)
 
     # default values
-
     ifcharge = 0
     ifdipole = 0
 
@@ -47,7 +44,6 @@ function h3ddir!(vals::HelmholtzVals,sources::Array{Float64},
         @warn "Hessian not implemented for Helmholtz fmm, only computing potential and gradients at targets"
         pgt = 2
     end
-
 
     pg = 0
     anyfail, n, nt, ifcharge, ifdipole = (

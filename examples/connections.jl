@@ -8,7 +8,7 @@ using LinearAlgebra, IntegralEquations, Plots
 geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
-tri_mesh_file = "examples/meshes/sphere_1m"
+# tri_mesh_file = "examples/meshes/sphere_1m"
 tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
                                                 physics_order=tri_physics_orders[1])
@@ -41,5 +41,7 @@ function unroll_interpolations(interpolations)
 
     return interps, weights
 end
-
-interp,weights = unroll_interpolations(interpolations)
+@time interpolations = IntegralEquations.interpolate_elements(mesh;n=2,m=2);
+@time interp,weights = unroll_interpolations(interpolations);
+# Total weights should add up to surface area
+sum(weights/4π)
