@@ -150,9 +150,9 @@ function rotated_midpoint_triangular_quadpoints(n,m,vertex_number)
     if vertex_number == 4
         return X,Y,W
     elseif vertex_number == 5
-        return 1.0 .- X - Y, X, W
+        return 1 .- X - Y, X, W
     elseif vertex_number == 6
-        return Y, 1.0 .- X .- Y,W
+        return Y, 1 .- X .- Y,W
     end
 end
 
@@ -165,13 +165,13 @@ end
 Transforms Guassian quadrature points `gp` and weights `w` from the interval [-1,1] to [a,b]
 """
 function linear_quadrature_transformation(gp,w,a,b)
-    gp = (a .+ b)/2.0 .+ (b .- a)/2.0.*gp
-    w  = (b .- a)/2.0.*w
+    gp = (a + b)/2 .+ (b - a)/2*gp
+    w  = (b - a)/2 *w
     return gp,w
 end
-max_rad1(x) = 1.0 ./ (cos.(x) + sin.(x))             #
-max_rad2(x) = 0.5 * sec.(x)                          # Per. definition of secant: 1/cos(x)
-max_rad3(x) = sin.(π/4.0) ./ sin.(x .- π/4.0)*0.5    # Sinus relation
+max_rad1(x) = 1 ./ (cos.(x) + sin.(x))             #
+max_rad2(x) = sec.(x)/2                          # Per. definition of secant: 1/cos(x)
+max_rad3(x) = sin.(π/4) ./ sin.(x .- π/4)/2    # Sinus relation
 """
     polar_quadrature
 

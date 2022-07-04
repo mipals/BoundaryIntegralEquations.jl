@@ -90,15 +90,15 @@ function connected_sources(mesh,depth,physics_function::T) where
         end
     end
     if depth == 1
-        conns = shape_connections(mesh.physics_function)
-        for element = 1:n_elements
-            for idx = (n_corners + 1):n_physics_functions
-                for j ∈ conns[idx-n_corners]
-                    append!(element_connections[physics_topology[idx,element]],element_connections[[j,element]])
-                    append!(source_connections[physics_topology[idx,element]],  source_connections[[j,element]])
-                end
-            end
-        end
+        # conns = shape_connections(mesh.physics_function)
+        # for element = 1:n_elements
+        #     for idx = (n_corners + 1):n_physics_functions
+        #         for j ∈ conns[idx-n_corners]
+        #             append!(element_connections[physics_topology[idx,element]],element_connections[j,element])
+        #             append!(source_connections[physics_topology[idx,element]],  source_connections[j,element])
+        #         end
+        #     end
+        # end
     elseif depth == 2
         element_connections2 = [zeros(Int64,0) for i = 1:n_sources]
         source_connections2  = [zeros(Int64,0) for i = 1:n_sources]
@@ -163,7 +163,7 @@ function find_physics_nodes!(physics_nodes,idxs,di,physics_top)
 end
 
 function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-        fOn=true,gOn=true,depth=2,
+        fOn=true,gOn=true,depth=1,
         progress=true) where {T <: Union{TriangularLinear,DiscontinuousTriangularLinear}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
@@ -180,9 +180,6 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
                                             | \
                                             1 - 2
     ======================================================================================#
-    # shape_function1 = create_rotated_element(shape_function,n,m,1)
-    # shape_function2 = create_rotated_element(shape_function,n,m,2)
-    # shape_function3 = create_rotated_element(shape_function,n,m,3)
     beta = get_beta(physics_function)
     tmp  = DiscontinuousTriangularLinear(physics_function,beta)
     offr = get_offset(physics_function)
@@ -282,16 +279,15 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     I = create_row_indices(lengths,idx[end])
     J = vcat(source_connections...)
 
-    return sparse(I,J,F), sparse(I,J,G), F
+    return sparse(I,J,F), sparse(I,J,G)
 end
 
 
 function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-    fOn=true,gOn=true,depth=2,
+    fOn=true,gOn=true,depth=1,
     progress=true) where {T <: Union{TriangularQuadratic,DiscontinuousTriangularQuadratic}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
-    n_nodes     = size(mesh.sources,2)
     coordinates = mesh.coordinates
     physics_topology = mesh.physics_topology
     physics_function = mesh.physics_function
@@ -391,20 +387,6 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         # Access source
         source     = sources[:,source_node]
         # Every thread has access to parts of the pre-allocated matrices
-        # corner_normals       = zeros(3, mn)
-        # corner_tangents      = zeros(3, mn)
-        # corner_sangents      = zeros(3, mn)
-        # corner_interpolation = zeros(3, mn)
-        # corner_jacobian      = zeros(mn)
-        # corner_r             = zeros(mn)
-        # corner_integrand     = zeros(ComplexF64, mn)
-        # middle_normals       = zeros(3, mp)
-        # middle_tangents      = zeros(3, mp)
-        # middle_sangents      = zeros(3, mp)
-        # middle_interpolation = zeros(3, mp)
-        # middle_jacobian      = zeros(mp)
-        # middle_r             = zeros(mp)
-        # middle_integrand     = zeros(ComplexF64, mp)
         corner_normals       = @view Corner_normals[:,((threadid()-1)*mn+1):threadid()*mn]
         corner_tangents      = @view Corner_tangents[:,((threadid()-1)*mn+1):threadid()*mn]
         corner_sangents      = @view Corner_sangents[:,((threadid()-1)*mn+1):threadid()*mn]
@@ -476,5 +458,5 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     I = create_row_indices(lengths,idx[end])
     J = vcat(source_connections...)
 
-    return sparse(I,J,F), sparse(I,J,G), F
+    return sparse(I,J,F), sparse(I,J,G)
 end

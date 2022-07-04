@@ -47,7 +47,7 @@ function read_comsol_mesh(meshName,elementType)
     return coordinates,topology,entities
 end
 
-function load3dTriangularComsolMesh(meshFile;m=4,n=4,
+function load3dTriangularComsolMesh(meshFile;m=3,n=3,
                 geometry_order=:quadratic,
                 physics_order=:geometry,beta_type=:legendre,
                 entites=false,removedEntites=[-1])
@@ -69,32 +69,34 @@ function load3dTriangularComsolMesh(meshFile;m=4,n=4,
     sources = coordinates[:,sort(unique(topology))]
 
     if physics_order == :geometry
-        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+        physics_function = set_physics_element(physics_order,shape_function,beta_type)
         normals = get_element_normals(shape_function,coordinates,topology)
-        physicsTopology = topology
+        physics_topology = topology
     elseif physics_order == :linear
-        physicsElement = TriangularLinear(3,3)
+        physics_function = TriangularLinear(3,3)
         normals = get_element_normals(shape_function,coordinates,topology)
-        physicsTopology = topology[1:3,:]
-        used_nodes = sort(unique(physicsTopology))
+        physics_topology = topology[1:3,:]
+        used_nodes = sort(unique(physics_topology))
         normals = normals[:,used_nodes]
         sources = coordinates[:,used_nodes]
     else
-        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
-        sources,normals,physicsTopology = compute_sources(shape_function,
-                                                        physicsElement,
+        physics_function = set_physics_element(physics_order,shape_function,beta_type)
+        sources,normals,physics_topology = compute_sources(shape_function,
+                                                        physics_function,
                                                         topology,
                                                         coordinates)
     end
 
     # Allocate and compute tangent directions from normal
-    tangentX = similar(normals)
-    tangentY = similar(normals)
-    tangents!(normals,tangentX,tangentY)
+    tangents = similar(normals)
+    sangents = similar(normals)
+    tangents!(normals,tangents,sangents)
 
     # Create mesh
-    mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,shape_function,
-                 physicsElement,physicsTopology)
+    set_interpolation_nodes!(shape_function,gauss_points_triangle(n)...)
+    copy_interpolation_nodes!(physics_function,shape_function)
+    mesh = Mesh3d(sources,coordinates,topology,normals,tangents,sangents,shape_function,
+                 physics_function,physics_topology)
     if entites
         return mesh,ents[mask]
     else
@@ -124,33 +126,33 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
     sources = coordinates[:,sort(unique(topology))]
 
     if physics_order == :geometry
-        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
+        physics_function = set_physics_element(physics_order,shape_function,beta_type)
         normals = get_element_normals(shape_function,coordinates,topology)
-        physicsTopology = topology
+        physics_topology = topology
     elseif physics_order == :linear
-        physicsElement = QuadrilateralLinear4(3,3)
-        copy_interpolation_nodes!(physicsElement,shape_function)
+        physics_function = QuadrilateralLinear4(3,3)
+        copy_interpolation_nodes!(physics_function,shape_function)
         normals = get_element_normals(shape_function,coordinates,topology)
-        physicsTopology = topology[1:4,:]
+        physics_topology = topology[1:4,:]
         used_nodes = sort(unique(topology[1:4,:]))
         normals = normals[:,used_nodes]
         sources = coordinates[:,used_nodes]
     else
-        physicsElement = set_physics_element(physics_order,shape_function,beta_type)
-        sources,normals,physicsTopology = compute_sources(shape_function,
-                                                        physicsElement,
+        physics_function = set_physics_element(physics_order,shape_function,beta_type)
+        sources,normals,physics_topology = compute_sources(shape_function,
+                                                        physics_function,
                                                         topology,
                                                         coordinates)
     end
 
     # Allocate and compute tangent directions from normal
-    tangentX = similar(normals)
-    tangentY = similar(normals)
-    tangents!(normals,tangentX,tangentY)
+    tangents = similar(normals)
+    sangents = similar(normals)
+    tangents!(normals,tangents,sangents)
 
     # Create mesh
-    mesh = Mesh3d(sources,coordinates,topology,normals,tangentX,tangentY,shape_function,
-                 physicsElement,physicsTopology)
+    mesh = Mesh3d(sources,coordinates,topology,normals,tangents,sangents,shape_function,
+                 physics_function,physics_topology)
     if entites
         return mesh,ents[mask]
     else

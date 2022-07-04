@@ -292,7 +292,7 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
 
 end
 
-function quad_assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
+function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
                                 fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
     topology    = get_topology(mesh)
     n_elements  = number_of_elements(mesh)

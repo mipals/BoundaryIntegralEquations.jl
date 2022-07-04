@@ -45,8 +45,8 @@ Computes the Block matrix corresponding to the reduced lossy system.
 If `blockoutput=false` returns sparse matrix.
 If `blockoutput=true` returns a `LossyBlockMatrix` struct used for iterative solvers
 """
-function LossyBlockMatrix(mesh::Mesh,freq;depth=2,
-                        m=3,n=3,S=-1,exterior=true,blockoutput=false)
+function LossyBlockMatrix(mesh::Mesh,freq;depth=1,
+                            m=3,n=3,S=1,exterior=true,blockoutput=false)
     if (typeof(mesh.physics_function) <: DiscontinuousTriangularConstant)
         ArgumentError("Constant elements will have a tangential derivative equal to zero.")
     end
@@ -71,7 +71,7 @@ function LossyBlockMatrix(mesh::Mesh,freq;depth=2,
     Bₐ = (exterior ? Bₐ : Bₐ)
     # Thermal matrices
     println("Thermal Matrices:")
-    Fₕ,Bₕ, = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
+    Fₕ,Bₕ = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
     Aₕ = (exterior ? Fₕ + Diagonal(1.0 .- C₀) : Fₕ - Diagonal(C₀))
     Bₕ = (exterior ? Bₕ : Bₕ)
     # Viscous matrices

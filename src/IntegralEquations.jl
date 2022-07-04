@@ -21,6 +21,7 @@ using LoopVectorization
 using LinearMaps
 using IterativeSolvers
 using StatsBase
+using FMM3D
 using Base.Threads
 #==========================================================================================
                             General Properties of Shape Functions
@@ -61,6 +62,7 @@ include("3d/LossyBlockMatrixCompact.jl")
 include("3d/LossyInexactKrylov.jl")
 include("3d/assembly_galerkin.jl")
 include("3d/visualizations.jl")
+include("3d/fast_multipole_method.jl")
 #==========================================================================================
                                 Analytical solutions
 ==========================================================================================#
@@ -98,6 +100,9 @@ export Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
 
 # Assembly
 export assemble_parallel!
+
+# Fast mulitpole
+export FMMGOperator, FMMFOperator
 
 # Visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz
