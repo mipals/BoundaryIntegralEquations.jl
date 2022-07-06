@@ -130,8 +130,10 @@ Struct representing the system matrix (A) in the 1-variable system: A*pₐ = b.
 struct LossyOneVariableOuter{T} <: LinearMaps.LinearMap{T}
     N::Int64                            # Total system size (10n
     # Acoustic Matrices
-    Ha::AbstractArray{T}                # Acoustic BEM H
-    Ga::AbstractArray{T}                # Acoustic BEM G
+    # Ha::AbstractArray{T}                # Acoustic BEM H
+    # Ga::AbstractArray{T}                # Acoustic BEM G
+    Ha                                  # Acoustic BEM H
+    Ga                                  # Acoustic BEM G
     # Thermal Matrices
     Hh::AbstractArray{T}                # Thermal BEM H
     Gh::AbstractArray{T}                # Thermal BEM G
@@ -239,7 +241,8 @@ function LossyOneVariableOuter(mesh::Mesh3d,freq;lu_on=false)
     return LossyOneVariableOuter(mesh,BB,freq;lu_on=lu_on)
 end
 
-function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;lu_on=false)
+function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;
+                        lu_on=false,fmm_on=false,nearfield=false,n=3,thres=1e-6,offset=0.2)
     τₐ = BB.τₐ
     τₕ = BB.τₕ
     ϕₐ = BB.ϕₐ
@@ -274,12 +277,23 @@ function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;lu_on=fals
         luGv = lu(rand(ComplexF64,2,2)) # Junk factorization
         luGh = lu(rand(ComplexF64,2,2)) # Junk factorization
     end
-    inner = LossyOneVariableInner(N,BB.Aᵥ,BB.Bᵥ,luGv,BB.Dt₁,BB.Dt₂,nx,ny,nz,tx,ty,tz,sx,sy,sz,
+    inner = LossyOneVariableInner(N,BB.Aᵥ,BB.Bᵥ,luGv,BB.Dt₁,BB.Dt₂,
+                                    nx,ny,nz,tx,ty,tz,sx,sy,sz,
                                     inner_tmp1, inner_tmp2,lu_on)
-
-    outer = LossyOneVariableOuter(N,BB.Aₐ,BB.Bₐ,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
-                            luGv,inner,BB.Dt₁,BB.Dt₂,
-                            nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,
-                            outer_tmp1,outer_tmp2,outer_res,outer_x1,outer_x2,lu_on,freq)
+    if fmm_on
+        _,_,_,ka,_,_,_,_,_,_,_,_ = visco_thermal_constants(;freq=freq,S=1)
+        # Ga = FMMGOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
+        Ga = BB.Bₐ
+        Ha = FMMFOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
+        outer = LossyOneVariableOuter(N,Ha,Ga,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
+                                luGv,inner,BB.Dt₁,BB.Dt₂,
+                                nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,
+                                outer_tmp1,outer_tmp2,outer_res,outer_x1,outer_x2,lu_on,freq)
+    else
+        outer = LossyOneVariableOuter(N,BB.Aₐ,BB.Bₐ,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
+                                luGv,inner,BB.Dt₁,BB.Dt₂,
+                                nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,
+                                outer_tmp1,outer_tmp2,outer_res,outer_x1,outer_x2,lu_on,freq)
+    end
     return outer
 end

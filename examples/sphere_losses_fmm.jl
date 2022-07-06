@@ -26,7 +26,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 2000.0                                   # Frequency                 [Hz]
+freq   = 5000.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -34,6 +34,14 @@ radius = 1.0                                     # Radius of sphere_1m       [m]
                             Assembling BEM matrices
 ==========================================================================================#
 @time BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true,depth=1)
+
+# The error comes from the single-layer potential
+Ga = FMMGOperator(mesh,ka;n=3,eps=1e-6,offset=0.2,nearfield=true)
+xa = randn(size(Ga,1))
+maximum(abs.(Ga*xa - BB.Bₐ*xa))
+x1 = ones(ComplexF64,size(Ga,1))
+maximum(abs.(Ga*x1 - BB.Bₐ*x1))
+
 
 xyzb = mesh.sources
 M  = size(xyzb,2)
@@ -47,21 +55,54 @@ tangent2 = mesh.sangents
 vn0  = u₀*normals[3,:]
 vt10 = u₀*tangent1[3,:]
 vt20 = u₀*tangent2[3,:]
+
+
 #===========================================================================================
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
 # Creating the "outer"-struct representation of the system matrix
-outer = LossyOneVariableOuter(mesh,BB,freq;fmm_on=true)
-bt    = compute_lossy_rhs(outer,vn0,vt10,vt20)
+outer     = LossyOneVariableOuter(mesh,BB,freq;fmm_on=false)
+outer_fmm = LossyOneVariableOuter(mesh,BB,freq;fmm_on=true,n=3)
+
+
+import IntegralEquations: l_GH_r!, l_D_r!
+vbn = vn0
+vt1 = vt10
+vt2 = vt20
+l_GH_r!(outer.Gv,outer.luGv, outer.Hv, outer.nx, outer.ny, outer.nz, outer.tx, outer.ty, outer.tz,   outer.tmp1, outer.tmp2, outer.x1, vt1, true, outer.lu_on)
+l_D_r!(outer.Dt1,        outer.tx, outer.ty, outer.tz, outer.tx, outer.ty, outer.tz, outer.tmp1, outer.tmp2,         outer.x1, vt1, false)
+l_D_r!(outer.Dt2,        outer.sx, outer.sy, outer.sz, outer.tx, outer.ty, outer.tz, outer.tmp1, outer.tmp2,         outer.x1, vt1, false)
+# Second multiplication
+l_GH_r!(outer.Gv, outer.luGv, outer.Hv, outer.nx, outer.ny, outer.nz, outer.sx, outer.sy, outer.sz,   outer.tmp1, outer.tmp2, outer.x2, vt2, true, outer.lu_on)
+l_D_r!(outer.Dt1,         outer.tx, outer.ty, outer.tz, outer.sx, outer.sy, outer.sz, outer.tmp1, outer.tmp2,         outer.x2, vt2, false)
+l_D_r!(outer.Dt2,         outer.sx, outer.sy, outer.sz, outer.sx, outer.sy, outer.sz, outer.tmp1, outer.tmp2,         outer.x2, vt2, false)
+
+y = vbn + gmres(outer.inner,outer.x1 + outer.x2;verbose=true)
+
+
+maximum(abs.(outer_fmm.Ha*y - BB.Aₐ*y))
+maximum(abs.(outer_fmm.Ga*y - BB.Bₐ*y)) # Why is it so wrong?
+minimum(abs.(outer_fmm.Ga*y - BB.Bₐ*y)) # Why is it so wrong?
+
+
+bt        = compute_lossy_rhs(outer,vn0,vt10,vt20);
+bt_fmm    = compute_lossy_rhs(outer_fmm,vn0,vt10,vt20)
+bt ./ bt_fmm
 # Solving the problem using the "outer" struct
-@time pa,pa_hist = gmres(outer,bt;verbose=true,log=true)
+@time pa     = gmres(outer,bt;verbose=true)
+@time pa_fmm = gmres(outer_fmm,bt;verbose=true,maxiter=50)
+pa ./ pa_fmm
 #===========================================================================================
                                 Checking results
 ===========================================================================================#
-ghpainv,gh_hist = gmres(outer.Gh,outer.Hh*pa;verbose=true,log=true)
-gapainv,ga_hist = gmres(outer.Ga,outer.Ha*pa;verbose=true,log=true)
-ghpainv = ghpainv*ϕₕ*τₐ/τₕ
-gapainv = gapainv*ϕₐ
+ghpainv     = gmres(outer.Gh,outer.Hh*pa;verbose=true)*ϕₕ*τₐ/τₕ
+gapainv     = gmres(outer.Ga,outer.Ha*pa;verbose=true)*ϕₐ
+ghpainv_fmm = gmres(outer_fmm.Gh,outer_fmm.Hh*pa_fmm;verbose=true)*ϕₕ*τₐ/τₕ
+# gapainv_fmm = gmres(outer_fmm.Ga,outer_fmm.Ha*pa_fmm;verbose=true)*ϕₐ
+# ghpainv ./ ghpainv_fmm
+ghpainv = ghpainv_fmm
+# gapainv = gapainv_fmm
+# gapainv ./ gapainv_fmm
 # gapainv = gmres!(x0,outer.Ga,outer.Ha*pa;verbose=true)*ϕₐ
 vx = normals[1,:] .* vn0 + tangent1[1,:] .* vt10 + tangent2[1,:] .* vt20 -
     (normals[1,:] .* (gapainv - ghpainv)         +

@@ -2,7 +2,7 @@
                             Partial Assembly
 ==========================================================================================#
 function partial_assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
-                                    fOn=true,gOn=true,n=3,progress=true,depth=1)
+                                    fOn=true,gOn=true,n=3,progress=false,depth=1)
     topology    = get_topology(mesh)
     sources     = convert.(eltype(shape_function),in_sources)
     n_sources   = size(in_sources,2)
@@ -24,7 +24,7 @@ function partial_assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Tr
     copy_interpolation_nodes!(physics_function1,shape_function1)
 
     # Copying interpolation of physics functions1
-    physics_interpolation1 = copy(physics_function1.interpolation')
+    physics_interpolation1 = physics_function1.interpolation
 
     # Connections
     element_connections, source_connections = connected_sources(mesh,depth)
@@ -103,15 +103,6 @@ function unroll_interpolations(interpolations)
     return interps, weights, normals
 end
 
-# function mygemm_vec2!(C, A, B)
-#     @inbounds @fastmath for n ∈ eachindex(C)
-#         Cmn = zero(eltype(C))
-#         for k ∈ eachindex(A)
-#             Cmn += A[k] * B[k,n]
-#         end
-#         C[n] = Cmn
-#     end
-# end
 function nodes_to_gauss!(tmp,elmement_interpolation,physics_topology,x)
     # Getting sizess
     n_elements = size(physics_topology,2)
@@ -120,7 +111,6 @@ function nodes_to_gauss!(tmp,elmement_interpolation,physics_topology,x)
     # Interpolating on each element
     @inbounds for i = 1:n_elements
         tmp[(i-1)*n_interps+1:i*n_interps] = elm_interp*x[physics_topology[:,i]]
-        # mul!(tmp[(i-1)*n_interps+1:i*n_interps],elm_interp,x[physics_topology[:,i]])
     end
     return tmp
 end
@@ -153,7 +143,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     nodes_to_gauss!(A.tmp_weights,A.element_interpolation,A.physics_topology,x)
     integrand_mul!(A.tmp_weights,A.weights)
     vals = hfmm3d(A.eps,A.k,A.sources,charges=A.weights,targets=A.targets,pgt=1)
-    y .= vals.pottarg + A.nearfield_correction*x
+    y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 function FMMGOperator(eps,k,targets,sources,weights,elm_interp,physics_topology)
     zk = Complex(k)
@@ -163,26 +153,39 @@ function FMMGOperator(eps,k,targets,sources,weights,elm_interp,physics_topology)
     @warn "No-near field correction computed"
     nearfield_correction = 0*I
     # FMM3D uses a greens functiont that does not divide by 4π.
-    return FMMGOperator(n,m,zk,eps,targets,sources,weights/(4π + 0im),elm_interp,
+    return FMMGOperator(n,m,zk,eps,targets,sources,weights,elm_interp,
                             physics_topology,nearfield_correction,tmp)
 end
-function FMMGOperator(mesh,k;eps=1e-6,n=3)
+function FMMGOperator(mesh,k;eps=1e-6,n=3,nearfield=true,offset=0.1,depth=1)
+    # Creating physics and geometry for the FMM operator
+    shape_function   = deepcopy(mesh.shape_function)
+    physics_function = deepcopy(mesh.physics_function)
+    set_interpolation_nodes!(shape_function,gauss_points_triangle(n)...)
+    copy_interpolation_nodes!(physics_function,shape_function)
+    # Making sure the wave number is complex
     zk = Complex(k)
-    interpolations = interpolate_elements(mesh,mesh.shape_function)
+    # Interpolating on the mesh using the previous computed shape/physics functions
+    interpolations = interpolate_elements(mesh,shape_function)
     sources,weights,_ = unroll_interpolations(interpolations)
+    # Extracting mesh information
     targets = mesh.sources
     physics_topology = mesh.physics_topology
-    n = size(targets,2)
-    m = size(sources,2)
-    tmp = zeros(eltype(zk),length(weights))
+    element_interpolation = physics_function.interpolation
+    N = size(targets,2)
+    M = size(sources,2)
     # Computing near-field correction
-    _,C = partial_assemble_parallel!(mesh,zk,mesh.sources,mesh.shape_function;fOn=false)
-    _,S = assemble_parallel!(mesh,zk,mesh.sources;sparse=true,depth=1,fOn=false,n=n);
-    nearfield_correction = - C + S
-    #
-    element_interpolation = mesh.physics_function.interpolation
+    if nearfield
+        _,C = partial_assemble_parallel!(mesh,zk,targets,shape_function;fOn=false,depth=depth)
+        _,S = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,fOn=false,progress=false,
+        offset=offset);
+        nearfield_correction = - C + S
+    else
+        nearfield_correction = spzeros(ComplexF64,N,N)
+    end
+    # Creating temporary array
+    tmp = zeros(eltype(zk),length(weights))
     # FMM3D uses a greens functiont that does not divide by 4π.
-    return FMMGOperator(n,m,zk,eps,targets,sources,weights/(4π + 0im),element_interpolation,
+    return FMMGOperator(N,M,zk,eps,targets,sources,Complex.(weights),element_interpolation,
                             physics_topology,nearfield_correction,tmp)
 end
 #==========================================================================================
@@ -216,7 +219,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # integrand_mul!(A.tmp,A.weights)
     scale_columns!(A.tmp_weights,A.weights,A.tmp)
     vals = hfmm3d(A.eps,A.k,A.sources,targets=A.targets,dipvecs=A.tmp_weights,pgt=1)
-    y .= vals.pottarg + A.nearfield_correction*x
+    y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 function scale_columns!(weights,normals,tmp)
     for i = 1:length(tmp)
@@ -236,10 +239,10 @@ function FMMFOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_t
     @warn "No-near field correction computed"
     nearfield_correction = 0.5*I
     # FMM3D uses a greens functiont that does not divide by 4π.
-    return FMMFOperator(n,m,zk,eps,targets,sources,dipvecs/(4π + 0im),elm_interp,physics_topology,
+    return FMMFOperator(n,m,zk,eps,targets,sources,dipvecs,elm_interp,physics_topology,
                             nearfield_correction,tmp,tmp_weights)
 end
-function FMMFOperator(mesh,k;n=3,eps=1e-6)
+function FMMFOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1)
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
     set_interpolation_nodes!(shape_function,gauss_points_triangle(n)...)
@@ -250,19 +253,22 @@ function FMMFOperator(mesh,k;n=3,eps=1e-6)
     sources,weights,normals = unroll_interpolations(interpolations)
     targets = mesh.sources
     physics_topology = mesh.physics_topology
-    n = size(targets,2)
-    m = size(sources,2)
+    N = size(targets,2)
+    M = size(sources,2)
     dipvecs = normals .* weights'
     tmp = zeros(eltype(zk),length(weights))
     tmp_weights = zeros(eltype(zk),3,length(weights))
     # Computing near-field correction
-    # _,C = partial_assemble_parallel!(mesh,zk,mesh.sources,shape_function;fOn=false)
-    # _,S = assemble_parallel!(mesh,zk,mesh.sources;n=n,sparse=true,depth=1,fOn=false);
-    # nearfield_correction = - C + S + 0.5*I
-    nearfield_correction = spzeros(ComplexF64,n,n) + 0.5*I
+    if nearfield
+        C,_ = partial_assemble_parallel!(mesh,zk,targets,shape_function;gOn=false,depth=depth)
+        S,_ = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,gOn=false,offset=offset);
+        nearfield_correction = - C + S + 0.5*I
+    else
+        nearfield_correction = spzeros(ComplexF64,N,N) + 0.5*I
+    end
     # Element interpolation
     element_interpolation = physics_function.interpolation
     # FMM3D uses a greens functiont that does not divide by 4π.
-    return FMMFOperator(n,m,zk,eps,targets,sources,dipvecs/(4π + 0im),element_interpolation,
+    return FMMFOperator(N,M,zk,eps,targets,sources,Complex.(dipvecs),element_interpolation,
                         physics_topology,nearfield_correction,tmp,tmp_weights)
 end

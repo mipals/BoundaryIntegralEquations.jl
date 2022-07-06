@@ -67,18 +67,16 @@ function LossyBlockMatrix(mesh::Mesh,freq;depth=1,
     # Acoustic matrices
     println("Acoustic Matrices:")
     Fₐ,Bₐ,C₀ = assemble_parallel!(mesh,kₐ,sources;m=m,n=n)
-    Aₐ = (exterior ? Fₐ + Diagonal(1.0 .- C₀) : Fₐ - Diagonal(C₀))
-    Bₐ = (exterior ? Bₐ : Bₐ)
+    Aₐ = (exterior ? Fₐ + Diagonal(C₀) : Fₐ - Diagonal(C₀))
+
     # Thermal matrices
     println("Thermal Matrices:")
-    Fₕ,Bₕ = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
-    Aₕ = (exterior ? Fₕ + Diagonal(1.0 .- C₀) : Fₕ - Diagonal(C₀))
-    Bₕ = (exterior ? Bₕ : Bₕ)
+    Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;sparse=true,depth=depth);
+    Aₕ = (exterior ?  -Fₕ + Diagonal( C₀) : Fₕ - Diagonal(C₀))
     # Viscous matrices
     println("Viscous matrices:")
-    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kₕ,sources;sparse=true,depth=depth);
-    Aᵥ = (exterior ? Fᵥ + Diagonal(1.0 .- C₀) : Fᵥ - Diagonal(C₀))
-    Bᵥ = (exterior ? Bᵥ : Bᵥ)
+    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
+    Aᵥ = (exterior ?  -Fᵥ + Diagonal( C₀) : Fᵥ - Diagonal(C₀))
 
     #### Extracting the normal and tangent direction
     normals   = convert(typeof(Bᵥ),mesh.normals)
@@ -96,9 +94,9 @@ function LossyBlockMatrix(mesh::Mesh,freq;depth=1,
          [(tangents₂[1,:].*Dt₂) (tangents₂[2,:].*Dt₂) (tangents₂[3,:].*Dt₂)]
 
     LossyBlock = LossyBlockMatrix(nSource,N,
-                        Aₐ,Bₐ,sparse(Aₕ),sparse(Bₕ),sparse(Aᵥ),sparse(Bᵥ),
-                        normals,tangents₁,tangents₂,Dt₁,Dt₂,ND,
-                        ϕₐ,ϕₕ,τₐ,τₕ)
+                                Aₐ,Bₐ,Aₕ,Bₕ,Aᵥ,Bᵥ,
+                                normals,tangents₁,tangents₂,Dt₁,Dt₂,ND,
+                                ϕₐ,ϕₕ,τₐ,τₕ)
     if blockoutput
         return LossyBlock
     else

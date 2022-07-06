@@ -173,7 +173,7 @@ function computing_integrals!(physics_interpolation,interpolation_element,
         # Approximating the integral and adding the value to the C-vector
         sum_to_c!(subvectorC,integrand)
     end
-    if fOn && cOn
+    if fOn && cOn && false
         # Converting the integrand of the integral-free-form to the double-layer integrand
         freens3dk0_to_freens3d!(integrand,r,k)
         # Computing the integrand
@@ -195,10 +195,10 @@ end
 Assembles the BEM matrices for F, G and G0 kernels over the elements on the mesh.
 """
 function assemble_parallel!(mesh::Mesh3d,k,in_sources;fOn=true,gOn=true,cOn=true,
-                            sparse=false,m=4,n=4,progress=true,depth=2)
+                            sparse=false,m=4,n=4,progress=true,depth=2,offset=nothing)
     if sparse
         return sparse_assemble_parallel!(mesh,k,in_sources,mesh.shape_function;
-                                fOn=fOn,gOn=gOn,progress=progress,depth=depth)
+                                fOn=fOn,gOn=gOn,progress=progress,depth=depth,offset=offset)
     else
         return assemble_parallel!(mesh::Mesh3d,k,in_sources,mesh.shape_function;
                                 fOn=fOn,gOn=gOn,cOn=cOn,m=m,n=n,progress=progress)

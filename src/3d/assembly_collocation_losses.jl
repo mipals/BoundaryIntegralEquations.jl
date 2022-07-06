@@ -6,8 +6,8 @@ get_offset(physics_element::ContinuousQuadrilateral)    = 0.1
 
 get_beta(physicsElement::Triangular) = 0.0
 get_beta(physicsElement::DiscontinuousTriangularConstant)  = 0.5
-get_beta(physicsElement::DiscontinuousTriangularLinear)    = physicsElement.beta
-get_beta(physicsElement::DiscontinuousTriangularQuadratic) = physicsElement.beta
+get_beta(physicsElement::DiscontinuousTriangularLinear)    = 0.05
+get_beta(physicsElement::DiscontinuousTriangularQuadratic) = 0.05
 #==========================================================================================
                                 TriangularQuadratic Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
@@ -114,7 +114,7 @@ function connected_sources(mesh,depth,physics_function::T) where
 end
 
 function create_row_indices(lengths,total_counts)
-    row_indices =zeros(Int64,total_counts)
+    row_indices = zeros(Int64,total_counts)
     row = 1
     idx = 0
     for i ∈ lengths
@@ -125,6 +125,15 @@ function create_row_indices(lengths,total_counts)
     return row_indices
 end
 
+function mygemm_vec3!(C, B, A)
+    @inbounds @fastmath for n ∈ eachindex(C)
+        Cmn = zero(eltype(C))
+        for k ∈ eachindex(A)
+            Cmn += A[k] * B[n,k]
+        end
+        C[n] += Cmn
+    end
+end
 
 function sparse_computing_integrals!(physics_interpolation,shape_function,
                                     normals, tangents,sangents,
@@ -132,26 +141,36 @@ function sparse_computing_integrals!(physics_interpolation,shape_function,
                                     element_coordinates,
                                     fOn,gOn,submatrixF,submatrixG,k,source)
 
-    my_mul!(interpolation,element_coordinates,shape_function.interpolation)
-    compute_distances!(r,interpolation,source)
+    mul!(interpolation,element_coordinates,shape_function.interpolation)
     jacobian!(shape_function,element_coordinates,
-                                    normals,tangents,sangents,jacobian_mul_weights)
+                normals,tangents,sangents,jacobian_mul_weights)
     integrand_mul!(jacobian_mul_weights,shape_function.weights)
-    if gOn
-        ### Evaluating the G-kernel (single-layer kernel) at the global nodes
-        greens3d!(integrand,r,k)
-        # Multiplying integrand with jacobian and weights
-        integrand_mul!(integrand,jacobian_mul_weights)
-        # Approximating the integral and the adding the values to the BEM matrix
-        mygemm_vec!(submatrixG,integrand,physics_interpolation)
-    end
+    compute_distances!(r,interpolation,source)
+    # jacobian_openbem!(shape_function,element_coordinates,normals,tangents,sangents,jacobian_mul_weights)
+    # jacobian_mul_weights .*= shape_function.weights
     if fOn
         ### Evaluating the F-kernel (double-layer kernel) at the global nodes
         freens3d!(integrand,r,interpolation,source,normals,k)
+        # F3d!(interpolation,source,k,normals,r,integrand,-1)
         # Multiplying integrand with jacobian and weights
         integrand_mul!(integrand,jacobian_mul_weights)
+        # integrand .= integrand .* jacobian_mul_weights
         # Approximating integral and adding the value to the BEM matrix
-        mygemm_vec!(submatrixF,integrand,physics_interpolation)
+        mygemm_vec3!(submatrixF,physics_interpolation,integrand)
+        # submatrixF .+= physics_interpolation*integrand
+        # mul!(submatrixF,physics_interpolation,integrand,true,true)
+    end
+    if gOn
+        ### Evaluating the G-kernel (single-layer kernel) at the global nodes
+        greens3d!(integrand,r,k)
+        integrand_mul!(integrand,jacobian_mul_weights)
+        mygemm_vec3!(submatrixG,physics_interpolation,integrand)
+        # G3d!(k,r,integrand,-1)
+        # Multiplying integrand with jacobian and weights
+        # integrand .= integrand .* jacobian_mul_weights
+        # Approximating the integral and the adding the values to the BEM matrix
+        # submatrixG .+= physics_interpolation*integrand
+        # mul!(submatrixG,physics_interpolation,integrand,true,true)
     end
 end
 
@@ -163,7 +182,7 @@ function find_physics_nodes!(physics_nodes,idxs,di,physics_top)
 end
 
 function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-        fOn=true,gOn=true,depth=1,
+        fOn=true,gOn=true,depth=1,offset=nothing,
         progress=true) where {T <: Union{TriangularLinear,DiscontinuousTriangularLinear}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
@@ -182,7 +201,11 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     ======================================================================================#
     beta = get_beta(physics_function)
     tmp  = DiscontinuousTriangularLinear(physics_function,beta)
-    offr = get_offset(physics_function)
+    if typeof(offset) <: Real
+        offr = 0.0
+    else
+        offr = get_offset(physics_function)
+    end
     # offr = 0.0
     # Dealing with corners
     nodesX1,nodesY1,weights1 = singular_triangle_integration(tmp,3,[1.00;offr;offr],Diagonal(ones(3)),1e-6)
@@ -202,9 +225,9 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     set_interpolation_nodes!(physics_function3,nodesX3,nodesY3,weights3)
 
     # Copying interpolation of physics functions1
-    physics_interpolation1 = copy(physics_function1.interpolation')
-    physics_interpolation2 = copy(physics_function2.interpolation')
-    physics_interpolation3 = copy(physics_function3.interpolation')
+    physics_interpolation1 = physics_function1.interpolation
+    physics_interpolation2 = physics_function2.interpolation
+    physics_interpolation3 = physics_function3.interpolation
 
     # Connections
     element_connections, source_connections = connected_sources(mesh,depth)
@@ -284,7 +307,7 @@ end
 
 
 function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-    fOn=true,gOn=true,depth=1,
+    fOn=true,gOn=true,depth=1,offset=nothing,
     progress=true) where {T <: Union{TriangularQuadratic,DiscontinuousTriangularQuadratic}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
@@ -300,12 +323,13 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
                                             | \
                                             1 - 2
     ======================================================================================#
-    # shape_function1 = create_rotated_element(shape_function,n,m,1)
-    # shape_function2 = create_rotated_element(shape_function,n,m,2)
-    # shape_function3 = create_rotated_element(shape_function,n,m,3)
     beta = get_beta(physics_function)
     tmp  = DiscontinuousTriangularLinear(physics_function,beta)
-    offr = get_offset(physics_function)
+    if typeof(offset) <: Real
+        offr = offset
+    else
+        offr = get_offset(physics_function)
+    end
     # Dealing with corners
     DO = Diagonal(ones(3))
     nodesX1,nodesY1,weights1 = singular_triangle_integration(tmp,3,[1.00;offr;offr],DO,1e-6)
@@ -340,12 +364,12 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     set_interpolation_nodes!(physics_function6,nodesX6,nodesY6,weights6)
 
     # Copying interpolation of physics functions1
-    physics_interpolation1 = copy(physics_function1.interpolation')
-    physics_interpolation2 = copy(physics_function2.interpolation')
-    physics_interpolation3 = copy(physics_function3.interpolation')
-    physics_interpolation4 = copy(physics_function4.interpolation')
-    physics_interpolation5 = copy(physics_function5.interpolation')
-    physics_interpolation6 = copy(physics_function6.interpolation')
+    physics_interpolation1 = physics_function1.interpolation
+    physics_interpolation2 = physics_function2.interpolation
+    physics_interpolation3 = physics_function3.interpolation
+    physics_interpolation4 = physics_function4.interpolation
+    physics_interpolation5 = physics_function5.interpolation
+    physics_interpolation6 = physics_function6.interpolation
 
     # Connections
     element_connections, source_connections = connected_sources(mesh,depth)
@@ -357,10 +381,9 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     F = zeros(ComplexF64, idx[end])
     G = zeros(ComplexF64, idx[end])
 
-    # mn = m*n
+    # Preallocation of intermediate arrays
+    n_threads = nthreads()
     mn = length(nodesX1)
-    mp = length(nodesX4)
-    n_threads     = nthreads()
     Corner_normals       = zeros(3, mn*n_threads)
     Corner_tangents      = zeros(3, mn*n_threads)
     Corner_sangents      = zeros(3, mn*n_threads)
@@ -369,6 +392,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     Corner_r             = zeros(mn,n_threads)
     Corner_integrand     = zeros(ComplexF64, mn, n_threads)
 
+    mp = length(nodesX4)
     Middle_normals       = zeros(3, mp*n_threads)
     Middle_tangents      = zeros(3, mp*n_threads)
     Middle_sangents      = zeros(3, mp*n_threads)
@@ -376,7 +400,6 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     Middle_jacobian      = zeros(mp,n_threads)
     Middle_r             = zeros(mp,n_threads)
     Middle_integrand     = zeros(ComplexF64, mp, n_threads)
-
 
     n_physics_functions = number_of_shape_functions(physics_function)
     n_shape_functions   = number_of_shape_functions(shape_function)
@@ -394,6 +417,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         corner_jacobian      = @view Corner_jacobian[:,threadid()]
         corner_r             = @view Corner_r[:,threadid()]
         corner_integrand     = @view Corner_integrand[:,threadid()]
+
         middle_normals       = @view Middle_normals[:,((threadid()-1)*mp+1):threadid()*mp]
         middle_tangents      = @view Middle_tangents[:,((threadid()-1)*mp+1):threadid()*mp]
         middle_sangents      = @view Middle_sangents[:,((threadid()-1)*mp+1):threadid()*mp]
@@ -401,6 +425,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         middle_jacobian      = @view Middle_jacobian[:,threadid()]
         middle_r             = @view Middle_r[:,threadid()]
         middle_integrand     = @view Middle_integrand[:,threadid()]
+
         di = dict[source_node]
         physics_nodes = zeros(Int64, n_physics_functions)
         # physics_nodes = [1;2;3]
@@ -443,7 +468,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
                                             middle_normals,middle_tangents,middle_sangents,
                                             middle_interpolation,middle_jacobian,middle_r,
                                             middle_integrand,element_coordinates,
-                                         fOn,gOn,submatrixF,submatrixG,k,source)
+                                            fOn,gOn,submatrixF,submatrixG,k,source)
             else
                 sparse_computing_integrals!(physics_interpolation6,shape_function6,
                                             middle_normals,middle_tangents,middle_sangents,
