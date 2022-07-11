@@ -282,8 +282,8 @@ function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;
                                     inner_tmp1, inner_tmp2,lu_on)
     if fmm_on
         _,_,_,ka,_,_,_,_,_,_,_,_ = visco_thermal_constants(;freq=freq,S=1)
-        # Ga = FMMGOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
-        Ga = BB.Bₐ
+        Ga = FMMGOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
+        # Ga = BB.Bₐ
         Ha = FMMFOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
         outer = LossyOneVariableOuter(N,Ha,Ga,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
                                 luGv,inner,BB.Dt₁,BB.Dt₂,

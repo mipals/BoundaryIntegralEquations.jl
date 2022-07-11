@@ -16,8 +16,8 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # Triangular Meshes
 tri_mesh_file = "examples/meshes/sphere_1m"
 tri_mesh_file = "examples/meshes/sphere_1m_fine"
-# tri_mesh_file = "examples/meshes/sphere_1m_finer"
-tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_finer"
+# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
 #==========================================================================================
@@ -38,7 +38,7 @@ Block matrix corresponding to 5 BEM systems and 5 constraints
 Fp,Gs,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,sparse=false);
 Gp = Gs
 # Fp,Gp,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,sparse=false,gOn=false);
-Ag = FMMGOperator(mesh,zk;eps=1e-6,n=3,offset=0.2)
+Ag = FMMGOperator(mesh,zk;eps=1e-6,n=3,nearfield=true,offset=0.2)
 @time norm(Ag*pI - Gp*pI)/norm(Gp*pI)
 xg = ones(eltype(Ag),size(Ag,1))
 @time norm(Ag*xg - Gp*xg)/norm(Gp*xg)

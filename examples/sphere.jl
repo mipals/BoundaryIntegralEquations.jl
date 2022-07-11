@@ -11,11 +11,11 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 quad_physics_orders = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
-# tri_mesh_file = "examples/meshes/sphere_1m_fine"
-tri_mesh_file = "examples/meshes/sphere_1m_finer"
+tri_mesh_file = "examples/meshes/sphere_1m_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_finer"
 # tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                        physics_order=tri_physics_orders[5])
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                        physics_order=tri_physics_orders[2])
 # Quadrilateral Meshes
 # quad_mesh_file = "examples/meshes/quad_sphere"
 # quad_mesh_file = "examples/meshes/quad_sphere_1m_fine"
@@ -33,7 +33,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq  = 100.0                                   # Frequency                 [Hz]
+freq  = 1000.0                                   # Frequency                 [Hz]
 c     = 340.0                                   # Speed of sound            [m/s]
 k     = 2*π*freq/c                              # Wavenumber                [1/m]
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
@@ -43,13 +43,26 @@ pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-@time Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,gOn=false,sparse=false);
+# @time Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,gOn=false,sparse=false);
+@time Fp,Gp,Cp = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,sparse=false);
 #==========================================================================================
             Setting up a linear system and solving for the pressure
 ==========================================================================================#
 # Assembling linear system (we )
 Ap    = Fp + Diagonal(1.0 .- Cp)
+SF,SG = assemble_parallel!(mesh,k,mesh.sources;sparse=true,depth=2,progress=true,offset=0.15)
+Flu = lu(SF + Diagonal(1.0 .- Cp))
+
+p_bem = gmres(Ap,pI;verbose=true,Pl=Flu);
 p_bem = gmres(Ap,pI;verbose=true);
+
+Glu = lu(SG)
+p_bem = gmres(Gp,pI;verbose=true,Pr=Glu);
+p_bem = gmres(Gp,pI;verbose=true);
+
+T = Matrix(SG)\Gp
+gmres(T,pI;verbose=true);
+
 # p_bem = Ap\pI
 ## Plotting pressure on surface nodes
 surface_angles = acos.(mesh.sources[1,:]/radius)

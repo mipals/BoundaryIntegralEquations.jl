@@ -11,10 +11,10 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
-tri_mesh_file = "examples/meshes/sphere_1m_finest"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                                physics_order=tri_physics_orders[1])
+tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_finest"
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                                physics_order=tri_physics_orders[2])
 #==========================================================================================
         3d Visualization - Seems highly unstable on M1 chips. Problems with GLMakie?
 ==========================================================================================#
@@ -26,7 +26,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 2000.0                                   # Frequency                 [Hz]
+freq   = 100.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -92,17 +92,17 @@ ang_axis = acos.(xyzb[3,:]/radius)*180.0/pi
 perm = sortperm(ang_axis)
 
 # Plotting
-# plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:yellow)
-scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("|p|"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)
+plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
+# scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
+ylabel!("|p|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",linewidth=2)
 title!("Frequency = $(freq)")
-# plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:yellow)
-scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("|Vn|"); plot!(ang_axis[perm],real.(v_rAN_V[perm]),label="Analytical",linewidth=2)
-# ylims!((-1e-6,1e-6))
-# plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:yellow)
-scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-plot!(ang_axis[perm],real.(v_thetaAN_V[perm]),label="Analytical",linewidth=2)
+plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
+# scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
+ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(v_rAN_V[perm]),label="Analytical",linewidth=2)
+# ylims!((-5e-6,5e-6))
+plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
+# scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
+plot!(ang_axis[perm],abs.(v_thetaAN_V[perm]),label="Analytical",linewidth=2)
 xlabel!("Angle"); ylabel!("|Vt|")
-# plot(plt1,plt2,plt3,layout=(3,1))
+plot(plt1,plt2,plt3,layout=(3,1))
 # plt = plot(plt1,plt2,plt3,layout=(3,1),dpi=300)

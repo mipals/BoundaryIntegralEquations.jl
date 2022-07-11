@@ -142,7 +142,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     LinearMaps.check_dim_mul(y, A, x)
     nodes_to_gauss!(A.tmp_weights,A.element_interpolation,A.physics_topology,x)
     integrand_mul!(A.tmp_weights,A.weights)
-    vals = hfmm3d(A.eps,A.k,A.sources,charges=A.weights,targets=A.targets,pgt=1)
+    vals = hfmm3d(A.eps,A.k,A.sources,charges=A.tmp_weights,targets=A.targets,pgt=1)
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 function FMMGOperator(eps,k,targets,sources,weights,elm_interp,physics_topology)

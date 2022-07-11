@@ -10,9 +10,9 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
-# tri_mesh_file = "examples/meshes/sphere_1m_finer"
+tri_mesh_file = "examples/meshes/sphere_1m_finer"
 # tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
-tri_mesh_file = "examples/meshes/sphere_1m_finest"
+# tri_mesh_file = "examples/meshes/sphere_1m_finest"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
                                                 physics_order=tri_physics_orders[1])
 #==========================================================================================
@@ -26,7 +26,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 5000.0                                   # Frequency                 [Hz]
+freq   = 100.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -76,13 +76,6 @@ l_D_r!(outer.Dt2,        outer.sx, outer.sy, outer.sz, outer.tx, outer.ty, outer
 l_GH_r!(outer.Gv, outer.luGv, outer.Hv, outer.nx, outer.ny, outer.nz, outer.sx, outer.sy, outer.sz,   outer.tmp1, outer.tmp2, outer.x2, vt2, true, outer.lu_on)
 l_D_r!(outer.Dt1,         outer.tx, outer.ty, outer.tz, outer.sx, outer.sy, outer.sz, outer.tmp1, outer.tmp2,         outer.x2, vt2, false)
 l_D_r!(outer.Dt2,         outer.sx, outer.sy, outer.sz, outer.sx, outer.sy, outer.sz, outer.tmp1, outer.tmp2,         outer.x2, vt2, false)
-
-y = vbn + gmres(outer.inner,outer.x1 + outer.x2;verbose=true)
-
-
-maximum(abs.(outer_fmm.Ha*y - BB.Aₐ*y))
-maximum(abs.(outer_fmm.Ga*y - BB.Bₐ*y)) # Why is it so wrong?
-minimum(abs.(outer_fmm.Ga*y - BB.Bₐ*y)) # Why is it so wrong?
 
 
 bt        = compute_lossy_rhs(outer,vn0,vt10,vt20);
