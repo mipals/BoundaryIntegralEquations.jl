@@ -234,15 +234,73 @@ end
 #===========================================================================================
                                 Constructors
 ===========================================================================================#
-function LossyOneVariableOuter(mesh::Mesh3d,freq;lu_on=false)
+function LossyOneVariableOuter(mesh::Mesh3d,freq;S=1,depth=1,exterior=true,
+                            nearfield=true,n=3,thres=1e-6,offset=0.2)
+    # Extracting local (n,t,s) coordinate systems
+    nx = mesh.normals[1,:]
+    ny = mesh.normals[2,:]
+    nz = mesh.normals[3,:]
+    tx = mesh.tangents[1,:]
+    ty = mesh.tangents[2,:]
+    tz = mesh.tangents[3,:]
+    sx = mesh.sangents[1,:]
+    sy = mesh.sangents[2,:]
+    sz = mesh.sangents[3,:]
+    N = length(nx)
+
+    # Allocating memory used for saving intermediate values when multiplying with the struct
+    inner_tmp1 = zeros(ComplexF64,N)
+    inner_tmp2 = similar(inner_tmp1)
+    outer_tmp1 = similar(inner_tmp1)
+    outer_tmp2 = similar(inner_tmp1)
+    outer_res  = similar(inner_tmp1)
+    outer_x1   = similar(inner_tmp1)
+    outer_x2   = similar(inner_tmp1)
     # Computing relevant BEM-matrices
-    BB = LossyBlockMatrix(mesh,freq;blockoutput=true)
+    ρ,c,kₚ,kₐ,kₕ,kᵥ,τₐ,τₕ,ϕₐ,ϕₕ,η,μ = visco_thermal_constants(;freq=freq,S=S)
+
+    ### Extracting our sources
+    sources = mesh.sources
+
+    ### Extracting the number of nodes (and hence also the total matrix size)
+
+    ### Assembling the 3 BEM systems
+    one = ones(N)/2
+
+    # Thermal matrices
+    println("Thermal Matrices:")
+    Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;sparse=true,depth=depth);
+    Aₕ = (exterior ?  -Fₕ + Diagonal(one) : Fₕ - Diagonal(C₀))
+    # Viscous matrices
+    println("Viscous matrices:")
+    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
+    Aᵥ = (exterior ?  -Fᵥ + Diagonal(one) : Fᵥ - Diagonal(C₀))
+
+    ### Computing tangential derivatives
+    Dt₁, Dt₂ = shape_function_derivatives(mesh)
+    # Dt₁, Dt₂ = shapeFunctionDerivative(mesh)
+    Dt₁ = convert.(eltype(Bᵥ),Dt₁)
+    Dt₂ = convert.(eltype(Bᵥ),Dt₂)
+
+    luGv = lu(rand(ComplexF64,2,2)) # Junk factorization
+    luGh = lu(rand(ComplexF64,2,2)) # Junk factorization
+
+    inner = LossyOneVariableInner(N,Aᵥ,Bᵥ,luGv,Dt₁,Dt₂,
+                                nx,ny,nz,tx,ty,tz,sx,sy,sz,
+                                inner_tmp1, inner_tmp2,false)
+
     # Computing relevant constants
-    return LossyOneVariableOuter(mesh,BB,freq;lu_on=lu_on)
+    println("Acoustic Matrices:")
+    Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
+    Ha = FMMFOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
+    return LossyOneVariableOuter(N,Ha,Ga,Aₕ,Bₕ,luGh,Aᵥ,Bᵥ,
+                            luGv,inner,Dt₁,Dt₂,
+                            nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,
+                            outer_tmp1,outer_tmp2,outer_res,outer_x1,outer_x2,false,freq)
 end
 
-function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;
-                        lu_on=false,fmm_on=false,nearfield=false,n=3,thres=1e-6,offset=0.2)
+function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;depth=1,
+                        lu_on=false,fmm_on=false,nearfield=true,n=3,thres=1e-6,offset=0.2)
     τₐ = BB.τₐ
     τₕ = BB.τₕ
     ϕₐ = BB.ϕₐ
@@ -282,9 +340,8 @@ function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;
                                     inner_tmp1, inner_tmp2,lu_on)
     if fmm_on
         _,_,_,ka,_,_,_,_,_,_,_,_ = visco_thermal_constants(;freq=freq,S=1)
-        Ga = FMMGOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
-        # Ga = BB.Bₐ
-        Ha = FMMFOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield)
+        Ga = FMMGOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = FMMFOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
         outer = LossyOneVariableOuter(N,Ha,Ga,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
                                 luGv,inner,BB.Dt₁,BB.Dt₂,
                                 nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,

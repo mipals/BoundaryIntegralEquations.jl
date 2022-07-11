@@ -11,8 +11,9 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
+tri_mesh_file = "examples/meshes/sphere_1m_35k"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
 #==========================================================================================
@@ -33,7 +34,7 @@ radius = 1.0                                     # Radius of sphere_1m       [m]
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-@time BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true,depth=1)
+# @time BB = IntegralEquations.LossyBlockMatrix(mesh,freq;blockoutput=true,depth=1)
 
 xyzb = mesh.sources
 M  = size(xyzb,2)
@@ -51,7 +52,8 @@ vt20 = u₀*tangent2[3,:]
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
 # Creating the "outer"-struct representation of the system matrix
-outer = LossyOneVariableOuter(mesh,BB,freq;fmm_on=true)
+# outer = LossyOneVariableOuter(mesh,BB,freq;fmm_on=true)
+outer = LossyOneVariableOuter(mesh,freq)
 bt    = compute_lossy_rhs(outer,vn0,vt10,vt20)
 # Solving the problem using the "outer" struct
 @time pa,pa_hist = gmres(outer,bt;verbose=true,log=true)

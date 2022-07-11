@@ -9,12 +9,12 @@ geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
-# tri_mesh_file = "examples/meshes/sphere_1m_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_fine"
 tri_mesh_file = "examples/meshes/sphere_1m_finer"
-# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                                physics_order=tri_physics_orders[1])
+mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                                physics_order=tri_physics_orders[2])
 #==========================================================================================
         3d Visualization - Seems highly unstable on M1 chips. Problems with GLMakie?
 ==========================================================================================#
