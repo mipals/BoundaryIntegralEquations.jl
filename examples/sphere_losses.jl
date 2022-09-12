@@ -9,11 +9,12 @@ geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
-# tri_mesh_file = "examples/meshes/sphere_1m_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
 # tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
-tri_mesh_file = "examples/meshes/sphere_1m_35k"
+# tri_mesh_file = "examples/meshes/sphere_1m_35k"
+# tri_mesh_file = "examples/meshes/sphere_1m_77k"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
 #==========================================================================================
@@ -27,7 +28,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 100.0                                   # Frequency                 [Hz]
+freq   = 1000.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -61,7 +62,14 @@ bt    = compute_lossy_rhs(outer,vn0,vt10,vt20)
                                 Checking results
 ===========================================================================================#
 ghpainv,gh_hist = gmres(outer.Gh,outer.Hh*pa;verbose=true,log=true)
-gapainv,ga_hist = gmres(outer.Ga,outer.Ha*pa;verbose=true,log=true)
+# ghpainv = outer.Gh\(outer.Hh*pa)
+_,SG = assemble_parallel!(mesh,ka,mesh.sources;sparse=true,depth=2,progress=true,offset=0.2,fOn=false)
+lu_Ga = lu(SG)
+lu_Ga\(outer.Ga*ones(size(outer,1)))
+# 1000 Hz: 466 iterations
+# gapainv,ga_hist = gmres(outer.Ga,outer.Ha*pa;verbose=true,log=true)
+# 1000 Hz: 262 iterations
+gapainv,ga_hist = gmres(outer.Ga,outer.Ha*pa;verbose=true,log=true,Pr=lu_Ga)
 ghpainv = ghpainv*ϕₕ*τₐ/τₕ
 gapainv = gapainv*ϕₐ
 # gapainv = gmres!(x0,outer.Ga,outer.Ha*pa;verbose=true)*ϕₐ
@@ -84,6 +92,31 @@ v_t1   =  tangent1[1,:].*vx + tangent1[2,:].*vy + tangent1[3,:].*vz
 v_t2   =  tangent2[1,:].*vx + tangent2[2,:].*vy + tangent2[3,:].*vz
 vt_sum = sqrt.(v_t1.^2 + v_t2.^2)
 
+#===========================================================================================
+                            Testing new approach
+===========================================================================================#
+using Test
+Dx,Dy,Dz = IntegralEquations.shape_function_derivatives(mesh;global_derivatives=true)
+ph = -outer.τₐ/outer.τₕ*pa
+nx = outer.nx
+ny = outer.ny
+nz = outer.nz
+dpa = gmres(outer.Ga,outer.Ha*pa;verbose=true)
+dph = gmres(outer.Gh,outer.Hh*ph;verbose=true)
+vx0 = mesh.normals[1,:]*0.0
+# vy0 = mesh.normals[2,:]*0.0
+# vy0 = mesh.tangents[3,:]*u₀
+vz0 = mesh.normals[3,:]*u₀
+# Velocity coupling seems true
+@test abs.(outer.ϕₐ*(Dx*pa + Diagonal(nx)*dpa) + outer.ϕₕ*(Dx*ph + Diagonal(nx)*dph) + vx) ≈ vx0 atol=1e-5
+@test abs.(outer.ϕₐ*(Dy*pa + Diagonal(ny)*dpa) + outer.ϕₕ*(Dy*ph + Diagonal(ny)*dph) + vy) ≈ vy0 atol=1e-5
+@test abs.(outer.ϕₐ*(Dz*pa + Diagonal(nz)*dpa) + outer.ϕₕ*(Dz*ph + Diagonal(nz)*dph) + vz) ≈ vz0 atol=1e+0
+# Null-divergence?
+dvx = gmres(outer.Gv,outer.Hv*vx;verbose=true)
+dvy = gmres(outer.Gv,outer.Hv*vy;verbose=true)
+dvz = gmres(outer.Gv,outer.Hv*vz;verbose=true)
+# Also looks ok?
+@test abs.(Dx*vx + Diagonal(nx)*dvx + Dy*vy + Diagonal(ny)*dvy + Dz*vz + Diagonal(nz)*dvz) ≈ vx0 atol=1e-3
 #===========================================================================================
                                    Plotting solutions
 ===========================================================================================#

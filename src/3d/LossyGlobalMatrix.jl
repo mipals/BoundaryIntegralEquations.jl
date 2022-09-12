@@ -1,0 +1,167 @@
+#==========================================================================================
+                            Defining LossyGlobalOuter
+==========================================================================================#
+struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
+    n::Int64                # Number of nodes
+    # Acoustic Matrices
+    Hv::AbstractArray{T}    # Viscous BEM A
+    Gv::AbstractArray{T}    # Viscous BEM B
+    # Normal transformation
+    Nd::AbstractArray       # Collection of normal tr
+    # Gradients
+    Dr::AbstractArray       # [Dx  Dy  Dz]
+end
+Base.size(A::LossyGlobalInner) = (A.n, A.n)
+# Defining multiplication with `LossyGlobalInner`
+function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
+                            A::LossyGlobalInner{T},
+                            x::AbstractVector) where {T <: ComplexF64}
+    # Checking dimensions of input
+    LinearMaps.check_dim_mul(y, A, x)
+    # Extracting relevant values
+    y .= A.Dr*(A.Nd*x) - A.Nd'*(gmres(A.Gv,A.Hv*(A.Nd*x)))
+    return y
+end
+function Base.Matrix(A::LossyGlobalInner)
+    return A.Dr*A.Nd - A.Nd'*(Matrix(A.Gv)\(A.Hv*A.Nd))
+end
+
+#==========================================================================================
+                            Defining LossyGlobalOuter
+==========================================================================================#
+struct LossyGlobalOuter{T} <: LinearMaps.LinearMap{T}
+    n::Int64                # Number of nodes
+    # Acoustic Matrices
+    # Ha::AbstractArray{T}    # Acoustic BEM A
+    # Ga::AbstractArray{T}    # Acoustic BEM B
+    Ha
+    Ga
+    # Thermal Matrices
+    Hh::AbstractArray{T}    # Thermal BEM A
+    Gh::AbstractArray{T}    # Thermal BEM B
+    # Viscosity Matrices
+    Hv::AbstractArray{T}    # Viscous BEM A
+    Gv::AbstractArray{T}    # Viscous BEM B
+    # Normal transformation
+    Nd::AbstractArray       # Collection of normal tr
+    # Gradients
+    Dc::AbstractArray       # [Dx; Dy; Dc]
+    Dr::AbstractArray       # [Dx  Dy  Dz]
+    # Inner'
+    inner::LossyGlobalInner{T}
+    ### Constants
+    # For the constraint: vᵦ = ϕₐ∇pₐ + ϕₕ∇pₕ + vᵥ on Γ      (<- This is a vector equation)
+    phi_a::T                        # Acoustic gradient coupling parameter
+    phi_h::T                        # Thermal gradient coupling parameter
+    # For the constraint: T = τₐpₐ + τₕpₕ = 0 on Γ
+    tau_a::T                        # Acoustic coupling parameter
+    tau_h::T                        # Thermal coupling parameter
+    # Combinations
+    mu_a::T                        # Acoustic coupling parameter
+    mu_h::T                        # Thermal coupling parameter
+end
+
+
+#==========================================================================================
+                    Constructor (Assembling) of a LossyBlockMatrix
+==========================================================================================#
+"""
+    LossyGlobalOuter(mesh::Mesh, freq;
+                m=3,n=3,l=90,p=90,S=-1,sparsity=20.0,
+                exterior=true,adaptive=false,blockoutput=false)
+
+Computes the Block matrix corresponding to the reduced lossy system.
+If `blockoutput=false` returns sparse matrix.
+If `blockoutput=true` returns a `LossyBlockMatrix` struct used for iterative solvers
+"""
+function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=true,
+                            m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
+    if (typeof(mesh.physics_function) <: DiscontinuousTriangularConstant)
+        ArgumentError("Constant elements will have a tangential derivative equal to zero.")
+    end
+    # Computing physical constants
+    ρ,c,kₚ,kₐ,kₕ,kᵥ,τₐ,τₕ,ϕₐ,ϕₕ,η,μ = visco_thermal_constants(;freq=freq,S=S)
+    # Computing boundary layer thickness (approximate)
+
+    ### Extracting our sources
+    sources = mesh.sources
+
+    ### Extracting the number of nodes (and hence also the total matrix size)
+    nSource = size(sources,2)
+
+    ### Assembling the 3 BEM systems
+    # Defining Diagonal Entries
+    one = ones(nSource)/2
+    # Thermal matrices
+    println("Thermal Matrices:")
+    Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;sparse=sparse_assembly,depth=depth);
+    Aₕ = (exterior ?  -Fₕ + Diagonal(one) : Fₕ - Diagonal(C₀))
+    # Viscous matrices
+    println("Viscous matrices:")
+    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=sparse_assembly,depth=depth);
+    Aᵥ = (exterior ?  -Fᵥ + Diagonal(one) : Fᵥ - Diagonal(C₀))
+    ### Computing tangential derivatives
+    Dx,Dy,Dz = shape_function_derivatives(mesh;global_derivatives=true)
+
+    nx = mesh.normals[1,:]
+    ny = mesh.normals[2,:]
+    nz = mesh.normals[3,:]
+
+    ## Creating NullDivergence
+    Dc = [Dx;Dy;Dz]
+    Dr = [Dx Dy Dz]
+    # Plus or minus?
+    Nd = -[sparse(Diagonal(nx)); sparse(Diagonal(ny)); sparse(Diagonal(nz))]
+    # Nd = [sparse(Diagonal(nx)); sparse(Diagonal(ny)); sparse(Diagonal(nz))]
+    Gv = blockdiag(Bᵥ, Bᵥ, Bᵥ)
+    Hv = blockdiag(Aᵥ, Aᵥ, Aᵥ)
+
+    mu_a = ϕₐ - τₐ*ϕₕ/τₕ
+    mu_h =      τₐ*ϕₕ/τₕ
+    # mu_h = ϕₐ - mu_a
+
+    inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr)
+
+    if fmm_on
+        Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = FMMFOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+        outer = LossyGlobalOuter(nSource,
+                                    Ha,Ga,
+                                    Aₕ,Bₕ,
+                                    Hv,Gv,
+                                    Nd,Dc,Dr,
+                                    inner,
+                                    ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
+    else
+        println("Acoustic Matrices:")
+        Fₐ,Bₐ,C₀ = assemble_parallel!(mesh,kₐ,sources;m=m,n=n)
+        Aₐ = (exterior ? Fₐ + Diagonal(C₀) : Fₐ - Diagonal(C₀))
+        outer = LossyGlobalOuter(nSource,
+                        Aₐ,Bₐ,
+                        Aₕ,Bₕ,
+                        Hv,Gv,
+                        Nd,Dc,Dr,
+                        inner,
+                        ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
+    end
+    return outer
+end
+
+#==========================================================================================
+    Defining relevant routines for LinearMaps.jl to work on the LossyBlockMatrix format
+==========================================================================================#
+# Size. Required for the LinearMaps.jl (and IterativeSolvers.jl package)
+Base.size(A::LossyGlobalOuter) = (A.n, A.n)
+# Defining multiplication with `LossyGlobalOuter`
+function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
+                            A::LossyGlobalOuter{T},
+                            x::AbstractVector) where {T <: ComplexF64}
+    # Checking dimensions of input
+    LinearMaps.check_dim_mul(y, A, x)
+    # Adding the contribution from Ha
+    y .= -A.phi_a*(A.Ha*x)
+    # We only want to call the multiplication with Ga once pr. iteration
+    y += A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) + A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) - A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
+
+    return y
+end

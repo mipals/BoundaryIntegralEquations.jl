@@ -156,7 +156,7 @@ function FMMGOperator(eps,k,targets,sources,weights,elm_interp,physics_topology)
     return FMMGOperator(n,m,zk,eps,targets,sources,weights,elm_interp,
                             physics_topology,nearfield_correction,tmp)
 end
-function FMMGOperator(mesh,k;eps=1e-6,n=3,nearfield=true,offset=0.1,depth=1)
+function FMMGOperator(mesh,k;eps=1e-6,n=3,nearfield=true,offset=0.2,depth=1)
     # Creating physics and geometry for the FMM operator
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)

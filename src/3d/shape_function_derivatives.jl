@@ -104,6 +104,7 @@ function shape_function_derivatives(mesh;global_derivatives=false,return_normal=
         T1 = inverse_rle(mesh.tangents[1,:],lengths)
         T2 = inverse_rle(mesh.tangents[2,:],lengths)
         T3 = inverse_rle(mesh.tangents[3,:],lengths)
+
         S1 = inverse_rle(mesh.sangents[1,:],lengths)
         S2 = inverse_rle(mesh.sangents[2,:],lengths)
         S3 = inverse_rle(mesh.sangents[3,:],lengths)
