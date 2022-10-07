@@ -1,7 +1,10 @@
 #==========================================================================================
                             Adding Related Packages
 ==========================================================================================#
-using LinearAlgebra, IntegralEquations, Plots, IterativeSolvers
+using LinearAlgebra
+using IntegralEquations
+using Plots
+using IterativeSolvers
 #==========================================================================================
                 Loading Mesh + Visualization (viz seems broken on M1 chips :/ )
 ==========================================================================================#
@@ -11,9 +14,9 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
-tri_mesh_file = "examples/meshes/sphere_1m_35k"
+# tri_mesh_file = "examples/meshes/sphere_1m_35k"
 # tri_mesh_file = "examples/meshes/sphere_1m_77k"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
@@ -54,26 +57,32 @@ v0 = [zeros(2n); u₀*ones(n)]
 #===========================================================================================
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
-LGM = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1)
-# rhs1 = -LGM.Ga*vn0
-# rhs = -LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0)))
-rhs  = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0)))
+LGM = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1,n=3)
+rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbose=true)
 @time pa = gmres(LGM,rhs;verbose=true);
-# pat = gmres(LGM.Ga,rhs;verbose=true);
+# For n=1, 1*20 + 16 = 36 iterations. 151 sec (slightly wrong results) | freq = 1000
+# For n=3, 1*20 + 0  = 20 iterations. 209 sec (also more correct)      | freq = 1000
+# Preconditioner? Not useful for
+# SF,SG = assemble_parallel!(mesh,k,mesh.sources;sparse=true,depth=2,progress=true,offset=0.15,gOn=false)
+# Flu = lu(SF + Diagonal(ones(size(SF,2))))
+# @time p_bem = gmres(LGM,rhs;verbose=true,Pl=Flu);
+# Iterations: 1*20 + 8 = 28 | depth = 1 | freq = 1000  | offset = 0.15 | 154k | worse...
+# Iterations: 1*20 + 8 = 28 | depth = 2 | freq = 1000  | offset = 0.15 | 154k | worse...
 
 # Generating analytical solution
-coords = [radius*ones(n,1) acos.(xyzb[3,:]/radius)]
+coordinates = [radius*ones(n,1) acos.(xyzb[3,:]/radius)]
 pasAN, v_rAN, v_thetaAN, v_rAN_A, v_thetaAN_A, v_rAN_V, v_thetaAN_V =
-                    IntegralEquations.sphere_first_order(kₐ,c,ρ,radius,u₀,coords;S=1,kv=kᵥ)
+                IntegralEquations.sphere_first_order(kₐ,c,ρ,radius,u₀,coordinates;S=1,kv=kᵥ)
 ang_axis = acos.(xyzb[3,:]/radius)*180.0/pi
 perm = sortperm(ang_axis)
 
 # Plotting
-K = 100
+K = 1
 scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM-global",marker=:cross,markersize=2,color=:black)
 # scatter!(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:red)
-ylabel!("|p|"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)
+ylabel!("Re(p)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)
 title!("Frequency = $(freq)")
+# savefig("/Users/mpasc/Dropbox/Apps/ShareLaTeX/JTCA_Iterative_losses/figures/notes/pa$(n).png")
 #===========================================================================================
                                 Checking results
 ===========================================================================================#
@@ -107,7 +116,10 @@ v_t1   = tangent1[1,:].*vx + tangent1[2,:].*vy + tangent1[3,:].*vz
 v_t2   = tangent2[1,:].*vx + tangent2[2,:].*vy + tangent2[3,:].*vz
 vt_sum = sqrt.(v_t1.^2 + v_t2.^2)
 
-# Hmm, the Null-divergence is not satisfied?
+#===========================================================================================
+                                    Tests!
+                        Null-divergence is not satisfied?
+===========================================================================================#
 using Test
 @test LGM.Hh*ph ≈ -LGM.Gh*dph       # Checking Acoustical BEM System
 @test LGM.Ha*pa ≈ -LGM.Ga*dpa       # Checking Thermal BEM system
@@ -117,7 +129,27 @@ using Test
 # Checking no-slip condition
 @test LGM.phi_a*(LGM.Dc*pa + LGM.Nd*dpa) + LGM.phi_h*(LGM.Dc*ph + LGM.Nd*dph) + v ≈ v0
 
-# Track-memory
+#===========================================================================================
+                                Scaling of model
+===========================================================================================#
+nDOF = n
+nDOF = 154_000
+# A single BEM matrix
+3(nDOF)^2*2*8/(2^30)
+# Full dense system (100 times a single BEM Matrix)
+(10nDOF)^2*2*8/(2^30)
+# 6 BEM Systems, 2 inverse products (Gv^{-1}Hv, Gh^{-1}Hv) and 1 collection
+(9)*(nDOF)^2*2*8/(2^30) # Computing inverse would also kill performance...
+
+Base.summarysize(LGM)/(2^30)
+#===========================================================================================
+                                Memory tracking
+===========================================================================================#
+Ga = FMMGOperator(mesh,kₐ;n=1,eps=1e-6,offset=0.2,nearfield=true,depth=1)
+@time Ga*pa;
+Ha = FMMFOperator(mesh,kₐ;n=3,eps=1e-6,offset=0.2,nearfield=true,depth=1)
+@time Ha*pa;
+
 mem_matrix = Base.summarysize(LGM)/(2^20)
 mem_multiply = @allocated begin
     LGM*vn0
@@ -126,29 +158,55 @@ end
 @time LGM.Ga*vn0;
 @time LGM.Ha*vn0;
 
+@time LGM.inner*vn0;
+
+Base.summarysize(LGM.Gv)/(2^20)
+Base.summarysize(LGM.Hv)/(2^20)
+Base.summarysize(LGM.Gh)/(2^20)
+Base.summarysize(LGM.Hh)/(2^20)
+Base.summarysize(LGM.Ga)/(2^20)
+Base.summarysize(LGM.Ha)/(2^20)
+Base.summarysize(LGM.Nd)/(2^20)
+# Note that Dc requires less memory as we use a CSC format (and Dc has less columns)
+Base.summarysize(LGM.Dr)/(2^20)
+Base.summarysize(LGM.Dc)/(2^20)
+Base.summarysize(LGM.inner)/(2^20)
+
+(Base.summarysize(LGM.Gv) + Base.summarysize(LGM.Hv) +
+ Base.summarysize(LGM.Gh) + Base.summarysize(LGM.Hh) +
+ Base.summarysize(LGM.Ga) + Base.summarysize(LGM.Ha) +
+ Base.summarysize(LGM.Dr) + Base.summarysize(LGM.Dc) +
+ Base.summarysize(LGM.Nd))/(2^20)
+Base.summarysize(LGM)/(2^20) # Why is this less?
+
+LGM.Dr[1:n,0n+1:1n] - LGM.Dc[0n+1:1n,1:n]
+LGM.Dr[1:n,1n+1:2n] - LGM.Dc[1n+1:2n,1:n]
+LGM.Dr[1:n,2n+1:3n] - LGM.Dc[2n+1:3n,1:n]
 #===========================================================================================
                                    Plotting solutions
 ===========================================================================================#
 # Plotting
-K = 1
-plt1 = scatter(ang_axis[1:K:end],abs.(pa[1:K:end]),label="BEM",marker=:cross,markersize=2,color=:black)
+K = 100
+plt1 = scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM",marker=:cross,markersize=2,color=:black)
 # scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("|p|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",linewidth=2)
+ylabel!("|p|"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)
 title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis[1:K:end],abs.(v_n0[1:K:end])/scaling,label="BEM",marker=:cross,markersize=2,color=:black)
+# plt2 = scatter(ang_axis[1:K:end],abs.(v_n0[1:K:end])/scaling,label="BEM",marker=:cross,markersize=2,color=:black)
+plt2 = scatter(ang_axis[1:K:end],real.(v_n0[1:K:end]/mean(scalings)),label="BEM",marker=:cross,markersize=2,color=:black)
 # scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(v_rAN_V[perm]),label="Analytical",linewidth=2)
+ylabel!("|Vn|"); plot!(ang_axis[perm],real.(v_rAN_V[perm]),label="Analytical",linewidth=2)
 # ylims!((-5e-6,5e-6))
 plt3 = scatter(ang_axis[1:K:end],real.(vt_sum[1:K:end]),label="BEM",marker=:cross,markersize=2,color=:black)
 # scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
 plot!(ang_axis[perm],real.(v_thetaAN_V[perm]),label="Analytical",linewidth=2)
 xlabel!("Angle"); ylabel!("|Vt|")
 plot(plt1,plt2,plt3,layout=(3,1),dpi=500)
-savefig("test.png")
+# savefig("/Users/mpasc/Dropbox/Apps/ShareLaTeX/JTCA_Iterative_losses/figures/notes/test.png")
 
 #===========================================================================================
                             Full Solution
 ===========================================================================================#
+B*LGM.Nd
 
 ## FULL
 B = Matrix(LGM.Dr) - Matrix(LGM.Nd')*(Matrix(LGM.Gv)\Matrix(LGM.Hv))

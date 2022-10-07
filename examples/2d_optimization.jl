@@ -1,29 +1,51 @@
 #==========================================================================================
+                                    README
+==========================================================================================#
+# This file contains a simple implementation of 2D-BEM for acoustics.
+# It supports constant, linear and quadratic discontinuous and continuous elements.
+#==========================================================================================
                                     Packages
 ==========================================================================================#
-using FastGaussQuadrature, LinearAlgebra, SpecialFunctions, FiniteDifferences, Dierckx, Plots
+using FastGaussQuadrature
+using LinearAlgebra
+using SpecialFunctions
+using FiniteDifferences
+using Dierckx
+using Plots
 #==========================================================================================
                                 Helper Functions
 ==========================================================================================#
-JacMul!(j,w)    = @inbounds for i = 1:length(j) j[i]   = j[i]*w[i]                      end
-dist!(x,y,r)    = @inbounds for i = 1:length(r) r[i]   = hypot(x[1,i]-y[1],x[2,i]-y[2]) end
-jacobian!(j,n)  = @inbounds for i = 1:length(j) j[i]   = hypot(n[1,i],      n[2,i])     end
-normalize!(n,j) = @inbounds for i = 1:length(j) n[1,i] = n[1,i]/j[i];n[2,i]=n[2,i]/j[i] end
-normals!(n,dX)  = @inbounds for i = 1:size(n,2) n[1,i] = -dX[2,i];   n[2,i]=dX[1,i]     end
+JacMul!(j,w)    = @inbounds for i = axes(j,1) j[i]   = j[i]*w[i]                      end
+dist!(x,y,r)    = @inbounds for i = axes(r,1) r[i]   = hypot(x[1,i]-y[1],x[2,i]-y[2]) end
+jacobian!(j,n)  = @inbounds for i = axes(j,1) j[i]   = hypot(n[1,i],      n[2,i])     end
+normalize!(n,j) = @inbounds for i = axes(j,1) n[1,i] = n[1,i]/j[i];n[2,i]=n[2,i]/j[i] end
+normals!(n,dX)  = @inbounds for i = axes(n,2) n[1,i] = -dX[2,i];   n[2,i]=dX[1,i]     end
 #==========================================================================================
                                 Basis Functions
 ==========================================================================================#
-linear(ξ)    = [0.5*(1.0 .- ξ); 0.5*(1.0 .+ ξ)]
-quadratic(ξ) = [0.5 * ξ .* (ξ .- 1.0); 1.0 .- ξ .^2; 0.5 * ξ .* (ξ .+ 1.0)]
-constant(ξ)  = ones(1,length(ξ))
+linear(ξ)    = [(1 .- ξ)/2; (1 .+ ξ)/2]
+quadratic(ξ) = [ξ .* (ξ .- 1)/2; 1 .- ξ .^2; ξ .* (ξ .+ 1)/2]
+constant(ξ)  = ones(eltype(ξ),1,length(ξ))
 β = gausslegendre(2)[1][end]; discLinear(ξ)    = linear(ξ/β)
 δ = gausslegendre(3)[1][end]; discQuadratic(ξ) = quadratic(ξ/δ)
 #==========================================================================================
                                     Kernels
 ==========================================================================================#
-G!(k,r,int)       = @inbounds for i = 1:length(r) int[i] =  im*0.25*hankelh1.(0,k*r[i]) end
-F!(x,y,k,n,r,int) = @inbounds for i = 1:length(r) int[i] = -im*0.25*hankelh1.(1,k*r[i])*k.*(n[1,i]*(x[1,i]-y[1])+n[2,i]*(x[2,i]-y[2]))/r[i] end
-C!(x,y,n,r,int)   = @inbounds for i = 1:length(r) int[i] = (n[1,i]*(x[1,i]-y[1])+n[2,i]*(x[2,i]-y[2]))/(2π*r[i]^2) end
+G!(k,r,int) = @inbounds for i = eachindex(r) int[i] = im/4*hankelh1(0,k*r[i]) end
+function F!(x,y,k,n,r,int)
+    @inbounds for i = eachindex(r)
+        int[i] = -k*im*hankelh1(1,k*r[i])*(n[1,i]*(x[1,i] - y[1]) +
+                                           n[2,i]*(x[2,i] - y[2]))/(4r[i])
+    end
+    return int
+end
+function C!(x,y,n,r,int)
+    @inbounds for i = eachindex(r)
+        int[i] = (n[1,i]*(x[1,i] - y[1]) +
+                  n[2,i]*(x[2,i] - y[2]))/(2π*r[i]^2)
+    end
+    return int
+end
 #==========================================================================================
                                         Meshing
 ==========================================================================================#
@@ -46,20 +68,20 @@ end
 #==========================================================================================
                             Mesh interpolation routine
 ==========================================================================================#
-function compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpolation!,
+function compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpolation,
                             source,k,r,normals,jacobian,integrand,gOn,fOn,cOn)
     dist!(interpolation,source,r)                           # Computing distances
     if gOn # Only compute G if you need it
         G!(k,r,integrand)                                       # Evaluate Greens function
         JacMul!(integrand,jacobian)                             # Multiply by jacobian*weights
         # mul!(Gslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
-        mygemm_vec!(Gslice,integrand,physics_interpolation!')
+        mygemm_vec!(Gslice,integrand,physics_interpolation')
     end
     if fOn # Only compute F if you need it
         F!(interpolation,source,k,normals,r,integrand)          # Evaluate ∂ₙGreens function
         JacMul!(integrand,jacobian)                             # Multiply by jacobian*weights
         # mul!(Fslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
-        mygemm_vec!(Fslice,integrand,physics_interpolation!')
+        mygemm_vec!(Fslice,integrand,physics_interpolation')
     end
     if cOn # Only compute c if you need it
         C!(interpolation,source,normals,r,integrand)            # Evaluate G₀
@@ -69,9 +91,9 @@ end
 #==========================================================================================
                             Assembly - Spline
 ==========================================================================================#
-function scaledgausslegendre(n,a=0.0,b=1.0)
+function scaledgausslegendre(n,a=0,b=1)
     node, w = gausslegendre(n)
-    return 0.5*node*(b-a) .+ 0.5*(b+a) , 0.5*(b-a)*w
+    return node*(b-a)/2 .+ (b+a)/2 , (b-a)*w/2
 end
 function createPhysicsTopology(N,physicsOrder)
     return physicsOrder < 0 ? create_topology(-physicsOrder,N) : reshape(collect(1:(physicsOrder+1)*N), physicsOrder+1, N)
@@ -234,9 +256,9 @@ function re_meshing(spl,nControl,N=4000)
     coords[:,end] = coords[:,1]
     return coords
 end
-coo = re_meshing(spline,19)
+coo  = re_meshing(spline,19)
 splT = ParametricSpline(1:size(coo,2),coo;periodic=true)
-tmp = compute_segment_lengths(splT,10)
+tmp  = compute_segment_lengths(splT,10)
 
 
 # plot(eachcol(splT(1:0.1:get_knots(spline)[end])')...,aspect_ratio=1,label="Geometry")

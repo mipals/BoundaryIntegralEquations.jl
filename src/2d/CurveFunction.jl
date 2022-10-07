@@ -109,17 +109,16 @@ function set_nodal_interpolation!(curve_function::CurveFunction)
     interpolate_on_nodes!(curve_function)
 end
 #==========================================================================================
-                    Show-hand for extraction of CurveFunction properties
-==========================================================================================#
-get_derivatives(curve_function::CurveFunction)               = curve_function.derivatives
-get_nodes(curve_function::CurveFunction)                     = curve_function.gauss
-#==========================================================================================
                             Getting the interpolation nodes
 ==========================================================================================#
-get_nodal_nodes(curve_function::ContinuousCurveLinear)       = [-1.0; 1.0]
-get_nodal_nodes(curve_function::ContinuousCurveQuadratic)    = [-1.0; 0.0; 1.0]
-get_nodal_nodes(curve_function::DiscontinuousCurveConstant)  = [0.0]
+get_nodal_nodes(curve_function::ContinuousCurveLinear)       = [-one(eltype(curve_function));
+                                                                 one(eltype(curve_function))]
+get_nodal_nodes(curve_function::ContinuousCurveQuadratic)    = [-one(eltype(curve_function));
+                                                                zero(eltype(curve_function));
+                                                                 one(eltype(curve_function))]
+get_nodal_nodes(curve_function::DiscontinuousCurveConstant)  = [zero(eltype(curve_function))]
 get_nodal_nodes(curve_function::DiscontinuousCurveLinear)    = [-curve_function.alpha;
                                                                  curve_function.alpha]
-get_nodal_nodes(curve_function::DiscontinuousCurveQuadratic) = [-curve_function.alpha; 0.0;
+get_nodal_nodes(curve_function::DiscontinuousCurveQuadratic) = [-curve_function.alpha;
+                                                                 zero(eltype(curve_function.alpha));
                                                                  curve_function.alpha]

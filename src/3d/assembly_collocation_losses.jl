@@ -3,7 +3,6 @@ get_offset(physics_element::ContinuousTriangular)       = 0.0
 get_offset(physics_element::DiscontinuousQuadrilateral) = 0.0
 get_offset(physics_element::ContinuousQuadrilateral)    = 0.1
 
-
 get_beta(physicsElement::Triangular) = 0.0
 get_beta(physicsElement::DiscontinuousTriangularConstant)  = 0.5
 get_beta(physicsElement::DiscontinuousTriangularLinear)    = 0.05

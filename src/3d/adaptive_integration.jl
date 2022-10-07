@@ -1,6 +1,14 @@
 #==========================================================================================
-                            Table of gauss nodes & weights
+This file contains the adaptive integration from OpenBEM with only very minor changes.
 ==========================================================================================#
+"""
+    gauss_points_triangle(n)
+Returns u,v,w where (u,v) are local coordinates on a triangle with corners
+                |\
+                | \
+                |__\
+and w are the weights. The sum of weights are equal to the area of the triangle: 0.5
+"""
 function gauss_points_triangle(n)
     if n == 1
         IP=[1/3 1/3 0.5]
@@ -71,7 +79,7 @@ function minimum_distance(element_coordinates,source)
     return minimum(sqrt.(sum((element_coordinates .- source).^2,dims=1)))
 end
 function compute_center(element_coordinates)
-    return sum(element_coordinates,dims=2)/3.0;
+    return sum(element_coordinates,dims=2)/3;
 end
 function singularity_check(p,coords,sing_check,factor=2.0)
     if sing_check
@@ -128,9 +136,9 @@ function subdivide_triangle(shape_function::Triangular,
         P2 = DivsIN[3:4,i]
         P3 = DivsIN[5:6,i]
 
-        P12 = 0.5*(P1 + P2)
-        P23 = 0.5*(P2 + P3)
-        P31 = 0.5*(P3 + P1)
+        P12 = (P1 + P2)/2
+        P23 = (P2 + P3)/2
+        P31 = (P3 + P1)/2
 
         center = (P1 + P2 + P3)/3.0
 
@@ -144,8 +152,7 @@ function subdivide_triangle(shape_function::Triangular,
             size_of_sub_element = 0
         end
 
-        Ftest = 4.0
-        if size_of_sub_element > distSub/Ftest
+        if size_of_sub_element > distSub/4
             NewDivs = [P1  P12 P31 P12;
                        P12 P2  P23 P23;
                        P31 P23 P3  P31]

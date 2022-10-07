@@ -92,7 +92,7 @@ Computes the element corner which the source is closest to.
 function find_closest_corner(source,element_coordinates)
     max_distance   = Inf
     closest_corner = 0
-    @inbounds for i = 1:size(element_coordinates,2)
+    @inbounds for i = axes(element_coordinates,2)
         tmp_dist = hypot(element_coordinates[1,i] - source[1],
                          element_coordinates[2,i] - source[2],
                          element_coordinates[3,i] - source[3])
@@ -103,6 +103,29 @@ function find_closest_corner(source,element_coordinates)
     end
     return closest_corner
 end
+
+
+"""
+    create_rotated_element(basisElement::Triangular,m,n,clusterCorner)
+
+Creates a rotated triangular element of the same as the input basisElement.
+"""
+function create_rotated_element(shape_function,n::Real,m::Real,clusterCorner)
+    if clusterCorner == 1
+        nodes_u,nodes_v,weights = rotated_triangular_quadpoints(n,m)
+    elseif clusterCorner == 2
+        nodes_u,nodes_v,weights = triangularQuadpoints(n,m)
+    elseif clusterCorner == 3
+        nodes_v,nodes_u,weights = triangularQuadpoints(n,m)
+    end
+    rotated_element = deepcopy(shape_function)
+    rotated_element.gauss_u = nodes_u
+    rotated_element.gauss_v = nodes_v
+    rotated_element.weights = weights
+    interpolate_on_nodes!(rotated_element)
+    return rotated_element
+end
+
 
 #==========================================================================================
                                 Utility functions
@@ -115,25 +138,25 @@ function compute_distances!(r,interpolation,source)
     end
 end
 function integrand_mul!(integrand,jacobian)
-    @inbounds @fastmath for i = 1:length(integrand)
+    @inbounds @fastmath for i = eachindex(integrand)
         integrand[i] = integrand[i]*jacobian[i]
     end
 end
 function dotC!(C,integrand,jacobian)
     # Cm = zero(eltype(C))
-    @inbounds @fastmath for i = 1:length(integrand)
+    @inbounds @fastmath for i = eachindex(integrand)
         C[1] = C[1] + integrand[i] * jacobian[i]
     end
     # C[1] += Cm
 end
 function c_integrand_mul!(c,integrand,jacobian)
-    @inbounds @fastmath for i = 1:length(c)
+    @inbounds @fastmath for i = eachindex(c)
         c[i] += integrand[i]*jacobian[i]
     end
 end
 
 function sum_to_c!(y,integrand)
-    @inbounds @fastmath for i = 1:length(integrand)
+    @inbounds @fastmath for i = eachindex(integrand)
         y[1] += integrand[i]
     end
 end

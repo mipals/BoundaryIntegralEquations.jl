@@ -1,3 +1,5 @@
+# How to install FMM3D. It should, however, already by in the `Project.toml` file.
+# Because it is not registrated I think there migth be issues with `compat`-entries.
 # using Pkg
 # Pkg.add(PackageSpec(url="https://github.com/flatironinstitute/FMM3D.git", subdir="julia/"))
 #==========================================================================================

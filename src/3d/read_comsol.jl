@@ -7,11 +7,14 @@
 Loads the coordinates, topology and entites from a ".mphtxt" file.
 """
 function read_comsol_mesh(meshName,elementType)
+    # Number of shape functions. Needed for the size of the topology
     nShape = number_of_shape_functions(elementType)
+    # Opening COMSOL mesh file
     fid = open(meshName * ".mphtxt")
+    # Initializing output values
     coordinates = zeros(3,0)
-    topology = zeros(Int64,nShape,0)
-    entities = zeros(Int64,1,0)
+    topology    = zeros(Int64,nShape,0)
+    entities    = zeros(Int64,1,0)
     for line in eachline(fid)
         if line == "# Mesh vertex coordinates"
             newLine = readline(fid)
@@ -37,11 +40,10 @@ function read_comsol_mesh(meshName,elementType)
     end
 
     close(fid)
-    topology = topology .+ 1             # Fixing 0-index
+    # Transform COMSOLs 0-indexing to Julias 1-indexing
+    topology = topology .+ 1
     if typeof(elementType) <: TriangularQuadratic
-        # topology[5:6,:] = topology[6:-1:5,:] # Fixing COMSOLs weird triangle layout
-        # topology[2:3,:] = topology[3:-1:2,:]
-        # topology[4:6,:] = topology[6:-1:4,:]
+        # Fixing COMSOLs weird triangle layout
         topology[5:6,:] = topology[6:-1:5,:]
     end
     return coordinates,topology,entities
@@ -51,6 +53,7 @@ function load3dTriangularComsolMesh(meshFile;m=3,n=3,
                 geometry_order=:quadratic,
                 physics_order=:geometry,beta_type=:legendre,
                 entites=false,removedEntites=[-1])
+
     # Figuring out the element type
     initialCoordinates,initialTopology,ents = read_comsol_mesh(meshFile,TriangularQuadratic(2,2))
     if geometry_order == :quadratic
@@ -88,13 +91,15 @@ function load3dTriangularComsolMesh(meshFile;m=3,n=3,
     end
 
     # Allocate and compute tangent directions from normal
+    # This is to backwards-compatible to the old implementation of losses.
     tangents = similar(normals)
     sangents = similar(normals)
     tangents!(normals,tangents,sangents)
 
-    # Create mesh
+    # Setting the local-nodes of elements to be that of a regular triangle
     set_interpolation_nodes!(shape_function,gauss_points_triangle(n)...)
     copy_interpolation_nodes!(physics_function,shape_function)
+    # Finalizing mesh
     mesh = Mesh3d(sources,coordinates,topology,normals,tangents,sangents,shape_function,
                  physics_function,physics_topology)
     if entites
@@ -110,6 +115,7 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
                 entites=false,removedEntites=[-1])
     # Figuring out the element type
     initialCoordinates,initialTopology,ents = read_comsol_mesh(meshFile,QuadrilateralQuadraticLagrange(2,2))
+    # Checking input
     if geometry_order == :quadratic
         shape_function = QuadrilateralQuadraticLagrange(m,n)
     elseif geometry_order == :linear
@@ -146,11 +152,12 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
     end
 
     # Allocate and compute tangent directions from normal
+    # This is to backwards-compatible to the old implementation of losses.
     tangents = similar(normals)
     sangents = similar(normals)
     tangents!(normals,tangents,sangents)
 
-    # Create mesh
+    # Finalizing mesh
     mesh = Mesh3d(sources,coordinates,topology,normals,tangents,sangents,shape_function,
                  physics_function,physics_topology)
     if entites

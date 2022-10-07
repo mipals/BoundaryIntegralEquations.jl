@@ -9,16 +9,15 @@ Returns `m*n` integration points and `weights` for a quadrilateral element.
 function quadrilateralQuadpoints(n,m)
     nodex, wx = gausslegendre(n) # Nodes in the interval [-1, 1]
     nodey, wy = gausslegendre(m) # Nodes in the interval [-1, 1]
-
+    # Making the grid
     ξ = kron(ones(m),nodex)
     η = kron(nodey,ones(n))
+    # Combining weights
     weights = kron(wy,wx)
+    # Returning grid and weights
     return ξ,η,weights
 end
-function getQuadpoints(elementType::Quadrilateral,n=4,m=4)
-    return quadrilateralQuadpoints(n,m)
-end
-
+getQuadpoints(elementType::Quadrilateral,n=4,m=4) = quadrilateralQuadpoints(n,m)
 
 #==========================================================================================
                      Qudrature points for triangular elements
@@ -26,35 +25,35 @@ end
 """
     duffyBasis(u,v)
 
-Computes the duffy transformation of `u` and `v`.
+Returns the duffy transformation of `u` and `v`.
+
+        |▔▔▔▔▔▔▔|              /|
+        |       | - duffy ->  / |
+        |_______|            /__|
 """
-function duffyBasis(u,v)
-    return u, v.*(1.0 .- u)
-end
+duffyBasis(u,v) = u, v.*(1 .- u)
 
 """
     duffyBasisDerivative(u,v)
 
-Computes the derivative of the duffy transformation of `u` and `v`.
+Returns the derivative of the duffy transformation of `u` and `v`.
 """
 function duffyBasisDerivative(u,v)
-    return [ones(1,length(v)); -v],[zeros(1,length(u)); 1.0 .- u]
+    return [ones(eltype(u),length(v)); -v],[zeros(eltype(v),length(u)); 1 .- u]
 end
 
 """
     duffyJacobian(u,v)
 
-Computes the Jacobian the duffy transformation of `u` and `v`.
+Returns the Jacobian the duffy transformation of `u` and `v`.
 
 This determiant can be calculated analytically
 ```math
                 | 1       0 |
-                  | -v  1 - u | = 1 - u
+                | -v  1 - u | = |1 - u|
 ```
 """
-function duffyJacobian(u,v)
-    return abs.(1.0 .- u)
-end
+duffyJacobian(u,v) = abs.(1.0 .- u)
 
 """
     triangularQuadpoints(n=4,m=4)
@@ -70,21 +69,17 @@ The integration points are clustered around node "3" in the triangle:
 function triangularQuadpoints(n,m)
     nodex, wx = curveLinearQuadpoints(n) # Nodes in the interval [0, 1]
     nodey, wy = curveLinearQuadpoints(m) # Nodes in the interval [0, 1]
-
-    # Nodes in quadrilateral element (Not we can not )
+    # Making a grid and compute weights
     u = kron(ones(m),nodex)
     v = kron(nodey,ones(n))
     w = kron(wy,wx)
-
     # Transforming the quadrilateral element to an triangular element
     ξ,η = duffyBasis(u,v)
     weights = w .* duffyJacobian(u,v)
-
+    # Returning grid and weights
     return ξ,η,weights
 end
-function getQuadpoints(elementType::Triangular,n=4,m=4)
-    return triangularQuadpoints(n,m)
-end
+getQuadpoints(elementType::Triangular,n=4,m=4) = triangularQuadpoints(n,m)
 
 #==========================================================================================
                                  Rotation of integration points
@@ -103,34 +98,26 @@ The integration points are clustered around node "1" in the triangle:
 function rotated_triangular_quadpoints(n=4,m=4)
     nodex, wx = curveLinearQuadpoints(n) # Nodes in the interval [0, 1]
     nodey, wy = curveLinearQuadpoints(m) # Nodes in the interval [0, 1]
-
+    # Making grid points
     u = kron(ones(m),nodex)
     v = kron(nodey,ones(n))
+    # Grid weights
     w = kron(wy,wx)
-
     # Transforming the quadrilateral element to an triangular element
     ξ = u .* v
     η = (1.0 .- u) .* v
     weights = w .* v
-
+    # Returning grid and weights
     return ξ,η,weights
 end
 
 #==========================================================================================
                                 Spherical Coordinates
 ==========================================================================================#
-function duffyBasis2(u,v)
-    return 0.5*u, v.*(1.0 .- u)
-end
-function duffyJacobian2(u,v)
-    return 0.5*(1.0 .- u)
-end
-function duffyBasis3(u,v)
-    return (u .- 0.5).*v.+ 0.5, v.*(1.0 .- u)
-end
-function duffyJacobian3(u,v)
-    return 0.5*v
-end
+duffyBasis2(u,v)    = 0.5*u, v.*(1.0 .- u)
+duffyJacobian2(u,v) = 0.5*(1.0 .- u)
+duffyBasis3(u,v)    = (u .- 0.5).*v.+ 0.5, v.*(1.0 .- u)
+duffyJacobian3(u,v) = 0.5*v
 function rotated_midpoint_triangular_quadpoints(n,m,vertex_number)
     m = Int(ceil(m/2.0))*2
 
@@ -267,5 +254,4 @@ function getpolar_gaussian(n,vertexNumber)
     else
         error("Node number does not lie in range 1-6")
     end
-
 end

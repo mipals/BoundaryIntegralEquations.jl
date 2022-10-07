@@ -277,7 +277,7 @@ function LossyOneVariableOuter(mesh::Mesh3d,freq;S=1,depth=1,exterior=true,
     Aᵥ = (exterior ?  -Fᵥ + Diagonal(one) : Fᵥ - Diagonal(C₀))
 
     ### Computing tangential derivatives
-    Dt₁, Dt₂ = shape_function_derivatives(mesh)
+    Dt₁, Dt₂ = shape_function_derivatives(mesh;global_derivatives=false)
     # Dt₁, Dt₂ = shapeFunctionDerivative(mesh)
     Dt₁ = convert.(eltype(Bᵥ),Dt₁)
     Dt₂ = convert.(eltype(Bᵥ),Dt₂)

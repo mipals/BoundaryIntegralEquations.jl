@@ -1,10 +1,10 @@
 using IntegralEquations,Plots,LinearAlgebra
 
-n_elements = 500
-freq  = 100.0                                  # Frequency                 [Hz]
-c     = 340.0                                   # Speed of sound            [m/s]
-k     = 2*π*freq/c                              # Wavenumber                [1/m]
-r = 1.0
+n_elements = 500   # Number of elements
+freq = 100.0       # Frequency                 (Hz)
+c    = 340.0       # Speed of sound            (m/s)
+k    = 2*π*freq/c  # Wavenumber                (1/m)
+r    = 1.0         # Circle radius             (m)
 
 # mesh = IntegralEquations.mesh_circle(ContinuousCurveLinear(3),n_elements;radius=r)
 mesh = IntegralEquations.mesh_circle(ContinuousCurveQuadratic(3),n_elements;radius=r)

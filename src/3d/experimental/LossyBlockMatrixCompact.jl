@@ -75,7 +75,8 @@ function LossyBlockMatrixCompact(mesh,freq;
     tangents₂ = convert(typeof(Aᵥ),mesh.sangents)
 
     ### Computing tangential derivatives
-    Dt₁, Dt₂ = shapeFunctionDerivative(mesh)
+    # Dt₁, Dt₂ = shapeFunctionDerivative(mesh)
+    Dt₁, Dt₂ = shape_function_derivatives(mesh;global_derivatives=false)
     Dt₁ = convert.(eltype(Aᵥ),Dt₁)
     Dt₂ = convert.(eltype(Aᵥ),Dt₂)
 

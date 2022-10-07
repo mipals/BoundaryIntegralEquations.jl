@@ -1,5 +1,5 @@
 #==========================================================================================
-                            Defining LossyGlobalOuter
+                            Defining LossyGlobalInner
 ==========================================================================================#
 struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
     n::Int64                # Number of nodes
@@ -10,6 +10,9 @@ struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
     Nd::AbstractArray       # Collection of normal tr
     # Gradients
     Dr::AbstractArray       # [Dx  Dy  Dz]
+    # Temporary allocations. For testing purposes
+    tmp1::AbstractArray{T}
+    tmp2::AbstractArray{T}
 end
 Base.size(A::LossyGlobalInner) = (A.n, A.n)
 # Defining multiplication with `LossyGlobalInner`
@@ -30,35 +33,27 @@ end
                             Defining LossyGlobalOuter
 ==========================================================================================#
 struct LossyGlobalOuter{T} <: LinearMaps.LinearMap{T}
-    n::Int64                # Number of nodes
-    # Acoustic Matrices
-    # Ha::AbstractArray{T}    # Acoustic BEM A
-    # Ga::AbstractArray{T}    # Acoustic BEM B
-    Ha
-    Ga
-    # Thermal Matrices
-    Hh::AbstractArray{T}    # Thermal BEM A
-    Gh::AbstractArray{T}    # Thermal BEM B
-    # Viscosity Matrices
-    Hv::AbstractArray{T}    # Viscous BEM A
-    Gv::AbstractArray{T}    # Viscous BEM B
-    # Normal transformation
-    Nd::AbstractArray       # Collection of normal tr
-    # Gradients
-    Dc::AbstractArray       # [Dx; Dy; Dc]
-    Dr::AbstractArray       # [Dx  Dy  Dz]
-    # Inner'
-    inner::LossyGlobalInner{T}
+    n::Int64                    # Number of nodes
+    Ha                          # Acoustical BEM H
+    Ga                          # Acoustical BEM G
+    Hh::AbstractArray{T}        # Thermal BEM H
+    Gh::AbstractArray{T}        # Thermal BEM G
+    Hv::AbstractArray{T}        # Viscous BEM H
+    Gv::AbstractArray{T}        # Viscous BEM GH
+    Nd::AbstractArray           # [diag(nx);diag(ny);diag(nz)]
+    Dc::AbstractArray           # [Dx; Dy; Dc]
+    Dr::AbstractArray           # [Dx  Dy  Dz]
+    inner::LossyGlobalInner{T}  # Inner matrix
     ### Constants
-    # For the constraint: vᵦ = ϕₐ∇pₐ + ϕₕ∇pₕ + vᵥ on Γ      (<- This is a vector equation)
-    phi_a::T                        # Acoustic gradient coupling parameter
-    phi_h::T                        # Thermal gradient coupling parameter
+    # For the constraint: vᵦ = ϕₐ∇pₐ + ϕₕ∇pₕ + vᵥ on Γ
+    phi_a::T
+    phi_h::T
     # For the constraint: T = τₐpₐ + τₕpₕ = 0 on Γ
-    tau_a::T                        # Acoustic coupling parameter
-    tau_h::T                        # Thermal coupling parameter
+    tau_a::T
+    tau_h::T
     # Combinations
-    mu_a::T                        # Acoustic coupling parameter
-    mu_h::T                        # Thermal coupling parameter
+    mu_a::T
+    mu_h::T
 end
 
 
@@ -117,10 +112,11 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
     Hv = blockdiag(Aᵥ, Aᵥ, Aᵥ)
 
     mu_a = ϕₐ - τₐ*ϕₕ/τₕ
-    mu_h =      τₐ*ϕₕ/τₕ
-    # mu_h = ϕₐ - mu_a
+    mu_h =      τₐ*ϕₕ/τₕ # ϕₐ - mu_a
 
-    inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr)
+    tmp1 = zeros(eltype(Hv),3nSource) # Are not used right now
+    tmp2 = zeros(eltype(Hv),3nSource) # Are not used right now
+    inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr,tmp1,tmp2)
 
     if fmm_on
         Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
@@ -146,7 +142,6 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
     end
     return outer
 end
-
 #==========================================================================================
     Defining relevant routines for LinearMaps.jl to work on the LossyBlockMatrix format
 ==========================================================================================#
@@ -161,7 +156,9 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Adding the contribution from Ha
     y .= -A.phi_a*(A.Ha*x)
     # We only want to call the multiplication with Ga once pr. iteration
-    y += A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) + A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) - A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
+    y += A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) +
+               A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
+               A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
 
     return y
 end

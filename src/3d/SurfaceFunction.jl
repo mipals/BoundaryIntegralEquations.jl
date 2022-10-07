@@ -147,6 +147,7 @@ mutable struct QuadrilateralLegendre{T<:AbstractFloat} <: ContinuousQuadrilatera
 end
 #==========================================================================================
             Generalized Elements: https://academic.csuohio.edu/duffy_s/CVE_512_11.pdf
+                This is just an idea. Requires that we find an higher-order mesher
 ==========================================================================================#
 mutable struct QuadrilateralLagrangeM{T<:AbstractFloat} <: QuadrilateralLagrange
     weights::AbstractArray{T,1}
@@ -177,10 +178,6 @@ end
 #==========================================================================================
                                     Utility functions
 ==========================================================================================#
-get_nodes(surface_function::SurfaceFunction)        = surface_function.gauss_u,
-                                                      surface_function.gauss_v
-get_derivatives(surface_function::SurfaceFunction)  = surface_function.derivatives_u,
-                                                      surface_function.derivatives_v
 number_of_shape_functions(::TriangularLinear)                            = 3
 number_of_shape_functions(::TriangularQuadratic)                         = 6
 number_of_shape_functions(::DiscontinuousTriangularConstant)             = 1
@@ -193,7 +190,7 @@ number_of_shape_functions(::QuadrilateralQuadraticLagrange)              = 9
 number_of_shape_functions(::DiscontinuousQuadrilateralConstant)          = 1
 number_of_shape_functions(::DiscontinuousQuadrilateralLinear4)           = 4
 number_of_shape_functions(::DiscontinuousQuadrilateralQuadraticLagrange) = 9
-
+# Overloading base
 Base.eltype(::Type{QuadrilateralQuadratic{T}})                      where {T} = T
 Base.eltype(::Type{QuadrilateralLinearSerendipity{T}})              where {T} = T
 Base.eltype(::Type{QuadrilateralQuadraticLagrange{T}})              where {T} = T

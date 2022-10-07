@@ -8,4 +8,4 @@ using SafeTestsets, Test
 @safetestset "3D: Surface Functions" begin include("3d/surface_functions.jl")   end
 @safetestset "3D: Meshing          " begin include("3d/meshing.jl")             end
 @safetestset "3D: Assembly         " begin include("3d/assembly.jl")            end
-# @safetestset "3D: FMM              " begin include("3d/fmm.jl")                 end
+@safetestset "3D: FMM              " begin include("3d/fmm.jl")                 end

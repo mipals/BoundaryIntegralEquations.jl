@@ -54,16 +54,16 @@ include("3d/jacobian.jl")
 include("3d/mesh.jl")
 include("3d/read_comsol.jl")
 include("3d/adaptive_integration.jl")
-include("3d/triangular_modifications.jl")
 include("3d/assembly_collocation.jl")
 include("3d/assembly_collocation_losses.jl")
-include("3d/LossyBlockMatrix.jl")
-include("3d/LossyBlockMatrixCompact.jl")
 include("3d/LossyGlobalMatrix.jl")
-include("3d/LossyInexactKrylov.jl")
-include("3d/assembly_galerkin.jl")
 include("3d/visualizations.jl")
 include("3d/fast_multipole_method.jl")
+# Old/Experimental features
+include("3d/experimental/LossyBlockMatrix.jl")
+include("3d/experimental/LossyBlockMatrixCompact.jl")
+include("3d/experimental/LossyInexactKrylov.jl")
+include("3d/experimental/assembly_galerkin.jl")
 #==========================================================================================
                                 Analytical solutions
 ==========================================================================================#

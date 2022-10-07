@@ -30,28 +30,28 @@ end
 #==========================================================================================
             Testing the double-layer potentential for scattering of a sphere
 ==========================================================================================#
-@testset "BEM vs FMM scattering" begin
-    mesh_file = "../examples/meshes/sphere_1m"
-    geometry_orders = [:linear,:quadratic]
-    physics_orders  = [:linear,:quadratic,:disctriconstant,:disctrilinear,:disctriquadratic]
-    for go in geometry_orders, po in physics_orders
-        if go == :linear && po == :quadratic
-            continue
-        end
-        mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=go,physics_order=po)
-        zk = 1.0
-        radius = 1.0                                    # Radius of sphere_1m       [m]
-        # Computing incident pressure
-        angles = [π/2 0.0]
-        pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
-        Af = FMMFOperator(mesh,k)
-        @time Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,gOn=false,sparse=false);
-        Ap = Fp + Diagonal(1.0 .- Cp);
-        # Testing if the multiplication is the same
-        @test maximum(abs.(Af*x - Ap*x)) atol=1e-3
-        # Checking if the solution of the system is the same
-        p_bem = gmres(Ap,pI)
-        p_fmm = gmres(Af,pI)
-        @test p_bem ≈ p_fmm atol=1e-3
-    end
-end
+# @testset "BEM vs FMM scattering" begin
+#     mesh_file = "../examples/meshes/sphere_1m"
+#     geometry_orders = [:linear,:quadratic]
+#     physics_orders  = [:linear,:quadratic,:disctriconstant,:disctrilinear,:disctriquadratic]
+#     for go in geometry_orders, po in physics_orders
+#         if go == :linear && po == :quadratic
+#             continue
+#         end
+#         mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=go,physics_order=po)
+#         zk = 1.0
+#         radius = 1.0                                    # Radius of sphere_1m       [m]
+#         # Computing incident pressure
+#         angles = [π/2 0.0]
+#         pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
+#         Af = FMMFOperator(mesh,zk)
+#         @time Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,gOn=false,sparse=false);
+#         Ap = Fp + Diagonal(1.0 .- Cp);
+#         # Testing if the multiplication is the same
+#         @test maximum(abs.(Af*x - Ap*x)) atol=1e-3
+#         # Checking if the solution of the system is the same
+#         p_bem = gmres(Ap,pI)
+#         p_fmm = gmres(Af,pI)
+#         @test p_bem ≈ p_fmm atol=1e-2
+#     end
+# end

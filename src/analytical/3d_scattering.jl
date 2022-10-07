@@ -1,3 +1,6 @@
+#==========================================================================================
+                                Adapted from OpenBEM
+==========================================================================================#
 function incoming_wave(angles,K,xyzb,k)
     # pI = zeros(size((xyzb)))
     A  = sin.(angles[1]) .* cos.(angles[2])
@@ -16,7 +19,7 @@ function plane_wave_scattering_sphere(k,a,r,θ,Ieps)
     accuracy = []
     rel_accuracy = Ieps*10.0
     while rel_accuracy > Ieps
-        apri = (n*besselj(n - 0.5,ka) - (n + 1)*besselj(n + 1.5,ka)) ./ 
+        apri = (n*besselj(n - 0.5,ka) - (n + 1)*besselj(n + 1.5,ka)) ./
                (n*besselh(n - 0.5,ka) - (n + 1)*besselh(n + 1.5,ka));
         # Pmatrix = legendre(n,cos(theta));
         # Pmatrix[1,:]; # vector of legendre_n function of different arguments
@@ -44,7 +47,7 @@ sp_h(n,z)  = sp_j.(n,z) + im*sp_y.(n,z)
 dsp_h(n,z) = dsp_j.(n,z) + im*dsp_y.(n,z)
 # Scattered wave - (Equation 130 in Marburg)
 function psca(r,phi,k;N=50,R=1.0,p0=1.0)
-    # Args: 
+    # Args:
     #    r: Distance at evaluation point
     #    phi: Angle to evluation point
     #    k: Wavenumber

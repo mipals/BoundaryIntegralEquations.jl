@@ -1,3 +1,6 @@
+#==========================================================================================
+                                Adapted from OpenBEM
+==========================================================================================#
 function sph_hankel(z)
     # returns spherical hankel function 1st kind 1st order and its derivative
     h1  = exp.(1im*z)./z.*(1.0./(1im*z) .- 1.0)

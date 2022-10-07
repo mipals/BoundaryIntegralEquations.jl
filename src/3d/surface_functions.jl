@@ -5,10 +5,10 @@
                                         |    |
                                         1 -- 2
 ==========================================================================================#
-quadrilateralLinearSerendipity(u,v) =  [0.25*(1.0 .- u).*(1.0 .- v);
-                                        0.25*(1.0 .+ u).*(1.0 .- v);
-                                        0.25*(1.0 .+ u).*(1.0 .+ v);
-                                        0.25*(1.0 .- u).*(1.0 .+ v)]
+quadrilateralLinearSerendipity(u,v) =  [(1 .- u).*(1 .- v)/4;
+                                        (1 .+ u).*(1 .- v)/4;
+                                        (1 .+ u).*(1 .+ v)/4;
+                                        (1 .- u).*(1 .+ v)/4]
 function basisFunction(surfaceFunction::QuadrilateralLinearSerendipity,u,v)
     return quadrilateralLinearSerendipity(u,v)
 end
@@ -19,34 +19,34 @@ end
                                         8     6
                                         1  5  2
 ==========================================================================================#
-quadrilateralQuadratic(u,v) = [0.25*(1.0 .- u).*(v .- 1.0).*(u + v .+ 1.0);
-                               0.25*(1.0 .+ u).*(v .- 1.0).*(v - u .+ 1.0);
-                               0.25*(1.0 .+ u).*(v .+ 1.0).*(u + v .- 1.0);
-                               0.25*(u .- 1.0).*(v .+ 1.0).*(u - v .+ 1.0);
-                               0.50*(1.0 .- v).*(1.0 .- u.^2);
-                               0.50*(1.0 .+ u).*(1.0 .- v.^2);
-                               0.50*(1.0 .+ v).*(1.0 .- u.^2);
-                               0.50*(1.0 .- u).*(1.0 .- v.^2)]
+quadrilateralQuadratic(u,v) = [(1 .- u).*(v .- 1).*(u + v .+ 1)/4;
+                               (1 .+ u).*(v .- 1).*(v - u .+ 1)/4;
+                               (1 .+ u).*(v .+ 1).*(u + v .- 1)/4;
+                               (u .- 1).*(v .+ 1).*(u - v .+ 1)/4;
+                               (1 .- v).*(1 .- u.^2)/2;
+                               (1 .+ u).*(1 .- v.^2)/2;
+                               (1 .+ v).*(1 .- u.^2)/2;
+                               (1 .- u).*(1 .- v.^2)/2]
 function basisFunction(surfaceFunction::QuadrilateralQuadratic,u,v)
     return quadrilateralQuadratic(u,v)
 end
 function quadrilateralQuadraticDerivative(u,v)
-    dNu = [ -0.25*(v .- 1.0).*(u + v .+ 1.0) .+ 0.25*(1.0 .- u).*(v .- 1.0);
-             0.25*(v .- 1.0).*(v - u .+ 1.0) .- 0.25*(1.0 .+ u).*(v .- 1.0);
-             0.25*(v .+ 1.0).*(u + v .- 1.0) .+ 0.25*(1.0 .+ u).*(v .+ 1.0);
-             0.25*(v .+ 1.0).*(u - v .+ 1.0) .+ 0.25*(u .- 1.0).*(v .+ 1.0);
-            -(1.0 .- v).* u;
-             0.50*(1.0 .- v.^2);
-            -(1.0 .+ v).*u;
-            -0.5*(1.0 .- v.^2)]
-    dNv = [ 0.25*(1.0 .- u).*(u + v .+ 1.0) + 0.25*(1.0 .- u).*(v .- 1.0);
-            0.25*(1.0 .+ u).*(v - u .+ 1.0) + 0.25*(1.0 .+ u).*(v .- 1.0);
-            0.25*(1.0 .+ u).*(u + v .- 1.0) + 0.25*(1.0 .+ u).*(v .+ 1.0);
-            0.25*(u .- 1.0).*(u - v .+ 1.0) - 0.25*(u .- 1.0).*(v .+ 1.0);
-            0.5*(u.^2 .- 1.0);
-            -(1.0 .+ u).*v;
-            0.5*(1.0 .- u.^2);
-            -(1.0 .- u).*v]
+    dNu = [ -(v .- 1).*(u + v .+ 1)/4 .+ (1 .- u).*(v .- 1)/4;
+             (v .- 1).*(v - u .+ 1)/4 .- (1 .+ u).*(v .- 1)/4;
+             (v .+ 1).*(u + v .- 1)/4 .+ (1 .+ u).*(v .+ 1)/4;
+             (v .+ 1).*(u - v .+ 1)/4 .- (1 .- u).*(v .+ 1)/4;
+            -(1 .- v).* u;
+             (1 .- v.^2)/2;
+            -(1 .+ v).*u;
+            -(1 .- v.^2)/2]
+    dNv = [ (1 .- u).*(u + v .+ 1)/4 + (1 .- u).*(v .- 1)/4;
+            (1 .+ u).*(v - u .+ 1)/4 + (1 .+ u).*(v .- 1)/4;
+            (1 .+ u).*(u + v .- 1)/4 + (1 .+ u).*(v .+ 1)/4;
+            (u .- 1).*(u - v .+ 1)/4 + (1 .- u).*(v .+ 1)/4;
+            (u.^2 .- 1)/2;
+            -(1 .+ u).*v;
+             (1 .- u.^2)/2;
+            -(1 .- u).*v]
     return dNu, dNv
 end
 function basisFunctionDerivative(surfaceFunction::QuadrilateralQuadratic,u,v)
@@ -59,15 +59,15 @@ end
                                         6  7  8
                                         1  5  2
 ==========================================================================================#
-quadrilateralQuadraticLagrange(u,v) = [0.25*u.*(1.0 .- u).*v.*(1.0 .- v);
-                                      -0.25*u.*(1.0 .+ u).*v.*(1.0 .- v);
-                                      -0.25*u.*(1.0 .- u).*v.*(1.0 .+ v);
-                                       0.25*u.*(1.0 .+ u).*v.*(1.0 .+ v);
-                                      -0.50*(1.0 .+ u).*(1.0 .- u).*v.*(1.0 .- v);
-                                      -0.50*u.*(1.0 .- u).*(1.0 .+ v).*(1.0 .- v);
-                                        (1.0 .- u.^2).*(1.0 .- v.^2);
-                                       0.50*u.*(1.0 .+ u).*(1.0 .+ v).*(1.0 .- v);
-                                       0.50*(1.0 .+ u).*(1.0 .- u).*(1.0 .+ v).*v]
+quadrilateralQuadraticLagrange(u,v) = [u.*(1 .- u).*v.*(1 .- v)/4;
+                                      -u.*(1 .+ u).*v.*(1 .- v)/4;
+                                      -u.*(1 .- u).*v.*(1 .+ v)/4;
+                                       u.*(1 .+ u).*v.*(1 .+ v)/4;
+                                      -(1 .+ u).*(1 .- u).*v.*(1 .- v)/2;
+                                      -u.*(1 .- u).*(1 .+ v).*(1 .- v)/2;
+                                        (1 .- u.^2).*(1 .- v.^2);
+                                       u.*(1 .+ u).*(1 .+ v).*(1 .- v)/2;
+                                       (1 .+ u).*(1 .- u).*(1 .+ v).*v/2]
 function basisFunction(surfaceFunction::QuadrilateralQuadraticLagrange,u,v)
     return quadrilateralQuadraticLagrange(u,v)
 end
@@ -78,22 +78,16 @@ end
                                         |     |
                                         1 --- 2
 ==========================================================================================#
-quadrilateralLinear4(u,v) = [0.25*(1.0 .- u).*(1.0 .- v);
-                             0.25*(1.0 .+ u).*(1.0 .- v);
-                             0.25*(1.0 .- u).*(1.0 .+ v);
-                             0.25*(1.0 .+ u).*(1.0 .+ v)]
+quadrilateralLinear4(u,v) = [(1 .- u).*(1 .- v)/4;
+                             (1 .+ u).*(1 .- v)/4;
+                             (1 .- u).*(1 .+ v)/4;
+                             (1 .+ u).*(1 .+ v)/4]
 function basisFunction(surfaceFunction::QuadrilateralLinear4,u,v)
     return quadrilateralLinear4(u,v)
 end
 function quadrilateralLinear4Derivatives(u,v)
-    dNu = [-0.25*(1.0 .- v);
-            0.25*(1.0 .- v);
-           -0.25*(1.0 .+ v);
-            0.25*(1.0 .+ v)]
-    dNv = [-0.25*(1.0 .- u);
-           -0.25*(1.0 .+ u);
-            0.25*(1.0 .- u);
-            0.25*(1.0 .+ u)]
+    dNu = [-(1 .- v)/4;  (1 .- v)/4; -(1 .+ v)/4; (1 .+ v)/4]
+    dNv = [-(1 .- u)/4; -(1 .+ u)/4;  (1 .- u)/4; (1 .+ u)/4]
     return dNu, dNv
 end
 function basisFunctionDerivative(surfaceFunction::QuadrilateralLinear4,u,v)
@@ -111,8 +105,8 @@ function basisFunction(surfaceFunction::DiscontinuousQuadrilateralConstant,u,v)
     return discontinuousQuadrilateralConstant(u,v)
 end
 function discontinuousQuadrilateralConstantDerivatives(u,v)
-    dNu = zeros(1,length(u))
-    dNv = zeros(1,length(v))
+    dNu = zeros(eltype(u),1,length(u))
+    dNv = zeros(eltype(v),1,length(v))
     return dNu, dNv
 end
 function basisFunctionDerivative(surfaceFunction::DiscontinuousQuadrilateralConstant,u,v)
@@ -126,12 +120,12 @@ end
                                         | 1 2 |
                                           ---
 ==========================================================================================#
-discontinuousQuadrilateralLinear4(u,v,alpha) = quadrilateralLinear4(u./(1.0-alpha),v./(1.0-alpha))
+discontinuousQuadrilateralLinear4(u,v,alpha) = quadrilateralLinear4(u./(1-alpha),v./(1-alpha))
 function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
     return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.alpha)
 end
 function discontinuousQuadrilateralLinear4Derivatives(u,v,alpha)
-    return quadrilateralLinear4Derivatives(u./(1.0-alpha),v./(1.0-alpha))./(1.0-alpha)
+    return quadrilateralLinear4Derivatives(u./(1 - alpha),v./(1 - alpha))./(1 - alpha)
 end
 function basisFunctionDerivative(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
     return discontinuousQuadrilateralLinear4Derivatives(u,v,surfaceFunction.alpha)
@@ -143,7 +137,7 @@ end
                                         6  7  8
                                         1  5  2
 ==========================================================================================#
-discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1.0-alpha),v./(1.0-alpha))
+discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1-alpha),v./(1-alpha))
 function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
     return discontinuousQuadrilateralQuadraticLagrange(u,v,surfaceFunction.alpha)
 end
@@ -210,28 +204,28 @@ end
                                           6  5
                                           1  4  2
 ==========================================================================================#
-triangularQuadratic(u,v) = [(1.0 .- v .- u).*(1.0 .- 2.0*v .- 2.0*u);
-                            u.*(2.0*u .- 1.0);
-                            v.*(2.0*v .- 1.0);
-                            4.0*u.*(1.0 .- v .- u);
-                            4.0*u.*v;
-                            4.0*v.*(1.0 .- v .- u)]
+triangularQuadratic(u,v) = [(1 .- v .- u).*(1 .- 2*v .- 2*u);
+                            u.*(2*u .- 1);
+                            v.*(2*v .- 1);
+                            4*u.*(1 .- v .- u);
+                            4*u.*v;
+                            4*v.*(1 .- v .- u)]
 function basisFunction(surfaceFunction::TriangularQuadratic,u,v)
     return triangularQuadratic(u,v)
 end
 function triangularQuadraticDerivatives(u,v)
-    dNu = [-(2.0*(1.0 .- v .- u) .- 1.0) - 2.0*(1.0 .- v .- u);
-            4.0*u .- 1.0;
-            zeros(1,length(u));
-            4.0*(1.0 .- v .- u) - 4.0*u;
-            4.0*v;
-           -4.0*v]
-    dNv = [-(2.0*(1.0 .- v .- u) .- 1.0) - 2.0*(1.0 .- v .- u);
-            zeros(1,length(u));
-            4.0*v .- 1.0;
-           -4.0*u;
-            4.0*u;
-            4.0*(1.0 .- v .- u) - 4.0*v]
+    dNu = [-(2*(1 .- v .- u) .- 1) - 2*(1 .- v .- u);
+            4*u .- 1;
+            zeros(eltype(u),1,length(u));
+            4*(1 .- v .- u) - 4*u;
+            4*v;
+           -4*v]
+    dNv = [-(2*(1 .- v .- u) .- 1) - 2*(1 .- v .- u);
+            zeros(eltype(u),1,length(u));
+            4*v .- 1;
+           -4*u;
+            4*u;
+            4*(1 .- v .- u) - 4*v]
     return dNu, dNv
 end
 function basisFunctionDerivative(surfaceFunction::TriangularQuadratic,u,v)

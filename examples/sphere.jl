@@ -1,7 +1,11 @@
 #==========================================================================================
                             Adding Related Packages
 ==========================================================================================#
-using SpecialFunctions, LinearAlgebra, IntegralEquations, Plots, IterativeSolvers
+using IntegralEquations
+using LinearAlgebra
+using Plots
+using SpecialFunctions
+using IterativeSolvers
 import IntegralEquations: incoming_wave, plane_wave_scattering_sphere, psca, pinc
 #==========================================================================================
                 Loading Mesh + Visualization (viz seems broken on M1 chips :/ )

@@ -1,4 +1,5 @@
-using AbstractTrees, IntegralEquations
+using AbstractTrees
+using IntegralEquations
 
 AbstractTrees.children(T::Type) = subtypes(T)
 

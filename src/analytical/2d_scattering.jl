@@ -1,3 +1,6 @@
+#==========================================================================================
+                                Adapted from OpenBEM
+==========================================================================================#
 pressure(mn,ka) = (mn == 0 ? atan(-besselj(1,ka)/bessely(1,ka)) :
             atan((besselj(mn-1,ka)-besselj(mn+1,ka))/(bessely(mn+1,ka)-bessely(mn-1,ka))))
 function plane_wave_scattering_circle(ϕ,ka,nterm=10)

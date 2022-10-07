@@ -9,9 +9,9 @@ geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
 # tri_mesh_file = "examples/meshes/sphere_1m"
-tri_mesh_file = "examples/meshes/sphere_1m_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
 # tri_mesh_file = "examples/meshes/sphere_1m_35k"
 # tri_mesh_file = "examples/meshes/sphere_1m_77k"
@@ -28,7 +28,7 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 1000.0                                   # Frequency                 [Hz]
+freq   = 3000.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -58,14 +58,29 @@ outer = LossyOneVariableOuter(mesh,freq)
 bt    = compute_lossy_rhs(outer,vn0,vt10,vt20)
 # Solving the problem using the "outer" struct
 @time pa,pa_hist = gmres(outer,bt;verbose=true,log=true)
+# Generating analytical solution
+
+n = length(vn0)
+coordinates = [radius*ones(n,1) acos.(xyzb[3,:]/radius)]
+pasAN, v_rAN, v_thetaAN, v_rAN_A, v_thetaAN_A, v_rAN_V, v_thetaAN_V =
+                    IntegralEquations.sphere_first_order(kₐ,c,ρ,radius,u₀,coordinates;S=1,kv=kᵥ)
+ang_axis = acos.(xyzb[3,:]/radius)*180.0/pi
+perm = sortperm(ang_axis)
+
+# Plotting
+K = 1
+scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM-global",marker=:cross,markersize=2,color=:black)
+# scatter!(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:red)
+ylabel!("Re(p)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)
+title!("Frequency = $(freq)")
 #===========================================================================================
                                 Checking results
 ===========================================================================================#
 ghpainv,gh_hist = gmres(outer.Gh,outer.Hh*pa;verbose=true,log=true)
 # ghpainv = outer.Gh\(outer.Hh*pa)
-_,SG = assemble_parallel!(mesh,ka,mesh.sources;sparse=true,depth=2,progress=true,offset=0.2,fOn=false)
-lu_Ga = lu(SG)
-lu_Ga\(outer.Ga*ones(size(outer,1)))
+# _,SG = assemble_parallel!(mesh,ka,mesh.sources;sparse=true,depth=2,progress=true,offset=0.2,fOn=false)
+# lu_Ga = lu(SG)
+# lu_Ga\(outer.Ga*ones(size(outer,1)))
 # 1000 Hz: 466 iterations
 # gapainv,ga_hist = gmres(outer.Ga,outer.Ha*pa;verbose=true,log=true)
 # 1000 Hz: 262 iterations

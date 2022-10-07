@@ -12,11 +12,10 @@ struct ShapeFunctionDerivative{T <: ShapeFunction} <: ShapeFunction
 	end
 end
 #==========================================================================================
-                Properties for shape functions in 2d and 3d
+                    Properties for shape functions in 2d and 3d
 ==========================================================================================#
 get_weights(shape_function::ShapeFunction)::Array{Float64,1}        = shape_function.weights
 get_interpolation(shape_function::ShapeFunction)::Array{Float64,2}  = shape_function.interpolation
-Base.length(basisFunction::ShapeFunction) = number_of_shape_functions(basisFunction)
 
 # Create a jacobian function from a ShapeFunction
 jacobian(shape_function::ShapeFunction) = coordinates -> jacobian(shape_function,coordinates)::Array{Float64,2}

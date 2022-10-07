@@ -33,7 +33,7 @@ import IntegralEquations: shape_function_derivatives
         @test isapprox(sum(ones(1,3)*(mesh.normals.*mesh.tangents)),  0.0, atol=1e-14)
         @test isapprox(sum(ones(1,3)*(mesh.tangents.*mesh.sangents)), 0.0, atol=1e-14)
         # Checking of constant pressure will result in zero derivatives
-        Dx,Dy,Dz = shape_function_derivatives(mesh,global_derivatives=true)
+        Dx,Dy,Dz = shape_function_derivatives(mesh)
         n_sources = size(mesh.sources,2)
         @test isapprox(sum(abs.(Dx*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
         @test isapprox(sum(abs.(Dy*ones(n_sources)))/n_sources, 0.0, atol=1e-14)
@@ -69,7 +69,7 @@ end
         @test isapprox(sum(ones(1,3)*(mesh.normals.*mesh.tangents)),  0.0, atol=1e-14)
         @test isapprox(sum(ones(1,3)*(mesh.tangents.*mesh.sangents)), 0.0, atol=1e-14)
         # Checking of constant pressure will result in zero derivatives
-        Dx,Dy,Dz = shape_function_derivatives(mesh,global_derivatives=true)
+        Dx,Dy,Dz = shape_function_derivatives(mesh)
         n_sources = size(mesh.sources,2)
         @test isapprox(sum(abs.(Dx*ones(n_sources))/n_sources), 0.0, atol=1e-14)
         @test isapprox(sum(abs.(Dy*ones(n_sources))/n_sources), 0.0, atol=1e-14)
