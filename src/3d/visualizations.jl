@@ -46,7 +46,8 @@ end
 """
 function create_bc_simple_mesh(mesh_file,mesh,boundary_condition_entities,boundary_conditions=true)
     # For now re-read topology and entities
-    _,topology,entities = read_comsol_mesh(mesh_file,mesh.shape_function)
+    entities = read_comsol_entities(mesh_file)
+    topology = mesh.topology
     # Finding indicies of boundary conditions
     boundary_condition_id = Bool.(sum(boundary_condition_entities .∈ entities,dims=1))[:]
     if boundary_conditions == false
@@ -71,4 +72,31 @@ function create_bc_simple_mesh(mesh_file,mesh,boundary_condition_entities,bounda
     connectivities = [connect(Tuple(Float64.(face))) for face in eachcol(new_topology)]
     # Returning a SimpleMesh of the points and connectivities
     return SimpleMesh(points, connectivities)
+end
+
+
+"""
+    read_comsol_mesh(meshName)
+
+Loads the coordinates, topology and entites from a ".mphtxt" file.
+"""
+function read_comsol_entities(meshName)
+    # Number of shape functions. Needed for the size of the topology
+    # Opening COMSOL mesh file
+    fid = open(meshName * ".mphtxt")
+    # Initializing output values
+    entities    = zeros(Int64,1,0)
+    for line in eachline(fid)
+        if line == "# Geometric entity indices"
+            newLine = readline(fid)
+            while !isempty(newLine)
+                entities = [entities parse.(Int64,newLine)]
+                newLine = readline(fid)
+            end
+        end
+    end
+
+    close(fid)
+
+    return entities
 end

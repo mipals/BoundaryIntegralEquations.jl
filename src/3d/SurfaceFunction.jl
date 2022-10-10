@@ -173,7 +173,6 @@ end
 function Base.show(io::IO, ::MIME"text/plain", surface_function::SurfaceFunction)
     println(io, "SurfaceFunction Defined by:    \t $(typeof(surface_function))")
     println(io, "Number of gauss nodes:         \t $(length(surface_function.gauss_u))")
-    println(io, "Number of basis functions:     \t $(length(surface_function))")
 end
 #==========================================================================================
                                     Utility functions

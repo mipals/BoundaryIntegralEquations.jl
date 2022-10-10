@@ -21,13 +21,12 @@ tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
 #==========================================================================================
-        3d Visualization - Seems highly unstable on M1 chips. Problems with GLMakie?
+                                    3d Visualization
 ==========================================================================================#
-# using Meshes, MeshViz
-# ##choose a Makie backend
-# import GLMakie as Mke
-# simple_mesh = create_simple_mesh(mesh)
-# viz(simple_mesh, showfacets = true)
+using MeshViz
+import WGLMakie as wgl
+simple_mesh = create_simple_mesh(mesh)
+viz(simple_mesh, showfacets = true)
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
@@ -60,14 +59,6 @@ v0 = [zeros(2n); u₀*ones(n)]
 LGM = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1,n=3)
 rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbose=true)
 @time pa = gmres(LGM,rhs;verbose=true);
-# For n=1, 1*20 + 16 = 36 iterations. 151 sec (slightly wrong results) | freq = 1000
-# For n=3, 1*20 + 0  = 20 iterations. 209 sec (also more correct)      | freq = 1000
-# Preconditioner? Not useful for
-# SF,SG = assemble_parallel!(mesh,k,mesh.sources;sparse=true,depth=2,progress=true,offset=0.15,gOn=false)
-# Flu = lu(SF + Diagonal(ones(size(SF,2))))
-# @time p_bem = gmres(LGM,rhs;verbose=true,Pl=Flu);
-# Iterations: 1*20 + 8 = 28 | depth = 1 | freq = 1000  | offset = 0.15 | 154k | worse...
-# Iterations: 1*20 + 8 = 28 | depth = 2 | freq = 1000  | offset = 0.15 | 154k | worse...
 
 # Generating analytical solution
 coordinates = [radius*ones(n,1) acos.(xyzb[3,:]/radius)]
@@ -103,12 +94,10 @@ dvx = dvn[0n+1:1n]
 dvy = dvn[1n+1:2n]
 dvz = dvn[2n+1:3n]
 
-# using Statistics
+using Statistics
 # Why are we off by this constant???
 scaling  =  median(abs.(-LGM.Nd'*dvn) ./ abs.(LGM.Dr*v))
 scalings = (-LGM.Nd'*dvn) ./ (LGM.Dr*v)
-# omega = 2.0*π*freq                                 # Angular frequency
-# vs    = -im*omega*rho*u₀                           # Initial velocity
 
 # Local components of the viscous velocity on the boundary
 v_n0   = LGM.Nd'*v

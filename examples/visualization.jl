@@ -1,3 +1,6 @@
+#==========================================================================================
+                                Visualization of full mesh
+==========================================================================================#
 using IntegralEquations
 using MeshViz
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
@@ -18,7 +21,7 @@ simple_quad_mesh = create_simple_mesh(quad_mesh)
 viz(simple_quad_mesh;showfacets=true)
 
 #==========================================================================================
-                                        Plotting
+                                Visualization of boundary conditions
 ==========================================================================================#
 using IntegralEquations
 using MeshViz
@@ -46,3 +49,17 @@ viz(quad_simple_mesh;showfacets=true)
 quad_simple_bc   = create_bc_simple_mesh(quad_mesh_file,quad_mesh,quad_bc_ents)
 viz!(quad_simple_bc;showfacets=true,color=:red)
 # current_figure()
+
+#==========================================================================================
+                                Visualization of boundary conditions
+==========================================================================================#
+using IntegralEquations
+using MeshViz
+import WGLMakie as wgl
+
+# Loading triangular mesh
+tri_mesh_file = "examples/meshes/meta_boundary"
+tri_mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=:quadratic)
+simple_tri_mesh = create_simple_mesh(tri_mesh)
+wgl.set_theme!(resolution=(600, 600))
+viz(simple_tri_mesh;showfacets=true)

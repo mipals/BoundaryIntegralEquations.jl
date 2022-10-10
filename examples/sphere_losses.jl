@@ -20,11 +20,10 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2
 #==========================================================================================
         3d Visualization - Seems highly unstable on M1 chips. Problems with GLMakie?
 ==========================================================================================#
-# using Meshes, MeshViz
-# ##choose a Makie backend
-# import GLMakie as Mke
-# simple_mesh = create_simple_mesh(mesh)
-# viz(simple_mesh, showfacets = true)
+using Meshes, MeshViz
+import WGLMakie as wgl
+simple_mesh = create_simple_mesh(mesh)
+viz(simple_mesh, showfacets = true)
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
