@@ -25,6 +25,7 @@ struct Mesh3d{T} <: Mesh where {T <: AbstractArray}
     shape_function::ShapeFunction
     physics_function::ShapeFunction
     physics_topology::AbstractArray{Int64,2}
+    entities
 end
 #==========================================================================================
                             Helper Functions
@@ -37,6 +38,7 @@ get_topology(mesh::Mesh)                = mesh.topology
 get_sources(mesh::Mesh3d)               = mesh.sources
 get_normals(mesh::Mesh3d)               = mesh.normals
 get_tangents(mesh::Mesh3d)              = mesh.tangents,mesh.sangents
+get_entities(mesh::Mesh3d)              = mesh.entities
 #==========================================================================================
                             Printing symmary of mesh
 ==========================================================================================#

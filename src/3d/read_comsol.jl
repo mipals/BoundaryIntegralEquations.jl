@@ -101,7 +101,7 @@ function load3dTriangularComsolMesh(meshFile;m=3,n=3,
     copy_interpolation_nodes!(physics_function,shape_function)
     # Finalizing mesh
     mesh = Mesh3d(sources,coordinates,topology,normals,tangents,sangents,shape_function,
-                 physics_function,physics_topology)
+                 physics_function,physics_topology,ents[mask])
     if entites
         return mesh,ents[mask]
     else
@@ -159,7 +159,7 @@ function load3dQuadComsolMesh(meshFile;m=4,n=4,
 
     # Finalizing mesh
     mesh = Mesh3d(sources,coordinates,topology,normals,tangents,sangents,shape_function,
-                 physics_function,physics_topology)
+                 physics_function,physics_topology,ents[mask])
     if entites
         return mesh,ents[mask]
     else

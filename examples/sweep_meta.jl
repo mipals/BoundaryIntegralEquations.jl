@@ -20,7 +20,7 @@ import WGLMakie as wgl
 wgl.set_theme!(resolution=(1500, 1500))
 tri_bc_ents = [358] .- 1
 # Plotting entities in `bc_ents` red
-tri_simple_mesh = create_bc_simple_mesh(tri_mesh_file,tri_mesh,tri_bc_ents,false)
+tri_simple_mesh = create_bc_simple_mesh(tri_mesh,tri_bc_ents,false)
 viz(tri_simple_mesh;showfacets=true)
-tri_simple_bc   = create_bc_simple_mesh(tri_mesh_file,tri_mesh,tri_bc_ents)
+tri_simple_bc   = create_bc_simple_mesh(tri_mesh,tri_bc_ents)
 viz!(tri_simple_bc;showfacets=true,color=:red)
