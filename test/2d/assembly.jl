@@ -18,9 +18,11 @@ using Test
 
     Slin  = 0.0
     Squad = 0.0
-    for i = 1:length(lin_interps)
-        Slin  += sum(lin_interps[i].jacobian_mul_weights)
-        Squad += sum(quad_interps[i].jacobian_mul_weights)
+    for lin_interp ∈ lin_interps
+        Slin  += sum(lin_interp.jacobian_mul_weights)
+    end
+    for quad_interp ∈ quad_interps
+        Squad += sum(quad_interp.jacobian_mul_weights)
     end
     Slin - 2π
     Squad - 2π
