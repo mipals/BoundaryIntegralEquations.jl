@@ -49,7 +49,7 @@ function create_bc_simple_mesh(mesh,boundary_condition_entities,boundary_conditi
     entities = mesh.entities
     topology = mesh.topology
     # Finding indicies of boundary conditions
-    boundary_condition_id = Bool.(sum(boundary_condition_entities .∈ entities,dims=2))[:]
+    boundary_condition_id = Bool.(sum(boundary_condition_entities' .∈ entities,dims=2))[:]
     if boundary_conditions == false
         boundary_condition_id = .!boundary_condition_id
     end

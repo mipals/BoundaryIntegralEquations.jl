@@ -223,3 +223,26 @@ function get_beta_quad_quadratic(beta_type)
         return 1.0/3.0
     end
 end
+
+
+"""
+    get_hmax(mesh::Mesh3d)
+
+Computes the `h_max` of the mesh.
+"""
+function get_hmax(mesh::Mesh3d)
+    # Interpolating on each elements
+    interpolations = interpolate_elements(mesh)
+    # Preallocation
+    areas = zeros(length(interpolations))
+    # Extracting the areas of each elements as the sum of jacobian*weights
+    for (index,interpolation) in enumerate(interpolations)
+        areas[index] = sum(interpolation.jacobian_mul_weights)
+    end
+    # Return correct hmax depending on element type
+    if typeof(mesh.shape_function) <: Triangular
+        return sqrt(2*maximum(areas))
+    elseif typeof(mesh.shape_function) <: Quadrilateral
+        return sqrt(maxium(areas))
+    end
+end

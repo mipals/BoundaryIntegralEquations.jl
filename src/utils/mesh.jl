@@ -2,30 +2,29 @@
                             Defining mesh structs
 ==========================================================================================#
 abstract type Mesh end
-# abstract type Mesh2d end
-# abstract type Mesh3d end
 
 struct Mesh2d{T} <: Mesh where {T <: AbstractArray}
-    sources::T
-    coordinates::T
-    topology::AbstractArray{Int64,2}
-    normals::T
-    tangents::T
-    shape_function::ShapeFunction
-    physics_function::ShapeFunction
-    physics_topology::AbstractArray{Int64,2}
+    sources::T                                  # Collocation nodes
+    coordinates::T                              # Mesh coordinates
+    topology::AbstractArray{Int64,2}            # Element connectivities
+    normals::T                                  # Normal at collocation nodes
+    tangents::T                                 # Tangent at collocation nodes
+    shape_function::ShapeFunction               # Defines Element Interpolation
+    physics_function::ShapeFunction             # Defines Physics Interpolation
+    physics_topology::AbstractArray{Int64,2}    # Physics connectivities
+    # entites                                    # should probably be added at some point
 end
 struct Mesh3d{T} <: Mesh where {T <: AbstractArray}
-    sources::T
-    coordinates::T
-    topology::AbstractArray{Int64,2}
-    normals::T
-    tangents::T
-    sangents::T
-    shape_function::ShapeFunction
-    physics_function::ShapeFunction
-    physics_topology::AbstractArray{Int64,2}
-    entities
+    sources::T                                  # Collocation nodes
+    coordinates::T                              # Mesh coordinates
+    topology::AbstractArray{Int64,2}            # Element connectivities
+    normals::T                                  # Normal at collocation nodes
+    tangents::T                                 # First tangent at collocation nodes
+    sangents::T                                 # Second tangent at collocation nodes
+    shape_function::ShapeFunction               # Defines Element Interpolation
+    physics_function::ShapeFunction             # Defines Physics Interpolation
+    physics_topology::AbstractArray{Int64,2}    # Physics connectivities
+    entities                                    # COMSOL numbering of faces (for BCs)
 end
 #==========================================================================================
                             Helper Functions

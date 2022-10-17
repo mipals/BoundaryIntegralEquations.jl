@@ -3,7 +3,7 @@
 ==========================================================================================#
 using LinearAlgebra, IntegralEquations, Plots, IterativeSolvers
 #==========================================================================================
-                Loading Mesh + Visualization (viz seems broken on M1 chips :/ )
+                                    Loading Mesh
 ==========================================================================================#
 geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
