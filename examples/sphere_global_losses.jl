@@ -14,18 +14,19 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m"
 # tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
-tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
 # tri_mesh_file = "examples/meshes/sphere_1m_35k"
-# tri_mesh_file = "examples/meshes/sphere_1m_77k"
-mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
-                                                physics_order=tri_physics_orders[2])
+tri_mesh_file = "examples/meshes/sphere_1m_77k"
+@time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
+                                                physics_order=tri_physics_orders[1])
 #==========================================================================================
                                     3d Visualization
 ==========================================================================================#
 using MeshViz
 import WGLMakie as wgl
 simple_mesh = create_simple_mesh(mesh)
+wgl.set_theme!(resolution=(1200, 1200))
 viz(simple_mesh, showfacets = true)
 #==========================================================================================
                                 Setting up constants

@@ -22,6 +22,8 @@ using LinearMaps
 using IterativeSolvers
 using StatsBase
 using FMM3D
+using FileIO
+using MeshIO
 using Base.Threads
 #==========================================================================================
                             General Properties of Shape Functions
@@ -52,6 +54,7 @@ include("3d/surface_functions.jl")
 include("3d/shape_function_derivatives.jl")
 include("3d/jacobian.jl")
 include("3d/mesh.jl")
+include("3d/meshing.jl")
 include("3d/read_comsol.jl")
 include("3d/adaptive_integration.jl")
 include("3d/assembly_collocation.jl")

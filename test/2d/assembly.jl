@@ -24,8 +24,6 @@ using Test
     for quad_interp ∈ quad_interps
         Squad += sum(quad_interp.jacobian_mul_weights)
     end
-    Slin - 2π
-    Squad - 2π
 
     @test isapprox(Slin,2π,atol=5e-3)
     @test isapprox(Squad,2π,atol=1e-6)
@@ -36,7 +34,8 @@ end
     k = 1.0
     r = 1.0
 
-    geometric_elements = (ContinuousCurveLinear(3), ContinuousCurveQuadratic(3))
+    geometric_elements = (ContinuousCurveLinear(3),
+                          ContinuousCurveQuadratic(3))
     physics_elements   = (DiscontinuousCurveConstant(3),
                           DiscontinuousCurveLinear(3),
                           DiscontinuousCurveQuadratic(3))

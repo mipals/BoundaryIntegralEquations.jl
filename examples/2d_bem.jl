@@ -179,7 +179,7 @@ nElements = Int(ceil(el_wl*2π))
 ### Actual BEM computations
 topology    = createTopology(geometryOrder,nElements)   # Create a topology matrix
 coordinates = createCircle(topology)                    # Create the coordinates of the mesh
-F,G,C       = assemble(coordinates,topology,k,6;order=physicsOrder) # Assemble BEM matrices
+F,G,C       = assemble(coordinates,topology,k,5;order=physicsOrder) # Assemble BEM matrices
 # t1=createPhysics(-physicsOrder,topology,coordinates)[2]
 # Collocation points depend on the physics
 src = (physicsOrder ∉ [0,1,2] ? coordinates : createPhysics(physicsOrder,topology,coordinates)[2])
@@ -196,3 +196,18 @@ pA = cylscat(θ,k,150)
 plot(θ,abs.(pA),label="Analytical")
 scatter!(θ,abs.(ps),label="BEM")
 title!("Frequency = $(freq)")
+xlabel!("Angle")
+ylabel!("|p|")
+
+# notes
+nodes,weights  = gausslegendre(20)
+m1 = [1;0.0]
+m2 = [1.5;0.5]
+m3 = [1;1.0]
+coordinates = [m1 m2 m3]
+elementInterpolation = quadratic(nodes')
+interpolation = similar(coordinates*elementInterpolation)
+mul!(interpolation,coordinates,elementInterpolation)
+scatter(coordinates[1,:],coordinates[2,:])
+plot!(interpolation[1,:],interpolation[2,:])
+scatter!(interpolation[1,:],interpolation[2,:])
