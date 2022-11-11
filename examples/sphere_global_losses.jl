@@ -17,16 +17,18 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
 # tri_mesh_file = "examples/meshes/sphere_1m_35k"
-tri_mesh_file = "examples/meshes/sphere_1m_77k"
-@time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                                physics_order=tri_physics_orders[1])
+# tri_mesh_file = "examples/meshes/sphere_1m_77k"
+# @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
+                                                # physics_order=tri_physics_orders[1])
+
+mesh = IntegralEquations.load3dTriangularMesh("/Users/mpasc/Documents/testfiles/test_binary.ply");
 #==========================================================================================
                                     3d Visualization
 ==========================================================================================#
 using MeshViz
 import WGLMakie as wgl
 simple_mesh = create_simple_mesh(mesh)
-wgl.set_theme!(resolution=(1200, 1200))
+wgl.set_theme!(resolution=(600, 600))
 viz(simple_mesh, showfacets = true)
 #==========================================================================================
                                 Setting up constants
@@ -58,8 +60,10 @@ v0 = [zeros(2n); u₀*ones(n)]
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
 LGM = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1,n=3)
-rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbose=true)
+rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbose=true);
 @time pa = gmres(LGM,rhs;verbose=true);
+# 323695 Dofs: 2438.138033 seconds (136.03 M allocations: 91.786 GiB, 0.29% gc time, 0.00% compilation time)
+# 2*20 + 14 = 54 iterations
 
 # Generating analytical solution
 coordinates = [radius*ones(n,1) acos.(xyzb[3,:]/radius)]
@@ -69,7 +73,7 @@ ang_axis = acos.(xyzb[3,:]/radius)*180.0/pi
 perm = sortperm(ang_axis)
 
 # Plotting
-K = 1
+K = 10
 scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM-global",marker=:cross,markersize=2,color=:black)
 # scatter!(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:red)
 ylabel!("Re(p)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)

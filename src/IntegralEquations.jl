@@ -87,7 +87,7 @@ export visco_thermal_constants,ambient_to_properties
 
 # Mesh-related functions
 export Mesh,Mesh3d,Mesh2d
-export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh
+export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh,load3dTriangularMesh
 
 # 1D element types (for 2D)
 export ContinuousCurveLinear,ContinuousCurveQuadratic,
