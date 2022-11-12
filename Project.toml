@@ -25,6 +25,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 FastGaussQuadrature = "0.4"
+FileIO = "1"
 ForwardDiff = "0.10"
 IterativeSolvers = "0.9"
 LegendrePolynomials = "0.4"
