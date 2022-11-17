@@ -113,6 +113,6 @@ export create_simple_mesh, create_bc_simple_mesh, viz
 
 # Losses
 export LossyBlockMatrix,LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter
-export compute_lossy_rhs
+export compute_lossy_rhs,LossyGlobalOuter
 
 end

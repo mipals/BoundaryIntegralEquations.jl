@@ -16,24 +16,24 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # tri_mesh_file = "examples/meshes/sphere_1m_finer"
 # tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_finest"
-# tri_mesh_file = "examples/meshes/sphere_1m_35k"
+tri_mesh_file = "examples/meshes/sphere_1m_35k"
 # tri_mesh_file = "examples/meshes/sphere_1m_77k"
-# @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[1],
-                                                # physics_order=tri_physics_orders[1])
+@time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
+                                                       physics_order=tri_physics_orders[2])
 
-mesh = IntegralEquations.load3dTriangularMesh("/Users/mpasc/Documents/testfiles/test_binary.ply");
+# mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/test_binary.ply");
 #==========================================================================================
                                     3d Visualization
 ==========================================================================================#
 using MeshViz
 import WGLMakie as wgl
 simple_mesh = create_simple_mesh(mesh)
-wgl.set_theme!(resolution=(600, 600))
+wgl.set_theme!(resolution=(1200, 1200))
 viz(simple_mesh, showfacets = true)
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 1000.0                                   # Frequency                 [Hz]
+freq   = 500.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -51,8 +51,6 @@ tangent2 = mesh.sangents
 
 # Creating RHS
 vn0  = u₀*normals[3,:]
-vt10 = u₀*tangent1[3,:]
-vt20 = u₀*tangent2[3,:]
 
 n  = length(vn0)
 v0 = [zeros(2n); u₀*ones(n)]
@@ -73,11 +71,13 @@ ang_axis = acos.(xyzb[3,:]/radius)*180.0/pi
 perm = sortperm(ang_axis)
 
 # Plotting
-K = 10
-scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM-global",marker=:cross,markersize=2,color=:black)
-# scatter!(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:red)
+K = 1
+gr(size=(600,500))
+scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM-global",marker=:cross,markersize=2,color=:black,dpi=400)
 ylabel!("Re(p)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2)
 title!("Frequency = $(freq)")
+xlabel!("Angle")
+savefig("pa$(n).png")
 # savefig("/Users/mpasc/Dropbox/Apps/ShareLaTeX/JTCA_Iterative_losses/figures/notes/pa$(n).png")
 #===========================================================================================
                                 Checking results
@@ -129,7 +129,7 @@ using Test
 nDOF = n
 nDOF = 154_000
 # A single BEM matrix
-3(nDOF)^2*2*8/(2^30)
+2(nDOF)^2*2*8/(2^30)
 # Full dense system (100 times a single BEM Matrix)
 (10nDOF)^2*2*8/(2^30)
 # 6 BEM Systems, 2 inverse products (Gv^{-1}Hv, Gh^{-1}Hv) and 1 collection
