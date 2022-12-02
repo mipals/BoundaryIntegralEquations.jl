@@ -6,7 +6,7 @@
 The IntegralEquations.jl provides the basic building blocks for the Boundary Element Method (BEM). Currently, it only supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
 
 $$
-c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n}_{\mathbf{x}} }p(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x} = \mathrm{i}\rho ck\int_\Gamma G(\mathbf{x},\mathbf{y})v_s(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x}.
+c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n} }p(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x} = \mathrm{i}\rho ck\int_\Gamma G(\mathbf{x},\mathbf{y})v_s(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x}.
 $$
 
 For the Fast Multipole Method this package utilizes the Julia interfaces for the Flatiron Institute Fast Multipole Libraries: [2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia).
@@ -16,8 +16,9 @@ For the Fast Multipole Method this package utilizes the Julia interfaces for the
 * (Dis)continuous (Constant, Linear and Quadratic) Triangular Elements
 * (Dis)continuous (Constant, Linear and Quadratic) Quadrilateral Elements
 
-## Supported meshes
-* COMSOLs *.mphtxt* files. 
+## Supported mesh types
+* COMSOLs *.mphtxt* files (best for applying boundary conditions)
+* .obj, .plt, .stl, .off, .2DM through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
 
 ## Roadmap / Notes
 * Systematic way of applying boundary conditions
@@ -25,8 +26,6 @@ For the Fast Multipole Method this package utilizes the Julia interfaces for the
     - [ ] Adaptive integration for lossy formulation.
 * A performant reading of COMSOL mesh files.
 * Support for more mesh files. 
-    - [ ] Gmsh files.
-    - [ ] Ply files through [PlyIO.jl](https://github.com/JuliaGeometry/PlyIO.jl).
     - [ ] Any many more...
 * Support for single precision numbers. ([Inspired by Bempp-cl](https://www.mscroggs.co.uk/papers/2021-cise.pdf), generally needed for GPU)
 * More basis functions
