@@ -1,24 +1,30 @@
 import GeometryBasics
 
 function load_mesh_file(file)
+    # Read mesh
     mesh = load(file)
+    # Extract coordinates and connectivities
     mesh_coords = GeometryBasics.coordinates(mesh)
     elements    = GeometryBasics.faces(mesh)
+    # Get number of elements and number of nodes on the element (element order)
     n_elements  = length(elements)
     n_interpolations = length(elements[1])
-
+    # Preallocate topology and coordinates
     topology = zeros(Int64,n_interpolations,n_elements)
     coords   = zeros(3,length(mesh_coords))
+    # Insert connectivities into topology matrix
     for (index,element) in enumerate(elements)
         for i = 1:n_interpolations
             topology[i,index] = Int64(element[i].i) + 1
         end
     end
+    # Extract coordinates
     for (index,coord) in enumerate(mesh_coords)
         coords[:,index] = Float64.(coord)
     end
-
+    # Make dummy entities
     ents = zeros(Int64, n_elements)
+    # Return coordiates, topology and ents
     return coords, topology, ents
 end
 

@@ -5,7 +5,6 @@
 #==========================================================================================
                             Adding Related Packages
 ==========================================================================================#
-using FMM3D
 using LinearAlgebra
 using IntegralEquations
 using IterativeSolvers
@@ -16,17 +15,17 @@ using Plots
 geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
-tri_mesh_file = "examples/meshes/sphere_1m"
-tri_mesh_file = "examples/meshes/sphere_1m_fine"
-tri_mesh_file = "examples/meshes/sphere_1m_finer"
-# tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m"
+# tri_mesh_file = "examples/meshes/sphere_1m_fine"
+# tri_mesh_file = "examples/meshes/sphere_1m_finer"
+tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
 #==========================================================================================
                             Setting up constants
 ==========================================================================================#
 # Defining Frequency
-freq = 500.0
+freq = 1000.0
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 zk = Complex(ka)
 radius = 1.0                                    # Radius of sphere_1m       [m]
@@ -37,30 +36,10 @@ pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
 Defining LossyBlockMatrix
 Block matrix corresponding to 5 BEM systems and 5 constraints
 ==========================================================================================#
-Fp,Gs,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,sparse=false);
-Gp = Gs
-# Fp,Gp,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,sparse=false,gOn=false);
-Ag = FMMGOperator(mesh,zk;eps=1e-6,n=3,nearfield=true,offset=0.2)
-@time norm(Ag*pI - Gp*pI)/norm(Gp*pI)
-xg = ones(eltype(Ag),size(Ag,1))
-@time norm(Ag*xg - Gp*xg)/norm(Gp*xg)
-xg = rand(eltype(Ag),size(Ag,1))
-@time norm(Ag*xg - Gp*xg)/norm(Gp*xg)
-
+Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2);
 
 Ap = Diagonal(1.0 .- Cp) + Fp;
 Af = FMMFOperator(mesh,zk;nearfield=true,n=3,offset=0.2)
-xf = ones(eltype(Af),size(Af,1))
-@time norm(Af*xf - Ap*xf)/norm(Ap*xf)
-xf = rand(eltype(Af),size(Af,1))
-@time norm(Af*xf - Ap*xf)/norm(Ap*xf)
-@time norm(Af*pI - Ap*pI)/norm(Ap*pI)
-
-
-# Checking multiplation
-
-# p = rand(eltype(xf),size(xf))
-# @time IntegralEquations.nodes_to_gauss!(Af.tmp,Af.element_interpolation,Af.physics_topology,p)
 
 # Solving the scattering problem
 p_bem = gmres(Ap,pI;verbose=true);
@@ -70,13 +49,15 @@ p_fmm = gmres(Af,pI;verbose=true);
 surface_angles = acos.(mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
 p_analytical, _ = IntegralEquations.plane_wave_scattering_sphere(zk,radius,1.0,surface_angles,1e-6)
+# Plotting real part of pressure
 plot(surface_angles[perm], real.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],real.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],real.(p_fmm[perm]),label="FMM",linestyle=:dash,linewidth=2)
+# Plotting imaginary part of pressure
 plot(surface_angles[perm], imag.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],imag.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],imag.(p_fmm[perm]),label="FMM",linestyle=:dash,linewidth=2)
-
+# Plotting absolute pressure values
 plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],abs.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],abs.(p_fmm[perm]),label="FMM",linestyle=:dash,linewidth=2)

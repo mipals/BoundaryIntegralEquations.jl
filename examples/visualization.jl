@@ -4,7 +4,7 @@
 using IntegralEquations
 using MeshViz
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(1200, 1200))
+wgl.set_theme!(resolution=(1000, 1000))
 
 # Triangular Mesh
 tri_mesh_file = "examples/meshes/cylinder"
