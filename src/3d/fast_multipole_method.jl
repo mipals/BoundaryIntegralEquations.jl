@@ -210,9 +210,9 @@ function FMMGOperator(mesh,k;eps=1e-6,n=3,nearfield=true,offset=0.2,depth=1)
                             physics_topology,nearfield_correction,tmp)
 end
 #==========================================================================================
-                            Defining F-operator (double-layer)
+                            Defining H-operator (double-layer)
 ==========================================================================================#
-struct FMMFOperator{T} <: LinearMaps.LinearMap{T}
+struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
     n::Int64                            # Number of nodes
     m::Int64                            # Number of gauss nodes
     # Physical Quantities
@@ -231,9 +231,9 @@ struct FMMFOperator{T} <: LinearMaps.LinearMap{T}
     tmp::AbstractVecOrMat{T}
     tmp_weights::AbstractVecOrMat{T}
 end
-Base.size(A::FMMFOperator) = (A.n, A.n)
+Base.size(A::FMMHOperator) = (A.n, A.n)
 function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
-                            A::FMMFOperator{T},
+                            A::FMMHOperator{T},
                             x::AbstractVector) where {T <: ComplexF64}
     # Checking dimensions
     LinearMaps.check_dim_mul(y, A, x)
@@ -255,7 +255,7 @@ function scale_columns!(weights,normals,tmp)
     end
     return weights
 end
-function FMMFOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_topology)
+function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_topology)
     # Making sure the wavenumber is complex (required for the FMM3D library)
     zk = Complex(k)
     # Getting size of the FMM operator.
@@ -270,10 +270,10 @@ function FMMFOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_t
     @warn "No-near field correction computed"
     nearfield_correction = 0.5*I
     # FMM3D uses a Greens function that does not divide by 4π.
-    return FMMFOperator(n,m,zk,eps,targets,sources,dipvecs,elm_interp,physics_topology,
+    return FMMHOperator(n,m,zk,eps,targets,sources,dipvecs,elm_interp,physics_topology,
                             nearfield_correction,tmp,tmp_weights)
 end
-function FMMFOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1)
+function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1)
     # Creating physics and geometry for the FMM operator
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
@@ -303,6 +303,6 @@ function FMMFOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1)
     else
         nearfield_correction = spzeros(ComplexF64,N,N) + 0.5*I
     end
-    return FMMFOperator(N,M,zk,eps,targets,sources,dipvecs,physics_function.interpolation,
+    return FMMHOperator(N,M,zk,eps,targets,sources,dipvecs,physics_function.interpolation,
                             mesh.physics_topology,nearfield_correction,tmp,tmp_weights)
 end

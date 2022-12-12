@@ -44,7 +44,7 @@ end
 #         # Computing incident pressure
 #         angles = [π/2 0.0]
 #         pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
-#         Af = FMMFOperator(mesh,zk)
+#         Af = FMMHOperator(mesh,zk)
 #         @time Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,gOn=false,sparse=false);
 #         Ap = Fp + Diagonal(1.0 .- Cp);
 #         # Testing if the multiplication is the same

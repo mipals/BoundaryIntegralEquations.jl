@@ -11,9 +11,11 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 # Triangular Meshes
 mesh_file = "multipleResonatorsFine"
 # mesh_file = "resonatorFinalFine"
-@time mesh = load3dTriangularComsolMesh("examples/meshes/" * mesh_file;
-                                            geometry_order=geometry_orders[2],
-                                            physics_order=tri_physics_orders[2])
+# @time mesh = load3dTriangularComsolMesh("examples/meshes/" * mesh_file;
+                                            # geometry_order=geometry_orders[2],
+                                            # physics_order=tri_physics_orders[2])
+# mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/RB_14.stl")
+mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/f1_full_car.stl")
 #==========================================================================================
                                     3d Visualization
 ==========================================================================================#

@@ -19,7 +19,7 @@ tri_mesh_file = "examples/meshes/sphere_1m_fine"
 # tri_mesh_file = "examples/meshes/sphere_1m_35k"
 # tri_mesh_file = "examples/meshes/sphere_1m_77k"
 @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
-                                                       physics_order=tri_physics_orders[4])
+                                                       physics_order=tri_physics_orders[2])
 
 # mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/test_binary.ply");
 #==========================================================================================
@@ -148,7 +148,7 @@ Base.summarysize(LGM)/(2^30)
 ===========================================================================================#
 Ga = FMMGOperator(mesh,kₐ;n=1,eps=1e-6,offset=0.2,nearfield=true,depth=1)
 @time Ga*pa;
-Ha = FMMFOperator(mesh,kₐ;n=3,eps=1e-6,offset=0.2,nearfield=true,depth=1)
+Ha = FMMHOperator(mesh,kₐ;n=3,eps=1e-6,offset=0.2,nearfield=true,depth=1)
 @time Ha*pa;
 
 mem_matrix = Base.summarysize(LGM)/(2^20)

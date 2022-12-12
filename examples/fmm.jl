@@ -39,7 +39,7 @@ Block matrix corresponding to 5 BEM systems and 5 constraints
 Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2);
 
 Ap = Diagonal(1.0 .- Cp) + Fp;
-Af = FMMFOperator(mesh,zk;nearfield=true,n=3,offset=0.2)
+Af = FMMHOperator(mesh,zk;nearfield=true,n=3,offset=0.2)
 
 # Solving the scattering problem
 p_bem = gmres(Ap,pI;verbose=true);

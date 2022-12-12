@@ -13,6 +13,21 @@ abstract type QuadrilateralSerendipity   <: ContinuousQuadrilateral     end
 #==========================================================================================
                                 Triangular Elements
 ==========================================================================================#
+"""
+Defines a Triangle with node placements         \n
+                                          3     \n
+                                          1 2   \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =
+\\begin{bmatrix}
+1 - u - v   \\newline
+    u       \\newline
+    v
+\\end{bmatrix},\\quad u \\in [0,1], v\\in [0,1-u].
+```
+"""
 mutable struct TriangularLinear{T<:AbstractFloat} <: ContinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -21,6 +36,25 @@ mutable struct TriangularLinear{T<:AbstractFloat} <: ContinuousTriangular
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Triangle with node placements             \n
+                                          3         \n
+                                          6  5      \n
+                                          1  4  2   \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =
+\\begin{bmatrix}
+          (1 - v - u)(1 - 2v - 2u)   \\newline
+            u(2u - 1)                \\newline
+            v(2v - 1)                \\newline
+            4u(1 - v - u)            \\newline
+            4uv                      \\newline
+            4v(1 - v - u)
+\\end{bmatrix},\\quad u \\in [0,1], v\\in [0,1-u].
+```
+"""
 mutable struct TriangularQuadratic{T<:AbstractFloat} <: ContinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -37,6 +71,13 @@ mutable struct TriangularCubic{T<:AbstractFloat} <: ContinuousTriangular
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Triangle with node placement on the middle of the triangle.
+
+```math
+\\mathbf{N}(u,v) = [1]
+```
+"""
 mutable struct DiscontinuousTriangularConstant{T<:AbstractFloat} <: DiscontinuousTriangular
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -66,6 +107,23 @@ end
 #==========================================================================================
                                 Quadrilateral Elements
 ==========================================================================================#
+"""
+Defines a Quadrilateral with node placements         \n
+                                            4 -- 3   \n
+                                            |    |   \n
+                                            1 -- 2   \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =
+\\begin{bmatrix}
+          (1 - u)(1 - v)/4 \\newline
+          (1 + u)(1 - v)/4 \\newline
+          (1 + u)(1 + v)/4 \\newline
+          (1 - u)(1 + v)/4 \\newline
+\\end{bmatrix}, \\quad u, v \\in [-1, 1].
+```
+"""
 mutable struct QuadrilateralLinearSerendipity{T<:AbstractFloat} <: QuadrilateralSerendipity
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -74,6 +132,27 @@ mutable struct QuadrilateralLinearSerendipity{T<:AbstractFloat} <: Quadrilateral
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Quadrilateral with node placements        \n
+                                            4  7  3 \n
+                                            8     6 \n
+                                            1  5  2 \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =
+\\begin{bmatrix}
+            [(1 - u)(v - 1)(u + v + 1)/4   \\newline
+            (1 + u)(v - 1)(v - u + 1)/4 \\newline
+            (1 + u)(v + 1)(u + v - 1)/4 \\newline
+            (u - 1)(v + 1)(u - v + 1)/4 \\newline
+            (1 - v)(1 - u^2)/2          \\newline
+            (1 + u)(1 - v^2)/2          \\newline
+            (1 + v)(1 - u^2)/2          \\newline
+            (1 - u)(1 - v^2)/2
+\\end{bmatrix}, \\quad u, v \\in [-1, 1].
+```
+"""
 mutable struct QuadrilateralQuadratic{T<:AbstractFloat} <: QuadrilateralSerendipity
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -82,6 +161,23 @@ mutable struct QuadrilateralQuadratic{T<:AbstractFloat} <: QuadrilateralSerendip
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Quadrilateral with node placements         \n
+                                            3 -- 4   \n
+                                            |    |   \n
+                                            1 -- 2   \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =
+\\begin{bmatrix}
+          (1 - u)(1 - v)/4 \\newline
+          (1 + u)(1 - v)/4 \\newline
+          (1 - u)(1 + v)/4 \\newline
+          (1 + u)(1 + v)/4 \\newline
+\\end{bmatrix}, \\quad u, v \\in [-1, 1].
+```
+"""
 mutable struct QuadrilateralLinear4{T<:AbstractFloat} <: ContinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -90,6 +186,28 @@ mutable struct QuadrilateralLinear4{T<:AbstractFloat} <: ContinuousQuadrilateral
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Quadrilateral with node placements         \n
+                                            3  9  4  \n
+                                            6  7  8  \n
+                                            1  5  2  \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =
+\\begin{bmatrix}
+             u(1 - u)v(1 - v)/4          \\newline
+            -u(1 + u)v(1 - v)/4        \\newline
+            -u(1 - u)v(1 + v)/4        \\newline
+            u(1 + u)v(1 + v)/4         \\newline
+            -(1 + u)(1 - u)v(1 - v)/2  \\newline
+            -u(1 - u)(1 + v)(1 - v)/2  \\newline
+            (1 - u^2)(1 - v^2)         \\newline
+            u(1 + u)(1 + v)(1 - v)/2   \\newline
+            (1 + u)(1 - u)(1 + v)v/2
+\\end{bmatrix}, \\quad u, v \\in [-1, 1]
+```
+"""
 mutable struct QuadrilateralQuadraticLagrange{T<:AbstractFloat} <: QuadrilateralLagrange
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -106,6 +224,17 @@ mutable struct QuadrilateralCubicLagrange{T<:AbstractFloat} <: QuadrilateralLagr
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Quadrilateral with node placements         \n
+                                              ---    \n
+                                            |  1  |  \n
+                                              ---    \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) =  [1], \\quad u,v \\in [-1,1 ]
+```
+"""
 mutable struct DiscontinuousQuadrilateralConstant{T<:AbstractFloat} <: DiscontinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -114,6 +243,18 @@ mutable struct DiscontinuousQuadrilateralConstant{T<:AbstractFloat} <: Discontin
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
 end
+"""
+Defines a Quadrilateral with node placements         \n
+                                              ---    \n
+                                            | 3 4 |  \n
+                                            | 1 2 |  \n
+                                              ---    \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) = quadrilateralLinear4(u/(1-\\alpha),v/(1-\\alpha)), \\quad u,v \\in [-1,1 ]
+```
+"""
 mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: DiscontinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}
@@ -123,6 +264,19 @@ mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: Discontinu
     interpolation::AbstractArray{T,2}
     alpha::T
 end
+"""
+Defines a Quadrilateral with node placements            \n
+                                              -------   \n
+                                            | 3  9  4 | \n
+                                            | 6  7  8 | \n
+                                            | 1  5  2 | \n
+                                              -------   \n
+and basis functions defined as
+
+```math
+\\mathbf{N}(u,v) = quadrilateralQuadraticLagrange(u/(1-\\alpha),v/(1-\\alpha)), \\quad u,v \\in [-1,1 ]
+```
+"""
 mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: DiscontinuousQuadrilateral
     weights::AbstractArray{T,1}
     gauss_u::AbstractArray{T,1}

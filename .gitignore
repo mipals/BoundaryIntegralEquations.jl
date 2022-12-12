@@ -7,3 +7,4 @@ Manifest.toml
 examples/sphere_losses_timings.jl
 examples/sphere_losses.jl
 examples/meshes/sphere_1m_finest.mphtxt
+docs/build

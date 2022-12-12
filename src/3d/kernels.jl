@@ -2,9 +2,11 @@
         Acoustical Green's Function and Derivatives - Vectors (used for collocation)
 ==========================================================================================#
 """
-    greens3d!(integrand,r,k)
+Green's function for the Helmholtz Equation in 3d:
 
-Green's function for the Helmholtz Equation in 3d.
+```math
+\\frac{e^{ikr_j}}{4\\pi r_j}
+```
 """
 function greens3d!(integrand,r,k)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
@@ -12,9 +14,11 @@ function greens3d!(integrand,r,k)
     end
 end
 """
-    freens3d!(integrand,r,interpolation,source,normals,k)
+Normal derivative of the 3D Helmholtz Green's function with respect to interpolation nodes:
 
-Normal derivative of the 3D Helmholtz Green's function with respect to interpolation nodes.
+```math
+\\frac{e^{ikr_j}}{4\\pi r_j}(i*k*r_j - 1) (x_j - y)\\cdot n
+```
 """
 function freens3d!(integrand,r,interpolation,sources,normals,k)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
@@ -25,9 +29,11 @@ function freens3d!(integrand,r,interpolation,sources,normals,k)
     end
 end
 """
-    freens3dk0!(integrand,r,interpolation,source,normals)
-
 freens3d! with k=0.
+
+```math
+-\\frac{(x_j - y)\\cdot n}{4\\pi r_j}
+```
 """
 function freens3dk0!(integrand,r,interpolation,sources,normals)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)

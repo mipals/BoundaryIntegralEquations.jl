@@ -48,6 +48,7 @@ end
 Returns the Jacobian the duffy transformation of `u` and `v`.
 
 This determiant can be calculated analytically
+
 ```math
                 | 1       0 |
                 | -v  1 - u | = |1 - u|

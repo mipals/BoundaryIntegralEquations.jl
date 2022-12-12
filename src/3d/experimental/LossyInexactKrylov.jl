@@ -292,7 +292,7 @@ function LossyOneVariableOuter(mesh::Mesh3d,freq;S=1,depth=1,exterior=true,
     # Computing relevant constants
     println("Acoustic Matrices:")
     Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
-    Ha = FMMFOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
+    Ha = FMMHOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
     return LossyOneVariableOuter(N,Ha,Ga,Aₕ,Bₕ,luGh,Aᵥ,Bᵥ,
                             luGv,inner,Dt₁,Dt₂,
                             nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,
@@ -341,7 +341,7 @@ function LossyOneVariableOuter(mesh::Mesh3d,BB::LossyBlockMatrix,freq;depth=1,
     if fmm_on
         _,_,_,ka,_,_,_,_,_,_,_,_ = visco_thermal_constants(;freq=freq,S=1)
         Ga = FMMGOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
-        Ha = FMMFOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = FMMHOperator(mesh,ka;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
         outer = LossyOneVariableOuter(N,Ha,Ga,BB.Aₕ,BB.Bₕ,luGh,BB.Aᵥ,BB.Bᵥ,
                                 luGv,inner,BB.Dt₁,BB.Dt₂,
                                 nx,ny,nz,tx,ty,tz,sx,sy,sz,ϕₐ,ϕₕ,τₐ,τₕ,

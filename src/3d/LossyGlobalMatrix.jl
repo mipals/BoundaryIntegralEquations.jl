@@ -120,7 +120,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
 
     if fmm_on
         Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
-        Ha = FMMFOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = FMMHOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
         outer = LossyGlobalOuter(nSource,
                                     Ha,Ga,
                                     Aₕ,Bₕ,

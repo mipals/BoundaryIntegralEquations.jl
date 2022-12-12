@@ -188,12 +188,12 @@ end
                                           .  .
                                           1  .  2
 ==========================================================================================#
-triangularLinear(u,v) = [1.0 .- u .- v; u; v];
+triangularLinear(u,v) = [1 .- u .- v; u; v];
 function basisFunction(surfaceFunction::TriangularLinear,u,v)
     return triangularLinear(u,v)
 end
-triangularLinearDerivatives(u,v) = [-1.0;1.0;0.0].*ones(1,length(u)),
-                                   [-1.0;0.0;1.0].*ones(1,length(v));
+triangularLinearDerivatives(u,v) = [-1;1;0].*ones(eltype(u),1,length(u)),
+                                   [-1;0;1].*ones(eltype(v),1,length(v));
 function basisFunctionDerivative(surfaceFunction::TriangularLinear,u,v)
     return triangularLinearDerivatives(u,v)
 end
@@ -244,8 +244,8 @@ function basisFunction(surfaceFunction::DiscontinuousTriangularConstant,u,v)
     return discontinuousTriangularConstant(u,v)
 end
 function discontinuousTriangularConstantDerivatives(u,v)
-    dNu = zeros(1,length(u))
-    dNv = zeros(1,length(v))
+    dNu = zeros(eltype(u),1,length(u))
+    dNv = zeros(eltype(v),1,length(v))
     return dNu, dNv
 end
 function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularConstant,u,v)
@@ -258,10 +258,10 @@ end
                                         | \
                                         1 - 2
 ==========================================================================================#
-gamma3(u,v)  = 1.0 .- u .- v
-psik(s,β)    = (s .- β)/(1.0 - 3.0*β)
+gamma3(u,v)  = 1 .- u .- v
+psik(s,β)    = (s .- β)/(1 - 3*β)
 psi3(u,v,β)  =  psik(gamma3(u,v),β)
-psikm(s,β)   =  ones(1,length(s))/(1.0 - 3.0*β)
+psikm(s,β)   =  ones(1,length(s))/(1 - 3*β)
 psi3m(u,v,β) = -psikm(gamma3(u,v),β)
 
 discontinuousTriangularLinear(u,v,β) = [psi3(u,v,β);
@@ -289,28 +289,28 @@ end
                                           6  5
                                           1  4  2
 ==========================================================================================#
-discontinuousTriangularQuadratic(u,v,β) = [psi3(u,v,β).*(2.0*psi3(u,v,β) .- 1.0);
-                                            psik(u,β).*(2.0*psik(u,β) .- 1.0);
-                                            psik(v,β).*(2.0*psik(v,β) .- 1.0);
-                                        4.0*psik(u,β).*psi3(u,v,β);
-                                        4.0*psik(u,β).*psik(v,β);
-                                        4.0*psik(v,β).*psi3(u,v,β)]
+discontinuousTriangularQuadratic(u,v,β) = [psi3(u,v,β).*(2*psi3(u,v,β) .- 1);
+                                            psik(u,β).*(2*psik(u,β) .- 1);
+                                            psik(v,β).*(2*psik(v,β) .- 1);
+                                          4*psik(u,β).*psi3(u,v,β);
+                                          4*psik(u,β).*psik(v,β);
+                                          4*psik(v,β).*psi3(u,v,β)]
 function basisFunction(surfaceFunction::DiscontinuousTriangularQuadratic,u,v)
     return discontinuousTriangularQuadratic(u,v,surfaceFunction.beta)
 end
 function discontinuousTriangularQuadraticDerivatives(u,v,β)
-    dNu = [ (4.0*psi3(u,v,β) .- 1.0) .* psi3m(u,v,β);
-            (4.0*psik(u,β)   .- 1.0) .* psikm(u,β);
-            zeros(1,length(u));
-            4.0*psikm(u,β).*psi3(u,v,β) + 4.0*psik(u,β).*psi3m(u,v,β);
-            4.0*psikm(u,β).*psik(v,β);
-            4.0*psik(v,β).*psi3m(u,v,β)]
-    dNv = [(4.0*psi3(u,v,β) .- 1.0) .* psi3m(u,v,β);
-            zeros(1,length(v));
-           (4.0*psik(v,β)   .- 1.0) .* psikm(v,β);
-            4.0*psik(u,β).*psi3m(u,v,β);
-            4.0*psik(u,β).*psikm(v,β);
-            4.0*psikm(v,β).*psi3(u,v,β) + 4.0*psik(v,β).*psi3m(u,v,β)]
+    dNu = [ (4*psi3(u,v,β) .- 1) .* psi3m(u,v,β);
+            (4*psik(u,β)   .- 1) .* psikm(u,β);
+            zeros(eltype(u),1,length(u));
+            4*psikm(u,β).*psi3(u,v,β) + 4*psik(u,β).*psi3m(u,v,β);
+            4*psikm(u,β).*psik(v,β);
+            4*psik(v,β).*psi3m(u,v,β)]
+    dNv = [(4*psi3(u,v,β) .- 1) .* psi3m(u,v,β);
+            zeros(eltype(v),1,length(v));
+           (4*psik(v,β)   .- 1) .* psikm(v,β);
+            4*psik(u,β).*psi3m(u,v,β);
+            4*psik(u,β).*psikm(v,β);
+            4*psikm(v,β).*psi3(u,v,β) + 4*psik(v,β).*psi3m(u,v,β)]
     return dNu, dNv
 end
 function basisFunctionDerivative(surfaceFunction::DiscontinuousTriangularQuadratic,u,v)
@@ -319,6 +319,13 @@ end
 #==========================================================================================
                                 Triangular Constructors
 ==========================================================================================#
+function TriangularLinear(n::Real)
+    nodes_u, nodes_v, weights = gauss_points_triangle(n)
+    TMP = TriangularLinear(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
+    interpolation           = TMP(nodes_u',nodes_v')
+    dX, dY                  = TMP'(nodes_u',nodes_v')
+    return TriangularLinear(weights,nodes_u,nodes_v,dX,dY,interpolation)
+end
 function TriangularLinear(n::Real,m::Real)
     nodes_u, nodes_v, weights = triangularQuadpoints(n,m)
     TMP = TriangularLinear(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
@@ -334,6 +341,13 @@ function TriangularLinear(SF::Triangular)
     derivatives_u,derivatives_v = TMP'(gauss_u',gauss_v')
     interp = TMP(gauss_u',gauss_v')
     return TriangularLinear(weights,gauss_u,gauss_v,derivatives_u,derivatives_v,interp)
+end
+function TriangularQuadratic(n::Real)
+    nodes_u, nodes_v, weights = gauss_points_triangle(n)
+    TMP = TriangularQuadratic(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
+    interpolation           = TMP(nodes_u',nodes_v')
+    dX, dY                  = TMP'(nodes_u',nodes_v')
+    return TriangularQuadratic(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
 function TriangularQuadratic(n::Real,m::Real)
     nodes_u, nodes_v, weights = triangularQuadpoints(n,m)
