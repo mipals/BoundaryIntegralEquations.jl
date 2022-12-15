@@ -230,6 +230,8 @@ struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
     #
     tmp::AbstractVecOrMat{T}
     tmp_weights::AbstractVecOrMat{T}
+    #
+    # C                                   # C-constants
 end
 Base.size(A::FMMHOperator) = (A.n, A.n)
 function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
@@ -255,12 +257,13 @@ function scale_columns!(weights,normals,tmp)
     end
     return weights
 end
-function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_topology)
+function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_topology,
+                    integral_free_term = [])
     # Making sure the wavenumber is complex (required for the FMM3D library)
     zk = Complex(k)
     # Getting size of the FMM operator.
-    n = size(targets,2)
-    m = size(sources,2)
+    N = size(targets,2)
+    M = size(sources,2)
     # Compute dipole direction times dipole strengths
     dipvecs = normals .* weights'
     # Create tempory arrays
@@ -268,12 +271,17 @@ function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_t
     tmp_weights = zeros(eltype(zk),3,length(weights))
     # The near-field correction is here set to the zero matrix. Warn the user.
     @warn "No-near field correction computed"
-    nearfield_correction = 0.5*I
+    if isempty(integral_free_term)
+        nearfield_correction = ones(eltype(zk),N)/2
+    elseif length(integral_free_term) == M
+        nearfield_correction = Diagonal(integral_free_term)
+    end
     # FMM3D uses a Greens function that does not divide by 4π.
-    return FMMHOperator(n,m,zk,eps,targets,sources,dipvecs,elm_interp,physics_topology,
+    return FMMHOperator(N,M,zk,eps,targets,sources,dipvecs,elm_interp,physics_topology,
                             nearfield_correction,tmp,tmp_weights)
 end
-function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1)
+function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
+                                integral_free_term = [])
     # Creating physics and geometry for the FMM operator
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
@@ -295,13 +303,17 @@ function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1)
     # Allocating arrays for intermediate computations
     tmp = zeros(eltype(zk),length(weights))
     tmp_weights = zeros(eltype(zk),3,length(weights))
+    # If not set by the user set the integral free term equal to a half
+    if isempty(integral_free_term)
+        nearfield_correction = ones(eltype(zk),M)/2
+    elseif length(integral_free_term) == M
+        nearfield_correction = Diagonal(integral_free_term)
+    end
     # Computing near-field correction
     if nearfield
         C,_ = partial_assemble_parallel!(mesh,zk,targets,shape_function;gOn=false,depth=depth)
         S,_ = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,gOn=false,offset=offset);
-        nearfield_correction = - C + S + 0.5*I
-    else
-        nearfield_correction = spzeros(ComplexF64,N,N) + 0.5*I
+        nearfield_correction += - C + S
     end
     return FMMHOperator(N,M,zk,eps,targets,sources,dipvecs,physics_function.interpolation,
                             mesh.physics_topology,nearfield_correction,tmp,tmp_weights)
