@@ -7,8 +7,8 @@ import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can als
 wgl.set_theme!(resolution=(1000, 1000))
 
 # Triangular Mesh
-tri_mesh_file = "examples/meshes/cylinder"
-# mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=:linear)
+tri_mesh_file = "examples/meshes/calibrationplate"
+# tri_mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=:linear)
 tri_mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=:quadratic)
 simple_tri_mesh = create_simple_mesh(tri_mesh)
 viz(simple_tri_mesh;showfacets=true)
@@ -28,15 +28,15 @@ using MeshViz
 import WGLMakie as wgl
 
 # Triangles
-tri_bc_ents = [6,7]
+tri_bc_ents = [6,7,10] .- 1
 # Loading triangular mesh
-tri_mesh_file = "examples/meshes/sphere_1m"
-tri_mesh = load3dTriangularComsolMesh(tri_mesh_file)
+# tri_mesh_file = "examples/meshes/calibrationplate"
+# tri_mesh = load3dTriangularComsolMesh(tri_mesh_file)
 # Plotting entities in `bc_ents` red
-tri_simple_mesh = create_bc_simple_mesh(tri_mesh,tri_bc_ents,false)
-viz(tri_simple_mesh;showfacets=true)
+# tri_simple_mesh = create_bc_simple_mesh(tri_mesh,tri_bc_ents,false)
+# viz(tri_simple_mesh;showfacets=true)
 tri_simple_bc   = create_bc_simple_mesh(tri_mesh,tri_bc_ents)
-viz!(tri_simple_bc;showfacets=true,color=:red)
+viz(tri_simple_bc;showfacets=true,color=:red)
 
 # Quadrilaterals
 quad_bc_ents = [6,7]
