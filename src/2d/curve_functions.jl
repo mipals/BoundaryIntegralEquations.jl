@@ -13,7 +13,7 @@ end
 function jacobian(curveFunction::ContinuousCurveLinear,coordinates)
     ξ = curveFunction.nodes;
     return (ones(1,length(ξ))) * norm(coordinates[:,1] - coordinates[:,2]);
-end 
+end
 # For Quadratic Curve Shape Functions
 function jacobian(curveFunction::ContinuousCurveQuadratic,coordinates,ξ)
     len = length(ξ)
@@ -68,30 +68,30 @@ end
                         Discontinuous Continuous Linear
                                 -- 1 ---------- 2 --
 ==========================================================================================#
-discontinuousCurveLinear(ξ,alpha) = curveLinear(ξ/alpha)
+discontinuousCurveLinear(ξ,beta) = curveLinear(ξ/beta)
 function basisFunction(curveFunction::DiscontinuousCurveLinear,ξ)
-    return discontinuousCurveLinear(ξ,curveFunction.alpha)
+    return discontinuousCurveLinear(ξ,curveFunction.beta)
 end
 # Just a simple chain rule
-discontinuousCurveLinearDerivative(ξ,alpha) = curveLinearDerivative(ξ/alpha)/alpha
+discontinuousCurveLinearDerivative(ξ,beta) = curveLinearDerivative(ξ/beta)/beta
 function basisFunctionDerivative(curveFunction::DiscontinuousCurveLinear,ξ)
-    return discontinuousCurveLinearDerivative(ξ,curveFunction.alpha)
+    return discontinuousCurveLinearDerivative(ξ,curveFunction.beta)
 end
 #==========================================================================================
                         Discontinuous Continuous Quadratic
                                 -- 1 --- 2 --- 3 --
 ==========================================================================================#
-discontinuousCurveQuadratic(ξ,alpha) = curveQuadratic(ξ/alpha);
+discontinuousCurveQuadratic(ξ,beta) = curveQuadratic(ξ/beta);
 function basisFunction(curveFunction::DiscontinuousCurveQuadratic,ξ)
-    return discontinuousCurveQuadratic(ξ,curveFunction.alpha)
+    return discontinuousCurveQuadratic(ξ,curveFunction.beta)
 end
 # Just a simple chain rule
-discontinuousCurveQuadraticDerivative(ξ,alpha) = curveQuadraticDerivative(ξ/alpha)/alpha
+discontinuousCurveQuadraticDerivative(ξ,beta) = curveQuadraticDerivative(ξ/beta)/beta
 function basisFunctionDerivative(curveFunction::DiscontinuousCurveQuadratic,ξ)
-    return discontinuousCurveQuadraticDerivative(ξ,curveFunction.alpha)
+    return discontinuousCurveQuadraticDerivative(ξ,curveFunction.beta)
 end
 #==========================================================================================
-                            Defining relevant constructors 
+                            Defining relevant constructors
 ==========================================================================================#
 ### For Linear Curve Shape Functions
 function ContinuousCurveLinear(n::Int)
@@ -115,16 +115,16 @@ function DiscontinuousCurveConstant(n::Int)
     return DiscontinuousCurveConstant(weights,nodes,derivatives,interpolation)
 end
 ### For Discontinuous Linear
-function DiscontinuousCurveLinear(n::Int,alpha=0.5773502691896258)
+function DiscontinuousCurveLinear(n::Int,beta=0.5773502691896258)
     nodes, weights = curveQuadraticQuadpoints(n)
-    interpolation  = discontinuousCurveLinear(nodes',alpha)
-    derivatives    = discontinuousCurveLinearDerivative(nodes',alpha)
-    return DiscontinuousCurveLinear(weights,nodes,derivatives,interpolation,alpha)
+    interpolation  = discontinuousCurveLinear(nodes',beta)
+    derivatives    = discontinuousCurveLinearDerivative(nodes',beta)
+    return DiscontinuousCurveLinear(weights,nodes,derivatives,interpolation,beta)
 end
 ### For Discontinuous Quadratic
-function DiscontinuousCurveQuadratic(n::Int,alpha=0.7745966692414834)
+function DiscontinuousCurveQuadratic(n::Int,beta=0.7745966692414834)
     nodes, weights = curveQuadraticQuadpoints(n)
-    interpolation  = discontinuousCurveQuadratic(nodes',alpha)
-    derivatives    = discontinuousCurveQuadraticDerivative(nodes',alpha)
-    return DiscontinuousCurveQuadratic(weights,nodes,derivatives,interpolation,alpha)
+    interpolation  = discontinuousCurveQuadratic(nodes',beta)
+    derivatives    = discontinuousCurveQuadraticDerivative(nodes',beta)
+    return DiscontinuousCurveQuadratic(weights,nodes,derivatives,interpolation,beta)
 end

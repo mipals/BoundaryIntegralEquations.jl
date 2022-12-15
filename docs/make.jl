@@ -5,7 +5,7 @@ const OUTPUT_DIR   = joinpath(@__DIR__, "src/examples")
 
 examples = [
     "2d_element_usage.jl",
-    # "3d_element_usage.jl"
+    "3d_element_usage.jl"
 ]
 
 function uncomment_objects(str)

@@ -30,14 +30,14 @@ mutable struct DiscontinuousCurveLinear{T<:AbstractFloat} <: DiscontinuousCurveF
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
-    alpha::T
+    beta::T
 end
 mutable struct DiscontinuousCurveQuadratic{T<:AbstractFloat} <: DiscontinuousCurveFunction
     weights::AbstractArray{T,1}
     gauss::AbstractArray{T,1}
     derivatives::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
-    alpha::T
+    beta::T
 end
 #==========================================================================================
                                 Show
@@ -45,7 +45,7 @@ end
 function Base.show(io::IO, ::MIME"text/plain", curve_function::CurveFunction)
     println(io, "CurveFunction Defined by:      \t $(typeof(curve_function))")
     println(io, "Number of gauss nodes:         \t $(length(curve_function.gauss))")
-    println(io, "Number of basis functions:     \t $(length(curve_function))")
+    println(io, "Number of basis functions:     \t $(number_of_shape_functions(curve_function))")
 end
 #==========================================================================================
                                 Making structs callable
@@ -117,8 +117,8 @@ get_nodal_nodes(curve_function::ContinuousCurveQuadratic)    = [-one(eltype(curv
                                                                 zero(eltype(curve_function));
                                                                  one(eltype(curve_function))]
 get_nodal_nodes(curve_function::DiscontinuousCurveConstant)  = [zero(eltype(curve_function))]
-get_nodal_nodes(curve_function::DiscontinuousCurveLinear)    = [-curve_function.alpha;
-                                                                 curve_function.alpha]
-get_nodal_nodes(curve_function::DiscontinuousCurveQuadratic) = [-curve_function.alpha;
-                                                                 zero(eltype(curve_function.alpha));
-                                                                 curve_function.alpha]
+get_nodal_nodes(curve_function::DiscontinuousCurveLinear)    = [-curve_function.beta;
+                                                                 curve_function.beta]
+get_nodal_nodes(curve_function::DiscontinuousCurveQuadratic) = [-curve_function.beta;
+                                                                 zero(eltype(curve_function.beta));
+                                                                 curve_function.beta]

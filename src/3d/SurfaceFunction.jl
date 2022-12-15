@@ -252,7 +252,7 @@ Defines a Quadrilateral with node placements         \n
 and basis functions defined as
 
 ```math
-\\mathbf{N}(u,v) = quadrilateralLinear4(u/(1-\\alpha),v/(1-\\alpha)), \\quad u,v \\in [-1,1 ]
+\\mathbf{N}(u,v) = quadrilateralLinear4(u/(1-\\beta),v/(1-\\beta)), \\quad u,v \\in [-1,1 ]
 ```
 """
 mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: DiscontinuousQuadrilateral
@@ -262,7 +262,7 @@ mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: Discontinu
     derivatives_u::AbstractArray{T,2}
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
-    alpha::T
+    beta::T
 end
 """
 Defines a Quadrilateral with node placements            \n
@@ -274,7 +274,7 @@ Defines a Quadrilateral with node placements            \n
 and basis functions defined as
 
 ```math
-\\mathbf{N}(u,v) = quadrilateralQuadraticLagrange(u/(1-\\alpha),v/(1-\\alpha)), \\quad u,v \\in [-1,1 ]
+\\mathbf{N}(u,v) = quadrilateralQuadraticLagrange(u/(1-\\beta),v/(1-\\beta)), \\quad u,v \\in [-1,1 ]
 ```
 """
 mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: DiscontinuousQuadrilateral
@@ -284,7 +284,7 @@ mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: 
     derivatives_u::AbstractArray{T,2}
     derivatives_v::AbstractArray{T,2}
     interpolation::AbstractArray{T,2}
-    alpha::T
+    beta::T
 end
 #==========================================================================================
                                     Legendre Elements
@@ -453,16 +453,16 @@ function get_nodal_nodes_v(::QuadrilateralQuadraticLagrange)
     return [-1.0;-1.0; 1.0; 1.0;-1.0; 0.0; 0.0; 0.0; 1.0]
 end
 function get_nodal_nodes_u(sf::DiscontinuousQuadrilateralLinear4)
-    return [sf.alpha-1; 1-sf.alpha; sf.alpha-1; 1-sf.alpha]
+    return [sf.beta-1; 1-sf.beta; sf.beta-1; 1-sf.beta]
 end
 function get_nodal_nodes_v(sf::DiscontinuousQuadrilateralLinear4)
-    return [sf.alpha-1; sf.alpha-1; 1-sf.alpha; 1-sf.alpha]
+    return [sf.beta-1; sf.beta-1; 1-sf.beta; 1-sf.beta]
 end
 function get_nodal_nodes_u(sf::DiscontinuousQuadrilateralQuadraticLagrange)
-    return [sf.alpha-1; 1-sf.alpha; sf.alpha-1; 1-sf.alpha; 0; sf.alpha-1; 0; 1-sf.alpha; 0]
+    return [sf.beta-1; 1-sf.beta; sf.beta-1; 1-sf.beta; 0; sf.beta-1; 0; 1-sf.beta; 0]
 end
 function get_nodal_nodes_v(sf::DiscontinuousQuadrilateralQuadraticLagrange)
-    return [sf.alpha-1; sf.alpha-1; 1-sf.alpha; 1-sf.alpha; sf.alpha-1; 0; 0; 0; 1-sf.alpha]
+    return [sf.beta-1; sf.beta-1; 1-sf.beta; 1-sf.beta; sf.beta-1; 0; 0; 0; 1-sf.beta]
 end
 """
     setInterpolationNodal!(surface_function::SurfaceFunction)

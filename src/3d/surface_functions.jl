@@ -120,15 +120,15 @@ end
                                         | 1 2 |
                                           ---
 ==========================================================================================#
-discontinuousQuadrilateralLinear4(u,v,alpha) = quadrilateralLinear4(u./(1-alpha),v./(1-alpha))
+discontinuousQuadrilateralLinear4(u,v,beta) = quadrilateralLinear4(u./(1-beta),v./(1-beta))
 function basisFunction(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
-    return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.alpha)
+    return discontinuousQuadrilateralLinear4(u,v,surfaceFunction.beta)
 end
-function discontinuousQuadrilateralLinear4Derivatives(u,v,alpha)
-    return quadrilateralLinear4Derivatives(u./(1 - alpha),v./(1 - alpha))./(1 - alpha)
+function discontinuousQuadrilateralLinear4Derivatives(u,v,beta)
+    return quadrilateralLinear4Derivatives(u./(1 - beta),v./(1 - beta))./(1 - beta)
 end
 function basisFunctionDerivative(surfaceFunction::DiscontinuousQuadrilateralLinear4,u,v)
-    return discontinuousQuadrilateralLinear4Derivatives(u,v,surfaceFunction.alpha)
+    return discontinuousQuadrilateralLinear4Derivatives(u,v,surfaceFunction.beta)
 end
 #==========================================================================================
                             DiscontinuousQuadrilateralQuadraticLagrange (COMSOL Layout)
@@ -137,15 +137,15 @@ end
                                         6  7  8
                                         1  5  2
 ==========================================================================================#
-discontinuousQuadrilateralQuadraticLagrange(u,v,alpha) = quadrilateralQuadraticLagrange(u./(1-alpha),v./(1-alpha))
+discontinuousQuadrilateralQuadraticLagrange(u,v,beta) = quadrilateralQuadraticLagrange(u./(1-beta),v./(1-beta))
 function basisFunction(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
-    return discontinuousQuadrilateralQuadraticLagrange(u,v,surfaceFunction.alpha)
+    return discontinuousQuadrilateralQuadraticLagrange(u,v,surfaceFunction.beta)
 end
-# function discontinuousQuadrilateralQuadraticLagrangeDerivative(u,v,alpha)
-#     return quadrilateralQuadraticLagrangeDerivative(u./(1.0-alpha),v./(1.0-alpha))./(1.0-alpha)
+# function discontinuousQuadrilateralQuadraticLagrangeDerivative(u,v,beta)
+#     return quadrilateralQuadraticLagrangeDerivative(u./(1.0-beta),v./(1.0-beta))./(1.0-beta)
 # end
 # function basisFunctionDerivative(surfaceFunction::DiscontinuousQuadrilateralQuadraticLagrange,u,v)
-#     return discontinuousQuadrilateralQuadraticLagrangeDerivative(u,v,surfaceFunction.alpha)
+#     return discontinuousQuadrilateralQuadraticLagrangeDerivative(u,v,surfaceFunction.beta)
 # end
 #==========================================================================================
                 QuadrilateralLegendre: See https://ieeexplore.ieee.org/document/1353496
@@ -422,29 +422,29 @@ function QuadrilateralQuadraticLagrange(n::Real,m::Real)
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return QuadrilateralQuadraticLagrange(weights,nodes_u,nodes_v,dX,dY,interpolation)
 end
-function DiscontinuousQuadrilateralConstant(n::Real,m::Real,alpha_type=:legendre)
+function DiscontinuousQuadrilateralConstant(n::Real,m::Real,beta_type=:legendre)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    alpha = get_beta_quad_linear(alpha_type)
+    beta = get_beta_quad_linear(beta_type)
     TMP = DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2))
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
     return DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,dX,dY,interpolation)
 end
-function DiscontinuousQuadrilateralLinear4(n::Real,m::Real,alpha_type=:legendre)
+function DiscontinuousQuadrilateralLinear4(n::Real,m::Real,beta_type=:legendre)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    alpha = get_beta_quad_linear(alpha_type)
-    TMP = DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    beta = get_beta_quad_linear(beta_type)
+    TMP = DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),beta)
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
-    return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+    return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,beta)
 end
-function DiscontinuousQuadrilateralQuadraticLagrange(n::Real,m::Real,alpha_type=:legendre)
+function DiscontinuousQuadrilateralQuadraticLagrange(n::Real,m::Real,beta_type=:legendre)
     nodes_u, nodes_v, weights = quadrilateralQuadpoints(n,m)
-    alpha = get_beta_quad_quadratic(alpha_type)
-    TMP = DiscontinuousQuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    beta = get_beta_quad_quadratic(beta_type)
+    TMP = DiscontinuousQuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),beta)
     interpolation           = TMP(nodes_u',nodes_v')
     dX, dY                  = TMP'(nodes_u',nodes_v')
-    return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+    return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,beta)
 end
 function DiscontinuousQuadrilateralConstant(SF::Quadrilateral)
     nodes_u = SF.gauss_u
@@ -455,21 +455,21 @@ function DiscontinuousQuadrilateralConstant(SF::Quadrilateral)
     dX, dY        = TMP'(nodes_u',nodes_v')
     return DiscontinuousQuadrilateralConstant(weights, nodes_u, nodes_v,dX,dY,interpolation)
 end
-function DiscontinuousQuadrilateralLinear4(SF::Quadrilateral,alpha)
+function DiscontinuousQuadrilateralLinear4(SF::Quadrilateral,beta)
     nodes_u = SF.gauss_u
     nodes_v = SF.gauss_v
     weights = SF.weights
-    TMP = DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    TMP = DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),beta)
     interpolation = TMP(nodes_u',nodes_v')
     dX, dY        = TMP'(nodes_u',nodes_v')
-    return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+    return DiscontinuousQuadrilateralLinear4(weights,nodes_u, nodes_v,dX,dY,interpolation,beta)
 end
-function DiscontinuousQuadrilateralQuadraticLagrange(SF::Quadrilateral,alpha)
+function DiscontinuousQuadrilateralQuadraticLagrange(SF::Quadrilateral,beta)
     nodes_u = SF.gauss_u
     nodes_v = SF.gauss_v
     weights = SF.weights
-    TMP = DiscontinuousQuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),alpha)
+    TMP = DiscontinuousQuadrilateralQuadraticLagrange(weights, nodes_u, nodes_v,rand(3,2),rand(3,2),rand(3,2),beta)
     interpolation = TMP(nodes_u',nodes_v')
     dX, dY        = TMP'(nodes_u',nodes_v')
-    return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,alpha)
+    return DiscontinuousQuadrilateralQuadraticLagrange(weights,nodes_u, nodes_v,dX,dY,interpolation,beta)
 end
