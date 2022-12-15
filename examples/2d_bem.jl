@@ -1,28 +1,28 @@
-#==========================================================================================
+#===========================================================================================
                                     Packages
-==========================================================================================#
+===========================================================================================#
 using FastGaussQuadrature, LinearAlgebra, SpecialFunctions, ForwardDiff, Plots
-#==========================================================================================
+#===========================================================================================
                                 Helper Functions
-==========================================================================================#
+===========================================================================================#
 JacMul!(j,w)    = @inbounds for i = eachindex(j) j[i]   = j[i]*w[i]                      end
 dist!(x,y,r)    = @inbounds for i = eachindex(r) r[i]   = hypot(x[1,i]-y[1],x[2,i]-y[2]) end
 jacobian!(j,n)  = @inbounds for i = eachindex(j) j[i]   = hypot(n[1,i],      n[2,i])     end
 normalize!(n,j) = @inbounds for i = eachindex(j) n[1,i] = n[1,i]/j[i];n[2,i]=n[2,i]/j[i] end
 normals!(n,dX)  = @inbounds for i = axes(n,2)    n[1,i] = -dX[2,i];   n[2,i]=dX[1,i]     end
-#==========================================================================================
+#===========================================================================================
                                 Basis Functions
-==========================================================================================#
-linear(ξ)    = [(1 .- ξ)/2; (1 .+ ξ)/2]
-quadratic(ξ) = [ξ .* (ξ .- 1)/2; 1 .- ξ .^2; ξ .* (ξ .+ 1)/2]
-constant(ξ)  = ones(eltype(ξ),1,length(ξ))
-β = gausslegendre(2)[1][end]; discLinear(ξ)    = linear(ξ/β)
-δ = gausslegendre(3)[1][end]; discQuadratic(ξ) = quadratic(ξ/δ)
-# Derivatives this is fine for smaller problems. Inefficient for larger computations.
-basisFunctionDerivative(func,ξ) = hcat(ForwardDiff.derivative.(func,ξ)...)
-#==========================================================================================
+===========================================================================================#
+linear(u)    = [(1 .- u)/2; (1 .+ u)/2]
+quadratic(u) = [u .* (u .- 1)/2; 1 .- u .^2; u .* (u .+ 1)/2]
+constant(u)  = ones(eltype(u),1,length(u))
+β = gausslegendre(2)[1][end]; discLinear(u)    = linear(u/β)
+δ = gausslegendre(3)[1][end]; discQuadratic(u) = quadratic(u/δ)
+# Derivatives - this is fine for smaller problems. Inefficient for larger computations.
+basisFunctionDerivative(func,u) = hcat(ForwardDiff.derivative.(func,u)...)
+#===========================================================================================
                                     Kernels
-==========================================================================================#
+===========================================================================================#
 # Green's function
 G!(k,r,int) = @inbounds for i = eachindex(r) int[i] = im/4*hankelh1(0,k*r[i]) end
 # Normal derivative of Green's function
@@ -40,9 +40,9 @@ function C!(x,y,n,r,int)
     end
     return int
 end
-#==========================================================================================
+#===========================================================================================
                             Mesh interpolation routine
-==========================================================================================#
+===========================================================================================#
 function meshInterpolation!(Fslice,Gslice,Cslice,elementInterpolation,elementDerivatives,
                             physicsInterpolation,weights,
                             coordinates,source,k,r,interpolation,dX,normals,jacobian,integrand)
@@ -64,15 +64,18 @@ function meshInterpolation!(Fslice,Gslice,Cslice,elementInterpolation,elementDer
     C!(interpolation,source,normals,r,integrand)            # Evaluate G₀
     Cslice[1] += dot(integrand,jacobian)                    # Integration of G₀
 end
-#==========================================================================================
+#===========================================================================================
                                    Assembly
-==========================================================================================#
+===========================================================================================#
 function assemble(coordinates,topology,k,n;interior=false,order=-1,fieldPoints=[])
     # Defining correct interpolation of geometry and physics (this is a mess. Sorry)
-    physicsTopology,sources  = (order ∉ [0,1,2] ? (topology,coordinates) : createPhysics(order,topology,coordinates))
+    physicsTopology,sources  = (order ∉ [0,1,2] ? (topology,coordinates) :
+                                        createPhysics(order,topology,coordinates))
     fieldPoints          = (isempty(fieldPoints) ? sources : fieldPoints)
-    basisFunction(ξ)     = (size(topology,1) == 2 ? linear(ξ) : quadratic(ξ))
-    physicsFunction(ξ)   = (order ∉ [0,1,2] ? basisFunction(ξ) : (order == 0 ? discConstant(ξ) : (order == 1 ? discLinear(ξ) : discQuadratic(ξ))))
+    basisFunction(u)     = (size(topology,1) == 2 ? linear(u) : quadratic(u))
+    physicsFunction(u)   = (order ∉ [0,1,2] ? basisFunction(u) :
+                           (order == 0 ? discConstant(u) :
+                           (order == 1 ? discLinear(u) : discQuadratic(u))))
     # Quadrature points
     nodes,weights        = gausslegendre(n)
     # Element/geometry interpolation
@@ -107,11 +110,11 @@ function assemble(coordinates,topology,k,n;interior=false,order=-1,fieldPoints=[
     end
     return F,G,(interior ? C : 1.0 .+ C)
 end
-#==========================================================================================
+#===========================================================================================
                                         Meshing
-==========================================================================================#
+===========================================================================================#
 function createPhysics(ord,topology,coordinates)
-    bF(ξ) = (size(topology,1) == 2 ? linear(ξ) : quadratic(ξ))
+    bF(u) = (size(topology,1) == 2 ? linear(u) : quadratic(u))
     physicsTopology = reshape(collect(1:(ord+1)*size(topology,2)), ord+1, size(topology,2))
     sources         = zeros(2,(ord+1)*size(topology,2))
     geometryElement = (ord == 0 ? bF(0) : (ord == 1 ? [bF(-β) bF(β)] : [bF(-δ) bF(0) bF(δ)]))
@@ -127,10 +130,10 @@ function createTopology(ord,nElements)
     for i = 1:ord+1; top[i,1:length(i:ord:ord*nElements)] = i:ord:ord*nElements end
     return top
 end
-#==========================================================================================
+#===========================================================================================
                             Infinite Cylinder Helper Functions
                 This for the analytical solution of an infinite cylinder
-==========================================================================================#
+===========================================================================================#
 pressure(mn,ka) = (mn == 0 ? atan(-besselj(1,ka)/bessely(1,ka)) :
             atan((besselj(mn-1,ka)-besselj(mn+1,ka))/(bessely(mn+1,ka)-bessely(mn-1,ka))))
 function createCircle(topology,radius=1.0)
@@ -146,40 +149,36 @@ function cylscat(ϕ,ka,nterm=10)
     end
     return IntI + IntS
 end
-#==========================================================================================
+#===========================================================================================
         Test case: Scattering of an infinite cylinder with hard boundaries (v=0 on ∂Ω)
-==========================================================================================#
-# Physical properties
-freq = 600.0    # Frequency of interest [Hertz]
+===========================================================================================#
+freq = 1000.0    # Frequency of interest [Hertz]
 c = 340.0       # Speed up sound [m/s]
 k = 2*π*freq/c  # Wavenumber [m^(-1)]
 
-# geometryOrder: Denotes the order of the geometry
-#  1 = Continuous Linear Elements
-#  2 = Continuous Quadratic Elements
-geometryOrder = 2
+# geometryOrder: Denotes the order of the geometry.
+#  1 = Linear Elements      NB! Linear geometry is not good approximating a cylinder
+#  2 = Quadratic Elements
+geometryOrder = 1
 
 # physicsOrder: Denotes the order of the physics
 # -1 = Same as geometry
 #  0 = Discontinuous Constant Elements
 #  1 = Discontinuous Linear Elements
 #  2 = Discontinuous Quadratic Elements
-physicsOrder = 2
+physicsOrder = 1
 
 # Setting the number of elements
 # A rule of thumb says 6 elements per wavelength
-el_wl = 6*freq/c
+el_wl = 20*freq/c
 # The circumference of a circle is 2π. We can compute the number of elements required as
 nElements = Int(ceil(el_wl*2π))
 # nElements = 150
-# NOTE: You will see problems for linear geoemtry elements.
-# Theese errors are simply because the approximation of the cylinder is not good enough,
-# and not because the number of elements can not describe the underlying physics.
 
 ### Actual BEM computations
 topology    = createTopology(geometryOrder,nElements)   # Create a topology matrix
 coordinates = createCircle(topology)                    # Create the coordinates of the mesh
-F,G,C       = assemble(coordinates,topology,k,5;order=physicsOrder) # Assemble BEM matrices
+F,G,C       = assemble(coordinates,topology,k,4;order=physicsOrder) # Assemble BEM matrices
 # t1=createPhysics(-physicsOrder,topology,coordinates)[2]
 # Collocation points depend on the physics
 src = (physicsOrder ∉ [0,1,2] ? coordinates : createPhysics(physicsOrder,topology,coordinates)[2])
@@ -198,16 +197,3 @@ scatter!(θ,abs.(ps),label="BEM")
 title!("Frequency = $(freq)")
 xlabel!("Angle")
 ylabel!("|p|")
-
-# notes
-nodes,weights  = gausslegendre(20)
-m1 = [1;0.0]
-m2 = [1.5;0.5]
-m3 = [1;1.0]
-coordinates = [m1 m2 m3]
-elementInterpolation = quadratic(nodes')
-interpolation = similar(coordinates*elementInterpolation)
-mul!(interpolation,coordinates,elementInterpolation)
-scatter(coordinates[1,:],coordinates[2,:])
-plot!(interpolation[1,:],interpolation[2,:])
-scatter!(interpolation[1,:],interpolation[2,:])
