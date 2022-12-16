@@ -272,7 +272,7 @@ function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_t
     # The near-field correction is here set to the zero matrix. Warn the user.
     @warn "No-near field correction computed"
     if isempty(integral_free_term)
-        nearfield_correction = ones(eltype(zk),N)/2
+        nearfield_correction = Diagonal(ones(eltype(zk),N)/2)
     elseif length(integral_free_term) == M
         nearfield_correction = Diagonal(integral_free_term)
     end
@@ -305,7 +305,7 @@ function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
     tmp_weights = zeros(eltype(zk),3,length(weights))
     # If not set by the user set the integral free term equal to a half
     if isempty(integral_free_term)
-        nearfield_correction = ones(eltype(zk),M)/2
+        nearfield_correction = Diagonal(ones(eltype(zk),N)/2)
     elseif length(integral_free_term) == M
         nearfield_correction = Diagonal(integral_free_term)
     end
