@@ -164,3 +164,52 @@ function cylscat(ϕ,ka,nterm=10)
     end
     return IntI + IntS
 end
+
+
+freq = 100.0    # Frequency of interest [Hertz]
+c = 340.0       # Speed up sound [m/s]
+k = 2*π*freq/c  # Wavenumber [m^(-1)]
+
+# geometryOrder: Denotes the order of the geometry.
+
+# physicsOrder: Denotes the order of the physics
+# -2 = Continuous Quadratic
+# -1 = Continuous Linear
+#  0 = Discontinuous Constant Elements
+#  1 = Discontinuous Linear Elements
+#  2 = Discontinuous Quadratic Elements
+physicsOrder = 0
+
+# Setting the number of elements
+# A rule of thumb says 6 elements per wavelength
+el_wl = 40*freq/c
+# The circumference of a circle is 2π. We can compute the number of elements required as
+nElements = Int(ceil(el_wl*2π))
+# Number of geometric points
+N  = 19
+
+coordinates = createCircle(collect(1:N-1))
+coordinates = [coordinates coordinates[:,1]]
+spline = ParametricSpline(1:size(coordinates,2),coordinates;periodic=true)
+Nspline = size(spline.c,2)
+n_gauss = 10
+# assemble(spline,k,n;interior=false,gOn=true,fOn=true,cOn=true,
+#                 physicsOrder=-1,fieldPoints=[],nElements=10,N=10)
+F,_,C,src    = assemble(spline,k,n_gauss;interior=false,gOn=false,fOn=true,cOn=true,
+                            physicsOrder=-1,nElements=nElements,N=N)
+
+pIncident   = exp.(im*k*src[1,:])
+# diag(C)p = G*v - F*p + pIncident
+# With boundary condition v=0 we have that: p = (diag(C) + F)\pIncident
+ps = (F + Diagonal(C))\pIncident
+
+# Compute angles of the collocation points
+θ  = angle.(src[1,:] + im*src[2,:]); θ[θ .< 0] .+= 2π
+# Compute analytical solution
+pA = cylscat(θ,k,150)
+# Plot Results
+plot(θ,abs.(pA),label="Analytical")
+scatter!(θ,abs.(ps),label="BEM")
+title!("Frequency = $(freq)")
+xlabel!("Angle")
+ylabel!("|p|")

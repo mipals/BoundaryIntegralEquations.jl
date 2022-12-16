@@ -30,11 +30,11 @@ import WGLMakie as wgl
 # Triangles
 tri_bc_ents = [6,7,10] .- 1
 # Loading triangular mesh
-# tri_mesh_file = "examples/meshes/calibrationplate"
-# tri_mesh = load3dTriangularComsolMesh(tri_mesh_file)
+tri_mesh_file = "examples/meshes/calibrationplate"
+tri_mesh = load3dTriangularComsolMesh(tri_mesh_file)
 # Plotting entities in `bc_ents` red
-# tri_simple_mesh = create_bc_simple_mesh(tri_mesh,tri_bc_ents,false)
-# viz(tri_simple_mesh;showfacets=true)
+tri_simple_mesh = create_bc_simple_mesh(tri_mesh,tri_bc_ents,false)
+viz(tri_simple_mesh;showfacets=true)
 tri_simple_bc   = create_bc_simple_mesh(tri_mesh,tri_bc_ents)
 viz(tri_simple_bc;showfacets=true,color=:red)
 
