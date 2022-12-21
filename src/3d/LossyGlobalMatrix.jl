@@ -69,7 +69,9 @@ Computes the Block matrix corresponding to the reduced lossy system.
 If `blockoutput=false` returns sparse matrix.
 If `blockoutput=true` returns a `LossyBlockMatrix` struct used for iterative solvers
 """
-function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=true,
+function LossyGlobalOuter(mesh::Mesh,freq;
+                            progress=true,
+                            depth=1,sparse_assembly=true,exterior=true,
                             m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
     if (typeof(mesh.physics_function) <: DiscontinuousTriangularConstant)
         ArgumentError("Constant elements will have a tangential derivative equal to zero.")
@@ -88,12 +90,13 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
     # Defining Diagonal Entries
     one = ones(nSource)/2
     # Thermal matrices
-    println("Thermal Matrices:")
-    Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;sparse=sparse_assembly,depth=depth);
+    if progress; println("Thermal Matrices:"); end
+    Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;
+                        sparse=sparse_assembly,depth=depth,progress=progress);
     Aₕ = (exterior ?  -Fₕ + Diagonal(one) : Fₕ - Diagonal(C₀))
     # Viscous matrices
-    println("Viscous matrices:")
-    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=sparse_assembly,depth=depth);
+    if progress; println("Viscous matrices:"); end
+    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=sparse_assembly,depth=depth,progress=progress);
     Aᵥ = (exterior ?  -Fᵥ + Diagonal(one) : Fᵥ - Diagonal(C₀))
     ### Computing tangential derivatives
     Dx,Dy,Dz = shape_function_derivatives(mesh;global_derivatives=true)
@@ -118,6 +121,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
     tmp2 = zeros(eltype(Hv),3nSource) # Are not used right now
     inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr,tmp1,tmp2)
 
+    if progress; println("Acoustic Matrices:"); end
     if fmm_on
         Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
         Ha = FMMHOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
@@ -129,8 +133,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
                                     inner,
                                     ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
     else
-        println("Acoustic Matrices:")
-        Fₐ,Bₐ,C₀ = assemble_parallel!(mesh,kₐ,sources;m=m,n=n)
+        Fₐ,Bₐ,C₀ = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
         Aₐ = (exterior ? Fₐ + Diagonal(C₀) : Fₐ - Diagonal(C₀))
         outer = LossyGlobalOuter(nSource,
                         Aₐ,Bₐ,

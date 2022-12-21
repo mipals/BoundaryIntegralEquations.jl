@@ -197,8 +197,8 @@ function FMMGOperator(mesh,k;eps=1e-6,n=3,nearfield=true,offset=0.2,depth=1)
     # Computing near-field correction
     if nearfield
         _,C = partial_assemble_parallel!(mesh,zk,targets,shape_function;fOn=false,depth=depth)
-        _,S = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,fOn=false,progress=false,
-        offset=offset);
+        _,S = assemble_parallel!(mesh,zk,targets;
+                                sparse=true,depth=depth,fOn=false,progress=false,offset=offset);
         nearfield_correction = - C + S
     else
         nearfield_correction = spzeros(ComplexF64,N,N)
@@ -281,7 +281,7 @@ function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_t
                             nearfield_correction,tmp,tmp_weights)
 end
 function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
-                                integral_free_term = [])
+                                integral_free_term = [],progress=false)
     # Creating physics and geometry for the FMM operator
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
@@ -312,7 +312,7 @@ function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
     # Computing near-field correction
     if nearfield
         C,_ = partial_assemble_parallel!(mesh,zk,targets,shape_function;gOn=false,depth=depth)
-        S,_ = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,gOn=false,offset=offset);
+        S,_ = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,gOn=false,offset=offset,progress=progress);
         nearfield_correction += - C + S
     end
     return FMMHOperator(N,M,zk,eps,targets,sources,dipvecs,physics_function.interpolation,

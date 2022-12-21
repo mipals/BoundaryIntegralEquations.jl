@@ -10,7 +10,6 @@ import IntegralEquations: set_nodal_interpolation!
 #==========================================================================================
                                     Creating Tests
 ==========================================================================================#
-
 @testset "Linear Triangular Shape Functions" begin
     linear_triangular = TriangularLinear(3,3)
     # Weights should add to area of triangle
@@ -117,6 +116,7 @@ end
     # Checking if nodal set_nodal_interpolation! works as intended
     @test disc_constant_quad.interpolation ≈ I
 end
+
 @testset "Discontinuous Quadrilateral Linear Shape Functions" begin
     disc_linear_quad = DiscontinuousQuadrilateralLinear4(4,4)
     # Weights should add to area of quad
@@ -126,6 +126,7 @@ end
     # Checking if nodal set_nodal_interpolation! works as intended
     @test disc_linear_quad.interpolation ≈ I
 end
+
 @testset "Discontinuous Quadrilateral Quadratic Shape Functions" begin
     disc_quadratic_quad = DiscontinuousQuadrilateralQuadraticLagrange(4,4)
     # Weights should add to area of quad

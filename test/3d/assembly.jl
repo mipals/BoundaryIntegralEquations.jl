@@ -15,9 +15,8 @@ import IntegralEquations: incoming_wave, plane_wave_scattering_sphere
     k     = 2*π*freq/c                              # Wavenumber                [1/m]
     angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
     radius = 1.0                                    # Radius of sphere_1m       [m]
-    # Computing incident pressure
-    # Relative path from the "runtests.jl" file (not the "meshing.jl" file)
-    mesh_file = "../examples/meshes/sphere_1m"
+    #? Computing incident pressure
+    mesh_file = "../examples/meshes/sphere_1m" #! Relative path from the "runtests.jl" file
     geometry_orders = [:linear,:quadratic]
     physics_orders = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
     errors = [0.037 0.0063 0.0073 0.0041 0.004;
@@ -27,7 +26,6 @@ import IntegralEquations: incoming_wave, plane_wave_scattering_sphere
             continue
         end
         mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=go,physics_order=po)
-        # The elements described by 'topology' should match the number of shape functions
         #===================================================================================
                                         Assembling
         ===================================================================================#
@@ -51,9 +49,7 @@ end
     k     = 2*π*freq/c                              # Wavenumber                [1/m]
     angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
     radius = 1.0                                    # Radius of sphere_1m       [m]
-    # Computing incident pressure
-    # Relative path from the "runtests.jl" file (not the "meshing.jl" file)
-    mesh_file = "../examples/meshes/quad_sphere"
+    mesh_file = "../examples/meshes/quad_sphere" #! Relative path from the "runtests.jl" file
     geometry_orders = [:linear,:quadratic]
     physics_orders  = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
     errors = [0.012 0.012 0.014 0.009 0.008;
