@@ -75,8 +75,8 @@ function LossyGlobalOuter(mesh::Mesh,freq;depth=1,sparse_assembly=true,exterior=
         ArgumentError("Constant elements will have a tangential derivative equal to zero.")
     end
     # Computing physical constants
+    # rho,c,kp,ka,kh,kv,tau_a,tau_h,phi_a,phi_h,eta,mu
     ρ,c,kₚ,kₐ,kₕ,kᵥ,τₐ,τₕ,ϕₐ,ϕₕ,η,μ = visco_thermal_constants(;freq=freq,S=S)
-    # Computing boundary layer thickness (approximate)
 
     ### Extracting our sources
     sources = mesh.sources
@@ -159,6 +159,5 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     y += A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) +
                A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
                A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
-
     return y
 end
