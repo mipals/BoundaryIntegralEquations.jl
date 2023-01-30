@@ -1,6 +1,3 @@
-using Pkg
-Pkg.add(url="https://github.com/flatironinstitute/FMM3D.git", subdir="julia")
-
 using Documenter, IntegralEquations, Literate
 
 const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")

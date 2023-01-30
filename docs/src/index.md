@@ -30,6 +30,3 @@ quad_mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=:linear)
 simple_quad_mesh = create_simple_mesh(quad_mesh)
 viz(simple_quad_mesh;showfacets=true)
 ```
-
-
-
