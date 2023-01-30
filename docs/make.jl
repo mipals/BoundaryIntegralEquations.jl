@@ -47,3 +47,7 @@ makedocs(
     )
 
     # servedocs(skip_dir=joinpath("docs","src","examples"))
+
+deploydocs(
+    repo = "github.com/mipals/IntegralEquations.jl.git",
+)
