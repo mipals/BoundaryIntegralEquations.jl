@@ -273,7 +273,7 @@ function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_t
     @warn "No-near field correction computed"
     if isempty(integral_free_term)
         nearfield_correction = Diagonal(ones(eltype(zk),N)/2)
-    elseif length(integral_free_term) == M
+    elseif length(integral_free_term) == N
         nearfield_correction = Diagonal(integral_free_term)
     end
     # FMM3D uses a Greens function that does not divide by 4π.

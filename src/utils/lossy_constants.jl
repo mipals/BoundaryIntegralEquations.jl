@@ -16,7 +16,7 @@ function visco_thermal_constants(;freq=1000,S=-1,pa=101325.0,t=20.0,Hr=50.0)
     kh2 = S*im*kp ./ (lh * (1.0 .+ S*im*kp*lvhp))
     kv2 = S*im*kp/lvp
 
-    # The result of the square 
+    # The result of the square
     ka = sqrt(ka2)
     kh = sqrt(kh2)
     kv = sqrt(kv2)
@@ -32,6 +32,7 @@ function visco_thermal_constants(;freq=1000,S=-1,pa=101325.0,t=20.0,Hr=50.0)
     return rho,c,kp,ka,kh,kv,tau_a,tau_h,phi_a,phi_h,eta,mu
 
 end
+
 function compute_k1_k2(freq,S=-1)
     rho,c,cf,gamma,nu,alfa,Cp,Cv,lambda,beta = ambient_to_properties(freq)
     ρ,c,kₚ,kₐ,kₕ,kᵥ,τₐ,τₕ,ϕₐ,ϕₕ,η,μ = visco_thermal_constants(;freq=freq,S=S)

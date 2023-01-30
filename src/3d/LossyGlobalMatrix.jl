@@ -70,7 +70,7 @@ If `blockoutput=false` returns sparse matrix.
 If `blockoutput=true` returns a `LossyBlockMatrix` struct used for iterative solvers
 """
 function LossyGlobalOuter(mesh::Mesh,freq;
-                            progress=true,
+                            progress=true,integral_free_term=[],
                             depth=1,sparse_assembly=true,exterior=true,
                             m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
     if (typeof(mesh.physics_function) <: DiscontinuousTriangularConstant)
@@ -87,17 +87,36 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     nSource = size(sources,2)
 
     ### Assembling the 3 BEM systems
-    # Defining Diagonal Entries
-    one = ones(nSource)/2
+    if progress; @info("Acoustic Matrices:"); end
+    if fmm_on
+        # Defining Diagonal Entries
+        if isempty(integral_free_term)
+            C0 = Diagonal(ones(eltype(kₕ),nSource)/2)
+        elseif length(integral_free_term) == nSource
+            C0 = Diagonal(integral_free_term)
+        elseif !(length(integral_free_term) == nSource)
+            throw(DimensionMismatch("Length of user-specified integral free terms,"*
+            "$(length(integral_free_term)), is not equal to the number of sources, $(nSource)"))
+        end
+        Ga = FMMGOperator(mesh,kₐ;
+                        n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = FMMHOperator(mesh,kₐ;
+                        integral_free_term=integral_free_term,
+                        n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
+    else
+        Ha,Ga,C = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
+        C0 = (exterior ? Diagonal(C) : Diagonal(1.0 - C))
+        Ha = (exterior ? Ha + C0 : Ha - C0)
+    end
     # Thermal matrices
-    if progress; println("Thermal Matrices:"); end
-    Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;
+    if progress; @info("Thermal Matrices:"); end
+    Hh,Gh = assemble_parallel!(mesh,kₕ,sources;
                         sparse=sparse_assembly,depth=depth,progress=progress);
-    Aₕ = (exterior ?  -Fₕ + Diagonal(one) : Fₕ - Diagonal(C₀))
+    Hh = (exterior ?  Hh + C0 : -Hh + C0)
     # Viscous matrices
-    if progress; println("Viscous matrices:"); end
+    if progress; @info("Viscous matrices:"); end
     Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=sparse_assembly,depth=depth,progress=progress);
-    Aᵥ = (exterior ?  -Fᵥ + Diagonal(one) : Fᵥ - Diagonal(C₀))
+    Aᵥ = (exterior ?  Fᵥ + C0 : -Fᵥ + C0)
     ### Computing tangential derivatives
     Dx,Dy,Dz = shape_function_derivatives(mesh;global_derivatives=true)
 
@@ -121,29 +140,13 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     tmp2 = zeros(eltype(Hv),3nSource) # Are not used right now
     inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr,tmp1,tmp2)
 
-    if progress; println("Acoustic Matrices:"); end
-    if fmm_on
-        Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
-        Ha = FMMHOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield,depth=depth)
-        outer = LossyGlobalOuter(nSource,
-                                    Ha,Ga,
-                                    Aₕ,Bₕ,
-                                    Hv,Gv,
-                                    Nd,Dc,Dr,
-                                    inner,
-                                    ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
-    else
-        Fₐ,Bₐ,C₀ = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
-        Aₐ = (exterior ? Fₐ + Diagonal(C₀) : Fₐ - Diagonal(C₀))
-        outer = LossyGlobalOuter(nSource,
-                        Aₐ,Bₐ,
-                        Aₕ,Bₕ,
+    return LossyGlobalOuter(nSource,
+                        Ha,Ga,
+                        Hh,Gh,
                         Hv,Gv,
                         Nd,Dc,Dr,
                         inner,
                         ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
-    end
-    return outer
 end
 #==========================================================================================
     Defining relevant routines for LinearMaps.jl to work on the LossyBlockMatrix format
