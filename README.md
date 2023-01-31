@@ -1,11 +1,9 @@
 # BoundaryIntegralEquations.jl
 
 | **Documentation**   |  **Tests**     | **CodeCov**  |
-|:--------:|:---------------:|:-------:|:---:|
+|:--------:|:---------------:|:-------:|
 |[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)|
 
-[![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)
 
 The BoundaryIntegralEquations.jl provides the basic building blocks for the Boundary Element Method (BEM). Currently, it only supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
 
