@@ -2,7 +2,7 @@
                             Adding Related Packages
 ==========================================================================================#
 using LinearAlgebra
-using IntegralEquations
+using BoundaryIntegralEquations
 using Plots
 using IterativeSolvers
 #==========================================================================================
@@ -49,7 +49,7 @@ normals  = mesh.normals
 #===========================================================================================
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
-LGM = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=false,depth=1,n=3)
+LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=false,depth=1,n=3)
 #* Creating the right-hand side
 id = 1
 if id == 1
@@ -75,7 +75,7 @@ rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbo
 
 #* Generating analytical solution
 pasAN, v_rAN, v_thetaAN, v_rAN_A, v_thetaAN_A, v_rAN_V, v_thetaAN_V =
-                IntegralEquations.sphere_first_order(kₐ,c,ρ,radius,u₀,coordinates;S=1,kv=kᵥ)
+                BoundaryIntegralEquations.sphere_first_order(kₐ,c,ρ,radius,u₀,coordinates;S=1,kv=kᵥ)
 ang_axis = coordinates[:,2]*180.0/pi
 perm = sortperm(ang_axis)
 

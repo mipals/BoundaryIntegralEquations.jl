@@ -1,11 +1,11 @@
 #==========================================================================================
                                 Using relevant packages
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using IterativeSolvers
 using Test
-import IntegralEquations: set_nodal_interpolation!
+import BoundaryIntegralEquations: set_nodal_interpolation!
 #==========================================================================================
                                 Continuous Segments
 ==========================================================================================#

@@ -1,7 +1,7 @@
 #==========================================================================================
                                 Visualization of full mesh
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using MeshViz
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(1000, 1000))
@@ -23,7 +23,7 @@ viz(simple_quad_mesh;showfacets=true)
 #==========================================================================================
                                 Visualization of boundary conditions
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using MeshViz
 import WGLMakie as wgl
 
@@ -53,7 +53,7 @@ viz!(quad_simple_bc;showfacets=true,color=:red)
 #==========================================================================================
                                 Visualization of boundary conditions
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using MeshViz
 import WGLMakie as wgl
 

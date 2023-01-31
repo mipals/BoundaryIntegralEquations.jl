@@ -3,7 +3,7 @@
 # ```math
 #   \mathbf{N}(u)
 # ```
-# The following is s brief explanation of how the `CurveFunction`s are implemented in `IntegralEquations.jl`. In short the `SurfaceFunction` is contain the following information of the surface element in local coordinates
+# The following is s brief explanation of how the `CurveFunction`s are implemented in `BoundaryIntegralEquations.jl`. In short the `SurfaceFunction` is contain the following information of the surface element in local coordinates
 # * `gauss`: Vector of $u$-values of the Gaussian points.
 # * `weights`: Vector of Gaussian weights.
 # * `interpolation`: Matrix with columns equal to the basis functions evauluated at the Gaussian nodes, i.e. $\mathbf{N}(u_i)$.
@@ -13,7 +13,7 @@
 # First we import relevant packages
 using Plots
 using LinearAlgebra
-using IntegralEquations
+using BoundaryIntegralEquations
 using FastGaussQuadrature
 # # Linear Curve
 curve_linear = ContinuousCurveLinear(10)

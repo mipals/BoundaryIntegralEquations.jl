@@ -2,7 +2,7 @@
                             Adding Related Packages
 ==========================================================================================#
 using LinearAlgebra
-using IntegralEquations
+using BoundaryIntegralEquations
 using Plots
 using IterativeSolvers
 #==========================================================================================
@@ -49,8 +49,8 @@ normals  = mesh.normals
 #===========================================================================================
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
-LGM_on  = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true, depth=1,n=3,exterior=true)
-LGM_off = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=false,depth=1,n=3,exterior=true)
+LGM_on  = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true, depth=1,n=3,exterior=true)
+LGM_off = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=false,depth=1,n=3,exterior=true)
 #===========================================================================================
                                         Tests
 ===========================================================================================#

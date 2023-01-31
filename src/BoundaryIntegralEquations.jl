@@ -1,4 +1,4 @@
-module IntegralEquations
+module BoundaryIntegralEquations
 
 #==========================================================================================
                         Importing Base functions to overload

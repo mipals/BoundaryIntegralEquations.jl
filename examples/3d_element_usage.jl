@@ -3,7 +3,7 @@
 # ```math
 #   \mathbf{N}(u,v)
 # ```
-# The following is s brief explanation of how the `SurfaceFunction`s are implemented in `IntegralEquations.jl`. In short the `SurfaceFunction` is contain the following information of the surface element in local coordinates
+# The following is s brief explanation of how the `SurfaceFunction`s are implemented in `BoundaryIntegralEquations.jl`. In short the `SurfaceFunction` is contain the following information of the surface element in local coordinates
 # * `gauss_u`: Vector of $u$-values of the Gaussian points.
 # * `gauss_v`: Vector $v$-values of the Gaussian points.
 # * `weights`: Vector of Gaussian weights.
@@ -14,7 +14,7 @@
 # First we import relevant packages
 using Plots
 using LinearAlgebra
-using IntegralEquations
+using BoundaryIntegralEquations
 # # Triangles
 # The simplest `SurfaceFunction` is `TriangularLinear` which defines a linear interpolation of a triangle. A `TriangularLinear` with 3 gaussian points is created as follows
 linear_triangular = TriangularLinear(3)
@@ -23,7 +23,7 @@ scatter(linear_triangular.gauss_u, linear_triangular.gauss_v,
         label = "Gauss Points", aspect_ratio = :equal, xlabel="u",ylabel="v")
 # While the Gaussian points are important for the integral of the local surfaces the nodal points of the reference triangle are important when computing normals and derivatives at the nodal positions, i.e. the positions where only one basis function is equal 1 and the rest are 0. This can be done by using the function `set_nodal_interpolation!` that is defined on all `SurfaceFunction`
 nodal_triangle = TriangularLinear(3)
-IntegralEquations.set_nodal_interpolation!(nodal_triangle) # Should be the identity matrix
+BoundaryIntegralEquations.set_nodal_interpolation!(nodal_triangle) # Should be the identity matrix
 # Using this we can plot the full reference triangle
 scatter!(nodal_triangle.gauss_u, nodal_triangle.gauss_v,
         label="Nodes")
@@ -79,7 +79,7 @@ scatter(linear_quadrilateral.gauss_u, linear_quadrilateral.gauss_v,
     legend=:outertop,label = "Gauss Points", aspect_ratio = :equal, xlabel="u",ylabel="v")
 # While the Gaussian points are important for the integral of the local surfaces the nodes of the reference triangle are important when computing normals and derivatives at the nodal positions. As such the function `set_nodal_interpolation!` is defined on all `SurfaceFunction`s
 nodal_quadrilateral = QuadrilateralLinear4(3,3)
-IntegralEquations.set_nodal_interpolation!(nodal_quadrilateral);
+BoundaryIntegralEquations.set_nodal_interpolation!(nodal_quadrilateral);
 # Using this we can plot the full reference quadrilateral
 scatter!(nodal_quadrilateral.gauss_u, nodal_quadrilateral.gauss_v,
         label="Nodes")
@@ -124,7 +124,7 @@ scatter(disclinear_triangular.gauss_u, disclinear_triangular.gauss_v,
         label = "Gauss Points", aspect_ratio = :equal, xlabel="u",ylabel="v")
 # Again the most interesting part is the nodal positions - which in this case is now inside of the element
 disc_nodal_triangle = DiscontinuousTriangularLinear(disclinear_triangular,beta)
-IntegralEquations.set_nodal_interpolation!(disc_nodal_triangle) # Should be the identity matrix
+BoundaryIntegralEquations.set_nodal_interpolation!(disc_nodal_triangle) # Should be the identity matrix
 # Using this we can plot the full reference triangle
 scatter!(disc_nodal_triangle.gauss_u, disc_nodal_triangle.gauss_v,
         label="Nodes")

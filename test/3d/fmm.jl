@@ -2,7 +2,7 @@
                                 Using relevant packages
 ==========================================================================================#
 using Test
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using IterativeSolvers
 
@@ -18,8 +18,8 @@ using IterativeSolvers
             continue
         end
         mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=go,physics_order=po)
-        interpolations = IntegralEquations.interpolate_elements(mesh;n=2,m=2);
-        interp,weights,normals = IntegralEquations.unroll_interpolations(interpolations);
+        interpolations = BoundaryIntegralEquations.interpolate_elements(mesh;n=2,m=2);
+        interp,weights,normals = BoundaryIntegralEquations.unroll_interpolations(interpolations);
         if go == :linear
             @test 4π ≈ sum(weights) atol=1e-1
         else
@@ -43,7 +43,7 @@ end
 #         radius = 1.0                                    # Radius of sphere_1m       [m]
 #         # Computing incident pressure
 #         angles = [π/2 0.0]
-#         pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
+#         pI = BoundaryIntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
 #         Af = FMMHOperator(mesh,zk)
 #         @time Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,gOn=false,sparse=false);
 #         Ap = Fp + Diagonal(1.0 .- Cp);

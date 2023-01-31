@@ -1,4 +1,4 @@
-name = "IntegralEquations"
+name = "BoundaryIntegralEquations"
 uuid = "ebf54fa4-afc0-484a-8ee1-77aaf84d33dc"
 authors = ["Mikkel Paltorp Schmitt"]
 version = "0.1.0"

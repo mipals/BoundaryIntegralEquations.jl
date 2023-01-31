@@ -1,11 +1,11 @@
 #==========================================================================================
                                 Using relevant packages
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using Test
-import IntegralEquations: tangents!, number_of_shape_functions
-import IntegralEquations: shape_function_derivatives
+import BoundaryIntegralEquations: tangents!, number_of_shape_functions
+import BoundaryIntegralEquations: shape_function_derivatives
 #==========================================================================================
                                     Creating Tests
 ==========================================================================================#

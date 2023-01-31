@@ -1,9 +1,13 @@
-# IntegralEquations.jl
+# BoundaryIntegralEquations.jl
 
-[![Build Status](https://github.com/mipals/IntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/IntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/mipals/IntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/IntegralEquations.jl)
+| **Documentation**   |  **Tests**     | **CodeCov**  |
+|:--------:|:---------------:|:-------:|:---:|
+|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)|
 
-The IntegralEquations.jl provides the basic building blocks for the Boundary Element Method (BEM). Currently, it only supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
+[![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)
+
+The BoundaryIntegralEquations.jl provides the basic building blocks for the Boundary Element Method (BEM). Currently, it only supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
 
 $$
 c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n} }p(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x} = \mathrm{i}\rho ck\int_\Gamma G(\mathbf{x},\mathbf{y})v_s(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x}.

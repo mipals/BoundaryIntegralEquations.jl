@@ -1,6 +1,6 @@
-# IntegralEquations.jl Documentation
+# BoundaryIntegralEquations.jl Documentation
 
-`IntegralEquations.jl` provides the basis functionalities of boundary element methods.
+`BoundaryIntegralEquations.jl` provides the basis functionalities of boundary element methods.
 
 The package is focused on solving the Helmholtz equation for acoustical problems. 
 
@@ -16,7 +16,7 @@ Mke.set_theme!(resolution=(800, 800)) # hide
 ```
 
 ```@example introduction
-using IntegralEquations, MeshViz
+using BoundaryIntegralEquations, MeshViz
 examples_path = normpath(joinpath(@__DIR__, "..", "..", "examples"));
 tri_mesh_file = examples_path * "/meshes/tri_sphere"
 tri_mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=:linear)

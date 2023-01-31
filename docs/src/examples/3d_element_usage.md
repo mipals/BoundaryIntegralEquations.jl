@@ -20,7 +20,7 @@ First we import relevant packages
 ````julia
 using Plots
 using LinearAlgebra
-using IntegralEquations
+using BoundaryIntegralEquations
 ````
 
 # Triangles
@@ -145,7 +145,7 @@ While the Gaussian points are important for the integral of the local surfaces t
 
 ````julia
 nodal_triangle = TriangularLinear(3)
-IntegralEquations.set_nodal_interpolation!(nodal_triangle) # Should be the identity matrix
+BoundaryIntegralEquations.set_nodal_interpolation!(nodal_triangle) # Should be the identity matrix
 ````
 
 ````
@@ -667,7 +667,7 @@ While the Gaussian points are important for the integral of the local surfaces t
 
 ````julia
 nodal_quadrilateral = QuadrilateralLinear4(3,3)
-IntegralEquations.set_nodal_interpolation!(nodal_quadrilateral);
+BoundaryIntegralEquations.set_nodal_interpolation!(nodal_quadrilateral);
 ````
 
 Using this we can plot the full reference quadrilateral
@@ -1132,7 +1132,7 @@ Again the most interesting part is the nodal positions - which in this case is n
 
 ````julia
 disc_nodal_triangle = DiscontinuousTriangularLinear(disclinear_triangular,beta)
-IntegralEquations.set_nodal_interpolation!(disc_nodal_triangle) # Should be the identity matrix
+BoundaryIntegralEquations.set_nodal_interpolation!(disc_nodal_triangle) # Should be the identity matrix
 ````
 
 ````

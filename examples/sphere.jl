@@ -1,12 +1,12 @@
 #==========================================================================================
                             Adding Related Packages
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using Plots
 using SpecialFunctions
 using IterativeSolvers
-import IntegralEquations: incoming_wave, plane_wave_scattering_sphere, psca, pinc
+import BoundaryIntegralEquations: incoming_wave, plane_wave_scattering_sphere, psca, pinc
 #==========================================================================================
                 Loading Mesh + Visualization (viz seems broken on M1 chips :/ )
 ==========================================================================================#
@@ -43,7 +43,7 @@ k     = 2*π*freq/c                              # Wavenumber                [1/
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
 radius = 1.0                                    # Radius of sphere_1m       [m]
 # Computing incident pressure
-pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,k)
+pI = BoundaryIntegralEquations.incoming_wave(angles,1.0,mesh.sources,k)
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
@@ -71,7 +71,7 @@ gmres(T,pI;verbose=true);
 ## Plotting pressure on surface nodes
 surface_angles = acos.(mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
-p_analytical, _ = IntegralEquations.plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
+p_analytical, _ = BoundaryIntegralEquations.plane_wave_scattering_sphere(k,radius,1.0,surface_angles,1e-6)
 plot(surface_angles[perm], real.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],real.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot(surface_angles[perm], imag.(p_analytical[perm]),label="Analytical",linewidth=2)
@@ -127,18 +127,18 @@ ylabel!(L"p/p_0")
 
 
 
-import IntegralEquations: get_topology,number_of_elements,get_coordinates,getpolar_gaussian
-import IntegralEquations: create_rotated_element, copy_interpolation_nodes!,set_interpolation_nodes!
+import BoundaryIntegralEquations: get_topology,number_of_elements,get_coordinates,getpolar_gaussian
+import BoundaryIntegralEquations: create_rotated_element, copy_interpolation_nodes!,set_interpolation_nodes!
 physics_function = mesh.physics_function
 
-beta = IntegralEquations.get_beta(physics_function)
+beta = BoundaryIntegralEquations.get_beta(physics_function)
 tmp  = DiscontinuousTriangularLinear(physics_function,beta)
-offr = IntegralEquations.get_offset(physics_function)
+offr = BoundaryIntegralEquations.get_offset(physics_function)
 # Dealing with corners
 DO = Diagonal(ones(3))
-nodesX1,nodesY1,weights1 = IntegralEquations.singular_triangle_integration(tmp,3,[1.00;offr;offr],DO,1e-6)
-nodesX2,nodesY2,weights2 = IntegralEquations.singular_triangle_integration(tmp,3,[offr;1.00;offr],DO,1e-6)
-nodesX3,nodesY3,weights3 = IntegralEquations.singular_triangle_integration(tmp,3,[offr;offr;1.00],DO,1e-6)
-nodesX4,nodesY4,weights4 = IntegralEquations.singular_triangle_integration(tmp,3,[0.50;0.50;offr],DO,1e-6)
-nodesX5,nodesY5,weights5 = IntegralEquations.singular_triangle_integration(tmp,3,[offr;0.50;0.50],DO,1e-6)
-nodesX6,nodesY6,weights6 = IntegralEquations.singular_triangle_integration(tmp,3,[0.50;offr;0.50],DO,1e-6)
+nodesX1,nodesY1,weights1 = BoundaryIntegralEquations.singular_triangle_integration(tmp,3,[1.00;offr;offr],DO,1e-6)
+nodesX2,nodesY2,weights2 = BoundaryIntegralEquations.singular_triangle_integration(tmp,3,[offr;1.00;offr],DO,1e-6)
+nodesX3,nodesY3,weights3 = BoundaryIntegralEquations.singular_triangle_integration(tmp,3,[offr;offr;1.00],DO,1e-6)
+nodesX4,nodesY4,weights4 = BoundaryIntegralEquations.singular_triangle_integration(tmp,3,[0.50;0.50;offr],DO,1e-6)
+nodesX5,nodesY5,weights5 = BoundaryIntegralEquations.singular_triangle_integration(tmp,3,[offr;0.50;0.50],DO,1e-6)
+nodesX6,nodesY6,weights6 = BoundaryIntegralEquations.singular_triangle_integration(tmp,3,[0.50;offr;0.50],DO,1e-6)

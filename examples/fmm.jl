@@ -6,7 +6,7 @@
                             Adding Related Packages
 ==========================================================================================#
 using LinearAlgebra
-using IntegralEquations
+using BoundaryIntegralEquations
 using IterativeSolvers
 using Plots
 #==========================================================================================
@@ -31,7 +31,7 @@ zk = Complex(ka)
 radius = 1.0                                    # Radius of sphere_1m       [m]
 # Computing incident pressure
 angles = [π/2 0.0]                              # Angles of incoming wave   [radians]
-pI = IntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
+pI = BoundaryIntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk)
 #==========================================================================================
 Defining LossyBlockMatrix
 Block matrix corresponding to 5 BEM systems and 5 constraints
@@ -48,7 +48,7 @@ p_fmm = gmres(Af,pI;verbose=true);
 # Plotting solution
 surface_angles = acos.(mesh.sources[1,:]/radius)
 perm = sortperm(surface_angles)
-p_analytical, _ = IntegralEquations.plane_wave_scattering_sphere(zk,radius,1.0,surface_angles,1e-6)
+p_analytical, _ = BoundaryIntegralEquations.plane_wave_scattering_sphere(zk,radius,1.0,surface_angles,1e-6)
 # Plotting real part of pressure
 plot(surface_angles[perm], real.(p_analytical[perm]),label="Analytical",linewidth=2)
 plot!(surface_angles[perm],real.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)

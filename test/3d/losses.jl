@@ -2,7 +2,7 @@
                                 Using relevant packages
 ==========================================================================================#
 using Test
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using IterativeSolvers
 #==========================================================================================

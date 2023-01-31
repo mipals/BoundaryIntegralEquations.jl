@@ -1,12 +1,12 @@
 #==========================================================================================
                                 Using relevant packages
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using IterativeSolvers
 using Test
-import IntegralEquations: get_beta_tri_linear, get_beta_tri_quadratic
-import IntegralEquations: set_nodal_interpolation!
+import BoundaryIntegralEquations: get_beta_tri_linear, get_beta_tri_quadratic
+import BoundaryIntegralEquations: set_nodal_interpolation!
 #==========================================================================================
                                     Creating Tests
 ==========================================================================================#

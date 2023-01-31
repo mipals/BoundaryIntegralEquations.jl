@@ -1,7 +1,7 @@
 #==========================================================================================
                                 Using relevant packages
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using Test
 #==========================================================================================
@@ -10,11 +10,11 @@ using Test
 @testset "Curve Integration" begin
     n_elements = 100
 
-    lin_circ    = IntegralEquations.mesh_circle(ContinuousCurveLinear(3),n_elements)
-    lin_interps = IntegralEquations.interpolate_elements(lin_circ;n=4)
+    lin_circ    = BoundaryIntegralEquations.mesh_circle(ContinuousCurveLinear(3),n_elements)
+    lin_interps = BoundaryIntegralEquations.interpolate_elements(lin_circ;n=4)
 
-    quad_circ    = IntegralEquations.mesh_circle(ContinuousCurveQuadratic(3),n_elements)
-    quad_interps = IntegralEquations.interpolate_elements(quad_circ;n=4)
+    quad_circ    = BoundaryIntegralEquations.mesh_circle(ContinuousCurveQuadratic(3),n_elements)
+    quad_interps = BoundaryIntegralEquations.interpolate_elements(quad_circ;n=4)
 
     Slin  = 0.0
     Squad = 0.0
@@ -41,22 +41,22 @@ end
                           DiscontinuousCurveQuadratic(3))
 
     for ge in geometric_elements, pe in physics_elements
-        mesh = IntegralEquations.mesh_circle(ge,pe,n_elements;radius=r)
+        mesh = BoundaryIntegralEquations.mesh_circle(ge,pe,n_elements;radius=r)
         F,G,C=assemble_parallel!(mesh,k,mesh.sources;n=4,progress=false,gOn=false);
 
         ϕ = angle.(mesh.sources[1,:] + im*mesh.sources[2,:])
-        p = IntegralEquations.plane_wave_scattering_circle(ϕ,k*r,10)
+        p = BoundaryIntegralEquations.plane_wave_scattering_circle(ϕ,k*r,10)
         pB = (F + Diagonal(C .- 1.0))\exp.(im*k*mesh.sources[1,:])
 
         @test all(isapprox.(abs.(p),abs.(pB),atol=1e-3))
     end
 
     for ge in geometric_elements
-        mesh = IntegralEquations.mesh_circle(ge,n_elements;radius=r)
+        mesh = BoundaryIntegralEquations.mesh_circle(ge,n_elements;radius=r)
         F,G,C=assemble_parallel!(mesh,k,mesh.sources;n=4,progress=false,gOn=false);
 
         ϕ = angle.(mesh.sources[1,:] + im*mesh.sources[2,:])
-        p = IntegralEquations.plane_wave_scattering_circle(ϕ,k*r,10)
+        p = BoundaryIntegralEquations.plane_wave_scattering_circle(ϕ,k*r,10)
         pB = (F + Diagonal(C .- 1.0))\exp.(im*k*mesh.sources[1,:])
 
         @test all(isapprox.(abs.(p),abs.(pB),atol=1e-3))

@@ -1,4 +1,4 @@
-using IntegralEquations
+using BoundaryIntegralEquations
 using MeshViz
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(600, 600))
@@ -23,7 +23,7 @@ simple_tri_mesh = create_simple_mesh(tri_mesh)
 viz(simple_tri_mesh;showfacets=true)
 
 
-coords, topology, ents = IntegralEquations.load_mesh_file(quad_mesh_file)
+coords, topology, ents = BoundaryIntegralEquations.load_mesh_file(quad_mesh_file)
 
 import GeometryBasics
 using FileIO, MeshIO

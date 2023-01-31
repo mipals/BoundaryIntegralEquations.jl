@@ -1,4 +1,4 @@
-using Documenter, IntegralEquations, Literate
+using Documenter, BoundaryIntegralEquations, Literate
 
 const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/examples")
@@ -26,8 +26,8 @@ makedocs(
     format = Documenter.HTML(
         prettyurls=get(ENV, "CI", "false") == "true",
     ),
-    modules = [IntegralEquations],
-    sitename="IntegralEquations.jl",
+    modules = [BoundaryIntegralEquations],
+    sitename="BoundaryIntegralEquations.jl",
     authors = "Mikkel Paltorp",
     pages = Any[
         "Home" => "index.md",
@@ -49,5 +49,5 @@ makedocs(
     # servedocs(skip_dir=joinpath("docs","src","examples"))
 
 deploydocs(
-    repo = "github.com/mipals/IntegralEquations.jl.git",
+    repo = "github.com/mipals/BoundaryIntegralEquations.jl.git",
 )

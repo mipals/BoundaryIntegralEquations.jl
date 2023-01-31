@@ -1,7 +1,7 @@
 #==========================================================================================
                             Adding Related Packages
 ==========================================================================================#
-using LinearAlgebra, IntegralEquations, Plots, IterativeSolvers
+using LinearAlgebra, BoundaryIntegralEquations, Plots, IterativeSolvers
 #==========================================================================================
                 Loading Mesh + Visualization (viz seems broken on M1 chips :/ )
 ==========================================================================================#
@@ -54,7 +54,7 @@ freq = freqs[1]
     #======================================================================================
                             Iterative Solution of the 1-variable system
     ======================================================================================#
-    LGM = IntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1,n=3)
+    LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1,n=3)
     rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbose=true)
     @time pa = gmres(LGM,rhs;verbose=true);
     #======================================================================================

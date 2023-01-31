@@ -1,11 +1,11 @@
 #==========================================================================================
                                 Using relevant packages
 ==========================================================================================#
-using IntegralEquations
+using BoundaryIntegralEquations
 using LinearAlgebra
 using IterativeSolvers
 using Test
-import IntegralEquations: incoming_wave, plane_wave_scattering_sphere
+import BoundaryIntegralEquations: incoming_wave, plane_wave_scattering_sphere
 #==========================================================================================
                                     Creating Tests
 ==========================================================================================#
