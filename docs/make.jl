@@ -20,7 +20,6 @@ for example in examples
     Literate.markdown(example_filepath, OUTPUT_DIR; execute=true, postprocess = uncomment_objects)
 end
 
-
 makedocs(
     doctest=false,
     format = Documenter.HTML(

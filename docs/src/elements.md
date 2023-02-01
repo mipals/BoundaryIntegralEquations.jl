@@ -12,3 +12,15 @@ The element description of the geometry allows for the function approximation of
     p(\mathbf{x}^e(\mathbf{u})) = \mathbf{T}(\mathbf{x}^e(\mathbf{u}))\mathbf{p} = \underbrace{\mathbf{T}(\mathbf{x}(\mathbf{u}))(\mathbf{L}^e)^\top}_{\mathbf{T}^e(\mathbf{u})}\underbrace{\mathbf{L}^e\mathbf{p}}_{\mathbf{p}^e} = \mathbf{T}^e(u)\mathbf{p}^e, \quad \mathbf{u} \in \mathcal{L}
 ```
 where ``\mathbf{L}^e`` is a permutation-like matrix that extracts the relevant values of ``\mathbf{p}`` and orders them such that they correspond to the local basis functions of ``\mathbf{T}^e(\mathbf{u})``. The local basis functions are usually chosen as (Lagrange) polynomials of degree $d$, but other basis functions such as e.g. Legendre polynomials and splines have also been applied with success. 
+
+!!! info "Example: Element Localization Matrix"
+    For a linear element ``e`` all three corners corresponds to a value of the global vector ``\mathbf{p}``. For e.g. an element could have local corner values given by ``\mathbf{p}^e = \begin{bmatrix}p_1 & p_4 & p_3 \end{bmatrix}^\top``. This element would have ``\mathbf{L}^e`` given as
+    ```math
+        \mathbf{L}^e = 
+        \begin{bmatrix}
+        1 & 0 & 0 & 0 & ... & 0\\
+        0 & 0 & 0 & 1 & ... & 0\\
+        0 & 0 & 1 & 0 & ... & 0
+        \end{bmatrix}.
+    ```
+    Note that ``\mathbf{L}^e`` only an artifact of the mathematical description. Any reasonable implementation should utilize indexing instead of multiplication with ``\mathbf{L}^e``.
