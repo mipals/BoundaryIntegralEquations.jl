@@ -30,13 +30,14 @@ makedocs(
     authors = "Mikkel Paltorp",
     pages = Any[
         "Home" => "index.md",
-        "Background Theory" => [
-            "Computers and functions" => "computers_and_functions.md",
-            "Elements" => "elements.md",
-            "Quadrature" => "quadrature.md",
-            "The Boundary Element Method" => "bem.md",
-            "The Fast Multipole Method" => "fmm.md",
-        ],
+        "Background Theory" => "background_theory.md",
+        # [
+        #     "Computers and functions" => "computers_and_functions.md",
+        #     "Elements" => "elements.md",
+        #     "Quadrature" => "quadrature.md",
+        #     "The Boundary Element Method" => "bem.md",
+        #     "The Fast Multipole Method" => "fmm.md",
+        # ],
 
         "2D" => [
             "Kernels" => "2d_kernels.md",
