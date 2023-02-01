@@ -1,4 +1,13 @@
-# Element Types
+# Elements
+
+## Element Modifications
+```@docs
+BoundaryIntegralEquations.set_nodal_interpolation!
+```
+
+```@docs
+BoundaryIntegralEquations.copy_interpolation_nodes!
+```
 
 ## Triangular
 ```@docs
@@ -31,6 +40,10 @@ QuadrilateralQuadraticLagrange
 ```
 
 ```@docs
+QuadrilateralQuadratic
+```
+
+```@docs
 DiscontinuousQuadrilateralConstant
 ```
 
@@ -41,4 +54,5 @@ DiscontinuousQuadrilateralLinear4
 ```@docs
 DiscontinuousQuadrilateralQuadraticLagrange
 ```
+
 

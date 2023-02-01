@@ -49,7 +49,8 @@ makedocs(
             "Element Types" => "3d_elements.md",
             "Meshes" => "3d_meshes.md",
             "Fast Multipole Operators" => "3d_fmm.md",
-            "Viscous and thermal losses" => "3d_losses.md",
+            "Viscous and Thermal Losses" => "3d_losses.md",
+            "Experimental Features" => "3d_experimental.md",
             ],
         "Examples" => [
             "examples/2d_element_usage.md",

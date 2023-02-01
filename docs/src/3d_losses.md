@@ -6,3 +6,7 @@ BoundaryIntegralEquations.LossyGlobalOuter
 ```@docs
 BoundaryIntegralEquations.LossyGlobalInner
 ```
+
+```@docs
+BoundaryIntegralEquations.shape_function_derivatives
+```

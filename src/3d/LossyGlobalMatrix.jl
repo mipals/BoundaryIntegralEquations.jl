@@ -1,6 +1,11 @@
 #==========================================================================================
                             Defining LossyGlobalInner
 ==========================================================================================#
+"""
+    LossyGlobalInner
+
+A `LinearMap` corresponding to the inner system of the reduced lossy system.
+"""
 struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
     n::Int64                # Number of nodes
     # Acoustic Matrices
@@ -63,11 +68,9 @@ end
 """
     LossyGlobalOuter(mesh::Mesh, freq;
                 m=3,n=3,l=90,p=90,S=-1,sparsity=20.0,
-                exterior=true,adaptive=false,blockoutput=false)
+                exterior=true,adaptive=false)
 
-Computes the Block matrix corresponding to the reduced lossy system.
-If `blockoutput=false` returns sparse matrix.
-If `blockoutput=true` returns a `LossyBlockMatrix` struct used for iterative solvers
+A `LinearMap` corresponding to the reduced lossy system.
 """
 function LossyGlobalOuter(mesh::Mesh,freq;
                             progress=true,integral_free_term=[],
