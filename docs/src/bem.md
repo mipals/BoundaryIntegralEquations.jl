@@ -39,7 +39,7 @@ where ``\mathbf{a} \in \mathbb{C}^n`` is a vector of arbitrary constants and ``\
 \end{bmatrix}.
 ```
 
-In its current form the solution to the above equation is a \text{function} which a computer can not be tasked to find. Instead, the problem is made computationally tractable by parametrizing the functions ``p`` and ``v_s`` as shown previously. As such the above reduces to
+In its current form the solution to the above equation is a *function* which a computer can not be tasked to find. Instead, the problem is made computationally tractable by parametrizing the functions ``p`` and ``v_s`` as shown previously. As such the above reduces to
 
 ```math
 \mathbf{a}^\top

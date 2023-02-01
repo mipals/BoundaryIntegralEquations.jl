@@ -8,7 +8,7 @@ The Fast Multipole Method (FMM) can be used to accelerate the multiplication wit
     \end{aligned}
 ```
 where when ``\mathbf{z} = \mathbf{x}_j`` the ``j``th term is excluded from the sum. 
-Notice that the above does not scale the exponentials with ``(4\pi)^{-1}``. As a result this needs to be handled by the user. We now explore how the above can be used to speed up the multiplication of ``\mathbf{H}`` and ``\mathbf{G}``. First we simplify things by assuming that each element requires the same amount of quadrature points\footnote{This will cause numerical issues that are then fixed by a nearfield correction step}, ``Q``, and that we want to multiply with a known vector ``\mathbf{y}``. Then for a row of ``\mathbf{G}`` we have that
+Notice that the above does not scale the exponentials with ``(4\pi)^{-1}``. As a result this needs to be handled by the user. We now explore how the above can be used to speed up the multiplication of ``\mathbf{H}`` and ``\mathbf{G}``. First we simplify things by assuming that each element requires the same amount of quadrature points (this will cause numerical issues that are then fixed by a nearfield correction step), ``Q``, and that we want to multiply with a known vector ``\mathbf{y}``. Then for a row of ``\mathbf{G}`` we have that
 ```math
 \begin{aligned}
     \left(\int_\Gamma G(\mathbf{x},\mathbf{z})\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\right)\mathbf{y}
