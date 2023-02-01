@@ -17,7 +17,7 @@ end
 Normal derivative of the 3D Helmholtz Green's function with respect to interpolation nodes:
 
 ```math
-\\frac{e^{ikr_j}}{4\\pi r_j}(i*k*r_j - 1) (x_j - y)\\cdot n
+\\frac{e^{ikr_j}}{4\\pi r_j}(ikr_j - 1) (x_j - y)\\cdot n
 ```
 """
 function freens3d!(integrand,r,interpolation,sources,normals,k)

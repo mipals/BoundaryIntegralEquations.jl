@@ -2,7 +2,7 @@
 
 | **Documentation**   |  **Tests**     | **CodeCov**  |
 |:--------:|:---------------:|:-------:|
-|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)|
+|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev/)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)|
 
 
 The BoundaryIntegralEquations.jl provides the basic building blocks for the Boundary Element Method (BEM). Currently, it only supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
@@ -13,6 +13,14 @@ $$
 
 For the Fast Multipole Method this package utilizes the Julia interfaces for the Flatiron Institute Fast Multipole Libraries: [2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia).
 
+## Installation
+As the package is still under heavy development it not part of the general registry. Instead, the package can be downloaded directly from GitHub 
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/mipals/BoundaryIntegralEquations.jl")
+```
+
 ## Supported Element Types
 * (Dis)continuous (Constant, Linear and Quadratic) Line elements
 * (Dis)continuous (Constant, Linear and Quadratic) Triangular Elements
@@ -21,27 +29,6 @@ For the Fast Multipole Method this package utilizes the Julia interfaces for the
 ## Supported mesh types
 * COMSOLs *.mphtxt* files (best for applying boundary conditions)
 * .obj, .plt, .stl, .off, .2DM through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
-
-## Roadmap / Notes
-* Systematic way of applying boundary conditions
-* Better support for quadrilaterals
-    - [ ] Adaptive integration for lossy formulation.
-* A performant reading of COMSOL mesh files.
-* Support for more mesh files. 
-    - [ ] Any many more...
-* Support for single precision numbers. ([Inspired by Bempp-cl](https://www.mscroggs.co.uk/papers/2021-cise.pdf), generally needed for GPU)
-* More basis functions
-    - [ ] Higher order basis functions. Fairly low-hanging fruit, but could be problematic due to on-element-singularities.
-    - [ ] Non-interpolatory basis such as [Higher-order Legendre basis functions.](https://ieeexplore.ieee.org/document/1353496) (seems to only be easily implemented for quadrilaterals).
-* Better singularity handling.
-* Better post-processing 
-    - [ ] Create data structure to save results.
-    - [ ] Automatically plot surface pressure/velocities.
-* Galerkin support
-    - [ ] Requires SauterSchwab integration. The package [SauterSchwabQuadrature.jl](https://github.com/ga96tik/SauterSchwabQuadrature.jl) is used by BEAST.jl. It might be easy to integrate here.
-* Other integration techniques
-    - [ ] [SparseGrids.jl](https://github.com/robertdj/SparseGrids.jl) / [DistributedSparseGrids.jl](https://github.com/baxmittens/DistributedSparseGrids.jl)
-    - [ ] Adaptive Hierarchical Approaches
 
 ## Similar Packages
 * [BEAST.jl](https://github.com/krcools/BEAST.jl): Boundary Element Analysis and Simulation Toolkit. A general toolkit, with a focus on electromagnetics. Limitations with respect to element orders and only supplies Galerkin assembly. 

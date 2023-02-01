@@ -14,6 +14,12 @@ struct Mesh2d{T} <: Mesh where {T <: AbstractArray}
     physics_topology::AbstractArray{Int64,2}    # Physics connectivities
     # entites                                    # should probably be added at some point
 end
+"""
+    Mesh3d
+
+Contains relevant information for
+
+"""
 struct Mesh3d{T} <: Mesh where {T <: AbstractArray}
     sources::T                                  # Collocation nodes
     coordinates::T                              # Mesh coordinates

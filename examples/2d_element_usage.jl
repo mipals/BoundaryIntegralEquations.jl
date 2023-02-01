@@ -1,13 +1,13 @@
-# # Surface Functions (2D)
+# # Curve Functions (2D)
 # For 2D boundary integral equations the elements of interest are defined as `CurveFunction`s. These are defined as a vector of basis functions defined by a single local coordinate ($u$)
 # ```math
 #   \mathbf{N}(u)
 # ```
-# The following is s brief explanation of how the `CurveFunction`s are implemented in `BoundaryIntegralEquations.jl`. In short the `SurfaceFunction` is contain the following information of the surface element in local coordinates
-# * `gauss`: Vector of $u$-values of the Gaussian points.
-# * `weights`: Vector of Gaussian weights.
-# * `interpolation`: Matrix with columns equal to the basis functions evauluated at the Gaussian nodes, i.e. $\mathbf{N}(u_i)$.
-# * `derivatives`: Matrix with columns equal to the derivative of the basis functions with respect to $u$ evaluated at the Gaussian nodes, i.e. $\mathbf{N}_u(u_i)$.
+# The following is s brief explanation of how the `CurveFunction`s are implemented in `BoundaryIntegralEquations.jl`. In short the `CurveFunction` is contain the following information of the surface element in local coordinates
+# * `gauss`: Vector of $u$-values of the Gaussian points
+# * `weights`: Vector of Gaussian weights
+# * `interpolation`: Matrix with columns equal to the basis functions evauluated at the Gaussian nodes, i.e. $\mathbf{N}(u_i)$
+# * `derivatives`: Matrix with columns equal to the derivative of the basis functions with respect to $u$ evaluated at the Gaussian nodes, i.e. $\mathbf{N}_u(u_i)$
 
 
 # First we import relevant packages

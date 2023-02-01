@@ -3,15 +3,16 @@
 # ```math
 #   \mathbf{N}(u,v)
 # ```
-# The following is s brief explanation of how the `SurfaceFunction`s are implemented in `BoundaryIntegralEquations.jl`. In short the `SurfaceFunction` is contain the following information of the surface element in local coordinates
-# * `gauss_u`: Vector of $u$-values of the Gaussian points.
-# * `gauss_v`: Vector $v$-values of the Gaussian points.
-# * `weights`: Vector of Gaussian weights.
-# * `interpolation`: Matrix with columns equal to the basis functions evauluated at the Gaussian nodes, i.e. $\mathbf{N}(u_i,v_i)$.
-# * `derivatives_u`: Matrix with columns equal to the derivative of the basis functions with respect to $u$ evaluated at the Gaussian nodes, i.e. $\mathbf{N}_u(u_i,v_i)$.
-# * `derivatives_v`: Matrix with columns equal to the derivative of the basis functions with respect to $v$ evaluated at the Gaussian nodes, i.e. $\mathbf{N}_v(u_i,v_i)$.
+# The `SurfaceFunction` contain the following information of the surface element in local coordinates
+# * `gauss_u`: Vector of $u$-values of the Gaussian points
+# * `gauss_v`: Vector $v$-values of the Gaussian points
+# * `weights`: Vector of Gaussian weights
+# * `interpolation`: Matrix with columns equal to the basis functions evauluated at the Gaussian nodes, i.e. $\mathbf{N}(u_i,v_i)$
+# * `derivatives_u`: Matrix with columns equal to the derivative of the basis functions with respect to $u$ evaluated at the Gaussian nodes, i.e. $\mathbf{N}_u(u_i,v_i)$
+# * `derivatives_v`: Matrix with columns equal to the derivative of the basis functions with respect to $v$ evaluated at the Gaussian nodes, i.e. $\mathbf{N}_v(u_i,v_i)$
+# All this information is required when computing the underyling boundary integrals.
 
-# First we import relevant packages
+# # Importing relevant packages
 using Plots
 using LinearAlgebra
 using BoundaryIntegralEquations
@@ -26,12 +27,12 @@ nodal_triangle = TriangularLinear(3)
 BoundaryIntegralEquations.set_nodal_interpolation!(nodal_triangle) # Should be the identity matrix
 # Using this we can plot the full reference triangle
 scatter!(nodal_triangle.gauss_u, nodal_triangle.gauss_v,
-        label="Nodes")
+        label="Nodal Points")
 plot!(Shape(nodal_triangle.gauss_u, nodal_triangle.gauss_v),
         fillalpha=0.2, label="Reference Triangle")
 # When discritizing boundary integrals over surfaces in 3d an important aspect is the mapping from the local $(u,v)$-coordinates to global $(x,y)$ coordinates. This transformation is linear with respect to the basis functions, but not nessecrarily the local coordinates, and is given by
 # ```math
-#   \mathbf{M} = \mathbf{X}\mathbf{N}(u,v).
+#   \mathbf{x}^e = \mathbf{X}^e\mathbf{N}(u,v).
 # ```
 # As an example we take the triangle with corners equal to the standard basis vectors
 x1 = [1.0;0.0;0.0]
@@ -46,16 +47,16 @@ plot3d!([X[1,:];x1[1]],[X[2,:];x1[2]],[X[3,:];x1[3]],label="Global Triangle")
 
 # The main purpose of this package is the discretization of surface integrals using elements. The simplest of such integration is where the integrand is the constant 1, as it equals the area of the surface. For a single element this can be seen as
 # ```math
-#   \int_{\Gamma_e} 1 \ \mathrm{d}\Gamma_\mathbf{y} = \int_0^{1-u}\int_0^1 \text{jacobian}(u,v)\ \mathrm{d}u\mathrm{d}v \approx \sum_{i=1}^{N_g} \text{jacobian}(u_i,v_i) w_i,
+#   \int_{\Gamma_e} 1 \ \mathrm{d}\Gamma_\mathbf{y} = \int_0^{1-u}\int_0^1 \text{jacobian}(u,v)\ \mathrm{d}u\mathrm{d}v \approx \sum_{i=1}^{Q} \text{jacobian}(u_i,v_i) w_i,
 # ```
 # where $n_g$ is the number of Gaussian points $(u_i, v_i)$, $w_i$ is the corresponding weight and the jacobian is defined as
 # ```math
-# \text{jacobian} = \left\|\left(\frac{\mathrm{d}\mathbf{M}}{\mathrm{d}u}\right) \times \left(\frac{\mathrm{d}\mathbf{M}}{\mathrm{d}v}\right)\right\|_2
+# \text{jacobian} = \left\|\left(\frac{\mathrm{d}\mathbf{x}^e}{\mathrm{d}u}\right) \times \left(\frac{\mathrm{d}\mathbf{x}^e}{\mathrm{d}v}\right)\right\|_2
 # ```
 # which can be thought of as the area deformation stemming from the mapping from local to global coordinates.
 # The exact area of a flat triangle is equal half of the area of the paralllelogram spanned by two sides of the triangle. This is computed similarly to the jacobian as
 # ```math
-#   \text{Area}(\Delta) = \frac{1}{2}\|(\mathbf{x}_3 - \mathbf{x}_1)\times(\mathbf{x}_2-\mathbf{x}_1)\|_2.
+#   \text{Area}(\Delta) = \frac{1}{2}\|(\mathbf{x}^e_3 - \mathbf{x}^e_1)\times(\mathbf{x}^e_2-\mathbf{x}^e_1)\|_2.
 # ```
 #
 # We now start by computing the exact area of the flat triangle as
@@ -97,12 +98,12 @@ plot3d!(Y[1,idx],Y[2,idx],Y[3,idx],label="Global Quadrilateral")
 
 #
 # ```math
-#   \int_{\Gamma_e} 1 \ \mathrm{d}\Gamma_\mathbf{y} = \int_{-1}^1\int_{-1}^1 \text{jacobian}(u,v)\ \mathrm{d}u\mathrm{d}v \approx \sum_{i=1}^{N_g} \text{jacobian}(u_i,v_i) w_i,
+#   \int_{\Gamma_e} 1 \ \mathrm{d}\Gamma_\mathbf{y} = \int_{-1}^1\int_{-1}^1 \text{jacobian}(u,v)\ \mathrm{d}u\mathrm{d}v \approx \sum_{i=1}^{Q} \text{jacobian}(u_i,v_i) w_i,
 # ```
 # where $n_g$ is the number of Gaussian points $(u_i, v_i)$ and $w_i$ is the corresponding weights. The Jacobian is computed the same as for the triangle.
 # The exact area of a flat quadrilateral is to the sum of the areas of the two flat triangles that make up the quadrilateral.
 # ```math
-#   \text{Area}(\square) = \frac{1}{2}\|(\mathbf{x}_4 - \mathbf{x}_1)\times(\mathbf{x}_2-\mathbf{x}_1)\|_2 + \frac{1}{2}\|(\mathbf{x}_4 - \mathbf{x}_3)\times(\mathbf{x}_2-\mathbf{x}_3)\|_2.
+#   \text{Area}(\square) = \frac{1}{2}\|(\mathbf{x}^e_4 - \mathbf{x}^e_1)\times(\mathbf{x}^e_2-\mathbf{x}^e_1)\|_2 + \frac{1}{2}\|(\mathbf{x}^e_4 - \mathbf{x}^e_3)\times(\mathbf{x}^e_2-\mathbf{x}^e_3)\|_2.
 # ```
 A_exact = (norm(cross(Y[:,4]-Y[:,1],Y[:,2]-Y[:,1])) + norm(cross(Y[:,4]-Y[:,3],Y[:,2]-Y[:,3])))/2
 # To compute the are using the integral we first need to compute the gradient
@@ -127,12 +128,12 @@ disc_nodal_triangle = DiscontinuousTriangularLinear(disclinear_triangular,beta)
 BoundaryIntegralEquations.set_nodal_interpolation!(disc_nodal_triangle) # Should be the identity matrix
 # Using this we can plot the full reference triangle
 scatter!(disc_nodal_triangle.gauss_u, disc_nodal_triangle.gauss_v,
-        label="Nodes")
+        label="Nodal Points")
 plot!(Shape(nodal_triangle.gauss_u, nodal_triangle.gauss_v),
         fillalpha=0.2, label="Reference Triangle")
 # When discritizing boundary integrals over surfaces in 3d an important aspect is the mapping from the local $(u,v)$-coordinates to global $(x,y)$ coordinates. This transformation is linear with respect to the basis functions, but not nessecrarily the local coordinates, and is given by
 # ```math
-#   \mathbf{M} = \mathbf{X}\mathbf{N}(u,v).
+#   \mathbf{x}^e = \mathbf{X}^e\mathbf{N}(u,v).
 # ```
 # As an example we take the triangle with corners equal to the standard basis vectors
 x1 = [1.0;0.0;0.0]
@@ -144,5 +145,5 @@ interp = X*disclinear_triangular.interpolation
 G = X*disc_nodal_triangle([0.0;1.0;0.0]',[0.0;0.0;1.0]')
 idx = [1;2;3;1]
 scatter3d(interp[1,:],interp[2,:],interp[3,:],label="Gauss Points")
-scatter3d!(X[1,:],X[2,:],X[3,:], label="Nodal points")
+scatter3d!(X[1,:],X[2,:],X[3,:], label="Nodal Points")
 plot3d!(G[1,idx],G[2,idx],G[3,idx],label="Global Triangle")

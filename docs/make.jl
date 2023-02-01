@@ -31,16 +31,28 @@ makedocs(
     authors = "Mikkel Paltorp",
     pages = Any[
         "Home" => "index.md",
+        "Background Theory" => [
+            "Computers and functions" => "computers_and_functions.md",
+            "Elements" => "elements.md",
+            "Quadrature" => "quadrature.md",
+            "The Boundary Element Method" => "bem.md",
+            "The Fast Multipole Method" => "fmm.md",
+        ],
+
         "2D" => [
             "Kernels" => "2d_kernels.md",
             "Element Types" => "2d_elements.md",
+            "Meshes" => "2d_meshes.md",
         ],
         "3D" => [
             "Kernels" => "3d_kernels.md",
             "Element Types" => "3d_elements.md",
+            "Meshes" => "3d_meshes.md",
+            "Fast Multipole Operators" => "3d_fmm.md",
+            "Viscous and thermal losses" => "3d_losses.md",
             ],
         "Examples" => [
-            "examples/2d_element_usage.md"
+            "examples/2d_element_usage.md",
             "examples/3d_element_usage.md"
             ]
         ]
