@@ -5,7 +5,7 @@ A key insight is that the element serves two purposes: It represents a subdomain
 ```
 where ``\mathbf{X}^e`` is a matrix with columns equal to the interpolation nodes of the geometry, ``\mathbf{N}(\mathbf{u})`` are the shape functions, $\Gamma^e$ is the element in global coordinates and ``\mathcal{L}`` are the local coordinates. In 3D a triangular element can look as
 
-![Elements]("figures/sfd.png")
+![Elements](figures/sfd.png)
 
 The element description of the geometry allows for the function approximation of $p$ to be done easily as
 ```math

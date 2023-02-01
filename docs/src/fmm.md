@@ -1,5 +1,5 @@
 # The Fast Multipole Method and BEM
-The Fast Multipole Method (FMM) can be used to accelerate the multiplication with the BEM matrices ``\mathbf{H}`` and ``\mathbf{G}``. Throughout the years many good resources that explain the intricacies of the FMM have been written. As such the details will here be left out. Instead, the focus will be on how to apply a 3rd-party FMM into an existing BEM framework. As an example the focus will be on the *Flatiron Institute Fast Multipole Libraries*. This library can be used to accelerate sums of the following form
+The Fast Multipole Method (FMM) can be used to accelerate the multiplication with the BEM matrices ``\mathbf{H}`` and ``\mathbf{G}``. Throughout the years many good resources that explain the intricacies of the FMM have been written. As such the details will here be left out. Instead, the focus will be on how to apply a 3rd-party FMM into an existing BEM framework. As an example the focus will be on the *Flatiron Institute Fast Multipole Libraries*, as this is the library currently interfaced in `BoundaryIntegralEquations.jl`. This library can be used to accelerate sums of the following form
 ```math
     \begin{aligned}
     u(\mathbf{z}) 
@@ -44,5 +44,5 @@ where ``\mathbf{V}`` is a matrix that transforms ``\mathbf{y}`` into the coeffic
 ```
 Here ``\mathbf{G}`` is the part approximated by the FMM (using ``Q`` Gaussian points on each element), ``\mathbf{F}`` is either ``\mathbf{C}`` or ``\mathbf{V}`` from the two equations while ``\mathbf{S}`` a nearfield correction. In short the nearfield correction subtract the wrong integration done by using only ``Q`` Gaussian points and adds on the correct integration instead. It is important to note that ``\mathbf{S}`` and ``\mathbf{F}`` are both highly sparse matrices, meaning that both assembly and multiplication with these scale ``\mathcal{O}(n\tau)`` where ``\tau \ll n``. This means that using an approximate scheme for ``\mathbf{G}`` with a multiplication that scales linear in time and memory result in a representation of ``\mathbf{A}`` that scales similarly.
 
-![Nearfield Correction]("figures/nearfield_correction.png")
+![Nearfield Correction](figures/nearfield_correction.png)
 
