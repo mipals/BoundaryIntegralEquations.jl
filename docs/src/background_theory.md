@@ -54,7 +54,7 @@ where ``\mathbf{L}^e`` is a permutation-like matrix that extracts the relevant v
         0 & 0 & 1 & 0 & ... & 0
         \end{bmatrix}.
     ```
-    Note that ``\mathbf{L}^e`` only an artifact of the mathematical description. Any reasonable implementation should utilize indexing instead of multiplication with ``\mathbf{L}^e``.
+    Note that ``\mathbf{L}^e`` is only an artifact of the mathematical description. Any reasonable implementation should utilize indexing instead of multiplication with ``\mathbf{L}^e``.
 
 ## Quadrature
 The underlying mathematics of the BEM is that of surface integrals. In most cases it is not possible to compute these analytically. Instead, a quadrature scheme is used to approximate the integrals. To do so the element in global coordinates is transformed into local coordinates using the Jacobian function describing the local deformation from the transformation. For 2D and 3D this deformation looks as follows
@@ -71,7 +71,7 @@ Applying this the surface integral can be transformed into local coordinates and
 ```math
     \int_{\Gamma^e} f(\mathbf{x})\ \mathrm{d}S_\mathbf{x} = \int_\mathcal{L} \text{jacobian}(\mathbf{u})f(\mathbf{u})\ \mathrm{d}\mathbf{u} \approx \sum_{i=1}^{Q} \text{jacobian}(\mathbf{u}_i)w_if(\mathbf{u}_i),
 ```
-
+    
 where $\mathbf{u}_i$ is the quadrature point with corresponding weights $w_i$.
 
 ## The Boundary Element Method

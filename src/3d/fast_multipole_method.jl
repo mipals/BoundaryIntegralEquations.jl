@@ -114,6 +114,11 @@ function unroll_interpolations(interpolations)
     return interps, weights, normals
 end
 
+"""
+    nodes_to_gauss!(gauss_points,elmement_interpolation,physics_topology,x)
+
+Computes the global coordinates of all the Gauss points.
+"""
 function nodes_to_gauss!(gauss_points,elmement_interpolation,physics_topology,x)
     # Getting number of interpolations pr. element
     n_interps  = size(elmement_interpolation,2)
@@ -128,6 +133,11 @@ end
 #==========================================================================================
                         Defining G-operator (single-layer potential)
 ==========================================================================================#
+"""
+    FMMGOperator
+
+A `LinearMap` that represents the BEM G matrix through the FMM.
+"""
 struct FMMGOperator{T} <: LinearMaps.LinearMap{T}
     n::Int64                            # Number of nodes
     m::Int64                            # Number of gauss nodes
@@ -212,6 +222,11 @@ end
 #==========================================================================================
                             Defining H-operator (double-layer)
 ==========================================================================================#
+"""
+    FMMHOperator
+
+A `LinearMap` that represents the BEM H matrix through the FMM.
+"""
 struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
     n::Int64                            # Number of nodes
     m::Int64                            # Number of gauss nodes

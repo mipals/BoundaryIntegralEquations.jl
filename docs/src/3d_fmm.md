@@ -4,7 +4,7 @@ BoundaryIntegralEquations.partial_assemble_parallel!
 ```
 
 ```@docs
-BoundaryIntegralEquations.unroll_interpolations!
+BoundaryIntegralEquations.unroll_interpolations
 ```
 
 ```@docs

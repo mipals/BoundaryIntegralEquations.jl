@@ -142,13 +142,13 @@ and basis functions defined as
 ```math
 \\mathbf{N}(u,v) =
 \\begin{bmatrix}
-            [(1 - u)(v - 1)(u + v + 1)/4   \\newline
-            (1 + u)(v - 1)(v - u + 1)/4 \\newline
-            (1 + u)(v + 1)(u + v - 1)/4 \\newline
-            (u - 1)(v + 1)(u - v + 1)/4 \\newline
-            (1 - v)(1 - u^2)/2          \\newline
-            (1 + u)(1 - v^2)/2          \\newline
-            (1 + v)(1 - u^2)/2          \\newline
+            [(1 - u)(v - 1)(u + v + 1)/4    \\newline
+            (1 + u)(v - 1)(v - u + 1)/4     \\newline
+            (1 + u)(v + 1)(u + v - 1)/4     \\newline
+            (u - 1)(v + 1)(u - v + 1)/4     \\newline
+            (1 - v)(1 - u^2)/2              \\newline
+            (1 + u)(1 - v^2)/2              \\newline
+            (1 + v)(1 - u^2)/2              \\newline
             (1 - u)(1 - v^2)/2
 \\end{bmatrix}, \\quad u, v \\in [-1, 1].
 ```
@@ -196,7 +196,7 @@ and basis functions defined as
 ```math
 \\mathbf{N}(u,v) =
 \\begin{bmatrix}
-             u(1 - u)v(1 - v)/4          \\newline
+             u(1 - u)v(1 - v)/4        \\newline
             -u(1 + u)v(1 - v)/4        \\newline
             -u(1 - u)v(1 + v)/4        \\newline
             u(1 + u)v(1 + v)/4         \\newline
@@ -252,7 +252,7 @@ Defines a Quadrilateral with node placements         \n
 and basis functions defined as
 
 ```math
-\\mathbf{N}(u,v) = quadrilateralLinear4(u/(1-\\beta),v/(1-\\beta)), \\quad u,v \\in [-1,1 ]
+\\mathbf{N}(u,v) = \\text{quadrilateralLinear4}(u/(1-\\beta),v/(1-\\beta)), \\quad u,v \\in [-1,1 ]
 ```
 """
 mutable struct DiscontinuousQuadrilateralLinear4{T<:AbstractFloat} <: DiscontinuousQuadrilateral
@@ -274,7 +274,7 @@ Defines a Quadrilateral with node placements            \n
 and basis functions defined as
 
 ```math
-\\mathbf{N}(u,v) = quadrilateralQuadraticLagrange(u/(1-\\beta),v/(1-\\beta)), \\quad u,v \\in [-1,1 ]
+\\mathbf{N}(u,v) = \\text{quadrilateralQuadraticLagrange}(u/(1-\\beta),v/(1-\\beta)), \\quad u,v \\in [-1,1 ]
 ```
 """
 mutable struct DiscontinuousQuadrilateralQuadraticLagrange{T<:AbstractFloat} <: DiscontinuousQuadrilateral
