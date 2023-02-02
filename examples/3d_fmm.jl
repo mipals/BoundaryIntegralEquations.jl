@@ -1,4 +1,4 @@
-# # Scattering of a sphere (3D)
+# # Scattering of a hard sphere (3D)
 # # Importing related packages
 using LinearAlgebra
 using BoundaryIntegralEquations
@@ -23,13 +23,14 @@ mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2
 simple_tri_mesh = create_simple_mesh(mesh)
 viz(simple_tri_mesh;showfacets=true)
 # # Setting up constants
+# Defining the frequency of interest
 freq = 100.0;                                    # Frequency [Hz]
 # Computing constants from frequency
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1);
 zk = Complex(ka);                                # Making sure that the wavenumber is complex
 radius = 1.0 ;                                   # Radius of sphere_1m       [m]
 angles = [π/2 0.0];                              # Angles of incoming wave   [radians]
-# # BEM Solutions
+# # Solution using the BEM
 # Computing incident pressure
 pI = BoundaryIntegralEquations.incoming_wave(angles,1.0,mesh.sources,zk);
 # Computing the BEM solution using dense matrices
@@ -47,13 +48,16 @@ perm = sortperm(surface_angles)
 p_analytical, _ = BoundaryIntegralEquations.plane_wave_scattering_sphere(zk,radius,1.0,surface_angles,1e-6);
 # Plotting real part of pressure
 plot(surface_angles[perm], real.(p_analytical[perm]),label="Analytical",linewidth=2)
+xlabel!("Angle"); ylabel!("re(p)");
 plot!(surface_angles[perm],real.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],real.(p_fmm[perm]),label="FMM",linestyle=:dash,linewidth=2)
 # Plotting imaginary part of pressure
 plot(surface_angles[perm], imag.(p_analytical[perm]),label="Analytical",linewidth=2)
+xlabel!("Angle"); ylabel!("im(p)");
 plot!(surface_angles[perm],imag.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],imag.(p_fmm[perm]),label="FMM",linestyle=:dash,linewidth=2)
 # Plotting absolute pressure values
 plot(surface_angles[perm], abs.(p_analytical[perm]),label="Analytical",linewidth=2)
+xlabel!("Angle"); ylabel!("|p|");
 plot!(surface_angles[perm],abs.(p_bem[perm]),label="BEM",linestyle=:dash,linewidth=2)
 plot!(surface_angles[perm],abs.(p_fmm[perm]),label="FMM",linestyle=:dash,linewidth=2)
