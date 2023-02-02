@@ -4,9 +4,9 @@ using BoundaryIntegralEquations
 using MeshViz
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
-# The following is just for the documentation
-using JSServe
-Page(exportable=true, offline=true)
+
+using JSServe                       #hide
+Page(exportable=true, offline=true) #hide
 
 # # Visualizing full mesh
 # ## Triangular Mesh

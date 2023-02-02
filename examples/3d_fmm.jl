@@ -7,17 +7,17 @@ using Plots
 using MeshViz
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
-# The following is just for the documentation
-using JSServe
-Page(exportable=true, offline=true)
+using JSServe                           #hide
+Page(exportable=true, offline=true)     #hide
 # # Loading Mesh
-geometry_orders     = [:linear,:quadratic]
-tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
-# Triangular Meshes
-# tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m")
-tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_fine")
-# tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_finer")
-# tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_extremely_fine")
+# Defining possible combinations of geometry and physics orders
+geometry_orders     = [:linear,:quadratic];
+tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic];
+# Loading and visualizing the triangular (spherical) mesh
+#src tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m");
+tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_fine");
+#src tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_finer");
+#src tri_mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_extremely_fine");
 mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                 physics_order=tri_physics_orders[2])
 simple_tri_mesh = create_simple_mesh(mesh)
