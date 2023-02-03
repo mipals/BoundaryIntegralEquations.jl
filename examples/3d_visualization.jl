@@ -1,4 +1,4 @@
-# # Visualization
+# # Visualization (3D)
 # # Importing packages
 using BoundaryIntegralEquations
 using MeshViz

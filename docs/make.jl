@@ -8,6 +8,7 @@ examples = [
     "3d_element_usage.jl",
     "3d_visualization.jl",
     "3d_fmm.jl",
+    "2d_infinite_cylinder.jl",
 ]
 
 function uncomment_objects(str)
@@ -56,6 +57,7 @@ makedocs(
             ],
         "Examples" => [
             "examples/2d_element_usage.md",
+            "examples/2d_infinite_cylinder.md",
             "examples/3d_element_usage.md",
             "examples/3d_visualization.md",
             "examples/3d_fmm.md",

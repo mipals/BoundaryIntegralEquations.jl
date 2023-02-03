@@ -8,3 +8,4 @@ examples/sphere_losses_timings.jl
 examples/sphere_losses.jl
 examples/meshes/sphere_1m_finest.mphtxt
 docs/build
+examples/writing_to_vtk.jl

@@ -1,215 +1,52 @@
-#==========================================================================================
-                                    README
-==========================================================================================#
-# This file contains a simple implementation of 2D-BEM for acoustics.
-# It supports constant, linear and quadratic discontinuous and continuous elements.
-#==========================================================================================
-                                    Packages
-==========================================================================================#
-using FastGaussQuadrature   # For Numerical Integration
-using LoopVectorization     # For fast small matrix-matrix multiplications
-using LinearAlgebra         # For performing standard Linear Algebra
-using SpecialFunctions      # For Hankel functions
-using Plots                 # For visualizing the results
-#==========================================================================================
-                                Helper Functions
-==========================================================================================#
-JacMul!(j,w)    = @inbounds for i = axes(j,1) j[i]   = j[i]*w[i]                      end
-dist!(x,y,r)    = @inbounds for i = axes(r,1) r[i]   = hypot(x[1,i]-y[1],x[2,i]-y[2]) end
-jacobian!(j,n)  = @inbounds for i = axes(j,1) j[i]   = hypot(n[1,i],      n[2,i])     end
-normalize!(n,j) = @inbounds for i = axes(j,1) n[1,i] = n[1,i]/j[i];n[2,i]=n[2,i]/j[i] end
-normals!(n,dX)  = @inbounds for i = axes(n,2) n[1,i] = -dX[2,i];   n[2,i]=dX[1,i]     end
-#==========================================================================================
-                                Basis Functions
-==========================================================================================#
-linear(ξ)    = [(1 .- ξ)/2; (1 .+ ξ)/2]
-quadratic(ξ) = [ξ .* (ξ .- 1)/2; 1 .- ξ .^2; ξ .* (ξ .+ 1)/2]
-constant(ξ)  = ones(eltype(ξ),1,length(ξ))
-β = gausslegendre(2)[1][end]; discLinear(ξ)    = linear(ξ/β)
-δ = gausslegendre(3)[1][end]; discQuadratic(ξ) = quadratic(ξ/δ)
-#==========================================================================================
-                                    Kernels
-==========================================================================================#
-G!(k,r,int) = @inbounds for i = eachindex(r) int[i] = im/4*hankelh1(0,k*r[i]) end
-function F!(x,y,k,n,r,int)
-    @inbounds for i = eachindex(r)
-        int[i] = -k*im*hankelh1(1,k*r[i])*(n[1,i]*(x[1,i] - y[1]) +
-                                           n[2,i]*(x[2,i] - y[2]))/(4r[i])
-    end
-    return int
-end
-function C!(x,y,n,r,int)
-    @inbounds for i = eachindex(r)
-        int[i] = (n[1,i]*(x[1,i] - y[1]) +
-                  n[2,i]*(x[2,i] - y[2]))/(2π*r[i]^2)
-    end
-    return int
-end
-#==========================================================================================
-                                        Meshing
-==========================================================================================#
-function create_topology(ord,nElements)
-    top = ones(Int64, ord+1, nElements)
-    for i = 1:ord+1; top[i,1:length(i:ord:ord*nElements)] = i:ord:ord*nElements end
-    return top
-end
-function mygemm_vec!(C, A, B)
-    @inbounds @fastmath for n ∈ eachindex(C)
-        Cmn = zero(eltype(C))
-        for k ∈ eachindex(A)
-            Cmn += A[k] * B[k,n]
-        end
-        C[n] += Cmn
-    end
-end
-#==========================================================================================
-                            Mesh interpolation routine
-==========================================================================================#
-function compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpolation,
-                            source,k,r,normals,jacobian,integrand,gOn,fOn,cOn)
-    dist!(interpolation,source,r)                           # Computing distances
-    if gOn # Only compute G if you need it
-        G!(k,r,integrand)                                       # Evaluate Greens function
-        JacMul!(integrand,jacobian)                             # Multiply by jacobian*weights
-        # mul!(Gslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
-        mygemm_vec!(Gslice,integrand,physics_interpolation')
-    end
-    if fOn # Only compute F if you need it
-        F!(interpolation,source,k,normals,r,integrand)          # Evaluate ∂ₙGreens function
-        JacMul!(integrand,jacobian)                             # Multiply by jacobian*weights
-        # mul!(Fslice,integrand,physics_interpolation!',true,true)  # Integration with basis func
-        mygemm_vec!(Fslice,integrand,physics_interpolation')
-    end
-    if cOn # Only compute c if you need it
-        C!(interpolation,source,normals,r,integrand)            # Evaluate G₀
-        Cslice[1] += dot(integrand,jacobian)                    # Integration of G₀
-    end
-end
-#==========================================================================================
-                    Creating continuous mesh topology and a circle geometry
-==========================================================================================#
-function createPhysicsTopology(N,physicsOrder)
-    return physicsOrder < 0 ? create_topology(-physicsOrder,N) : reshape(collect(1:(physicsOrder+1)*N), physicsOrder+1, N)
-end
-function create_circle(topology,radius=1.0)
-    angles = collect(range(0,2π,length=1+length(unique(topology))))
-    return radius*[cos.(angles[1:end-1])'; sin.(angles[1:end-1])']
-end
+# # Scattering of infinite cylinder (2D)
+# # Importing relevant packages
+using BoundaryIntegralEquations
+using Plots
+using LinearAlgebra
+import BoundaryIntegralEquations: mesh_circle, plane_wave_scattering_circle
 
-#==========================================================================================
-                            Assembly - Spline
-==========================================================================================#
-function assemble(spline,k,n;interior=false,gOn=true,fOn=true,cOn=true,
-                physicsOrder=-1,fieldPoints=[],nElements=10,N=10)
-    # Setting up element division of Spline
-    physics_function(ξ) = (physicsOrder == -2 ? quadratic(ξ)  :
-                          (physicsOrder == -1 ? linear(ξ)     :
-                          (physicsOrder ==  0 ? constant(ξ)   :
-                          (physicsOrder ==  1 ? discLinear(ξ) : discQuadratic(ξ)))))
-    nInterpolations = max(abs(physicsOrder),1)
-    tInterp         = range(1,N,length=nInterpolations*nElements+1)
-    nodes,weights   = scaledgausslegendre(n,0.0,1.0)
-    physicsTopology = createPhysicsTopology(nElements,physicsOrder)
-    # Compute stuff for every Gaussian node
-    physics_interpolation! = physics_function(gausslegendre(n)[1]')
-    tGauss = kron(ones(nElements),nodes) + kron(tInterp[1:nInterpolations:end-1],ones(n))
-    Interpolation = spline(tGauss)
-    DerivInterp   = derivative(spline,tGauss)
-    Weights  = kron(ones(nElements),weights)/(nElements*sum(weights))*(N-1)
-    Normals  = similar(DerivInterp);   normals!(Normals,DerivInterp) # Allocate & compute
-    Jacobian = zeros(size(Normals,2)); jacobian!(Jacobian,Normals)   # Allocate & compute
-    normalize!(Normals,Jacobian) # Normalizing using the Jacobian (length of normal)
-    JacMul!(Jacobian,Weights)    # NB! Now jacobian = jacobian*weights (abuse of notation)
-    # Computing the physics-nodes by interpolation of the spline
-    tInterp = (physicsOrder == 0 ?  tInterp[1:end-1]    .+ 0.5*(tInterp[2]-tInterp[1])       :
-              (physicsOrder == 1 ? [tInterp[1:end-1]'   .+ 0.5*(tInterp[2]-tInterp[1])*β     ;
-                                    tInterp[2:end]'     .- 0.5*(tInterp[2]-tInterp[1])*β][:] :
-              (physicsOrder == 2 ? [tInterp[1:2:end-1]' .+ 0.5*(tInterp[3]-tInterp[1])*β     ;
-                                    tInterp[2:2:end]'                                        ;
-                                    tInterp[3:2:end]'   .- 0.5*(tInterp[3]-tInterp[1])*β][:]
-                                    : tInterp[1:end-1])))
-    fieldPoints = (isempty(fieldPoints) ? spline(tInterp) : fieldPoints)
-    # Preallocation
-    F,G = (zeros(ComplexF64, size(fieldPoints,2), length(tInterp)) for _ in 1:2)
-    C   =  zeros(ComplexF64, size(fieldPoints,2))
-    @inbounds @views Threads.@threads for fieldNode = 1:size(fieldPoints,2)
-        Cslice    = C[fieldNode:fieldNode]
-        source    = fieldPoints[:,fieldNode]
-        r         = zeros(n)
-        integrand = zeros(ComplexF64,1,n)
-        @inbounds @views for element = 1:nElements
-            physicsNodes = physicsTopology[:,element]
-            Fslice = F[fieldNode:fieldNode,physicsNodes]
-            Gslice = G[fieldNode:fieldNode,physicsNodes]
-            interpolation = Interpolation[:,n*(element-1)+1:n*element]
-            jacobian = Jacobian[n*(element-1)+1:n*element]
-            normals  = Normals[:,n*(element-1)+1:n*element]
-            compute_integrands!(Fslice,Gslice,Cslice,interpolation,physics_interpolation!,
-                                source,k,r,normals,jacobian,integrand,gOn,fOn,cOn)
-        end
-    end
-    return F,G,(interior ? C : 1.0 .+ C),fieldPoints
+# # Setting up the system
+n_elements = 20;    # Number of elements
+freq = 100.0;       # Frequency                 (Hz)
+c    = 340.0;       # Speed of sound            (m/s)
+k    = 2*π*freq/c;  # Wavenumber                (1/m)
+r    = 1.0;         # Circle radius             (m)
+# # Loading and plotting meshes
+mesh_lin       = mesh_circle(ContinuousCurveLinear(3),n_elements;radius=r)
+mesh_quad      = mesh_circle(ContinuousCurveQuadratic(3),n_elements;radius=r)
+mesh_disc_con  = mesh_circle(ContinuousCurveLinear(3),DiscontinuousCurveConstant(3),n_elements;radius=r)
+mesh_disc_lin  = mesh_circle(ContinuousCurveQuadratic(3),DiscontinuousCurveLinear(3),n_elements;radius=r)
+mesh_disc_quad = mesh_circle(ContinuousCurveQuadratic(3),DiscontinuousCurveQuadratic(3),n_elements;radius=r)
+meshes = [mesh_lin,mesh_quad,mesh_disc_con,mesh_disc_lin,mesh_disc_quad]
+mesh_types = ["Linear Geometry, Continuous Linear Physics",
+              "Quadratic Geometry, Continuous Quadratic Physics",
+              "Linear Geometry, Discontinuous Constant Physics",
+              "Quadratic Geometry, Discontinuous Linear Physics",
+              "Quadratic Geometry, Discontinuous Quadratic Physics"]
+begin #hide
+for (mesh,plot_title) in zip(meshes,mesh_types)
+    plt1=plot(mesh.coordinates[1,:],mesh.coordinates[2,:],aspect_ratio=1,label=false)
+    scatter!(mesh.sources[1,:],mesh.sources[2,:],label="Collocation"); xlabel!("x"); ylabel!("y")
+    scatter!(mesh.coordinates[1,:],mesh.coordinates[2,:],aspect_ratio=1,label="Geometry nodes")
+    title!(plot_title)
+    display(plt1)
 end
-#==========================================================================================
-                        Infinite Cylinder Helper Functions
-==========================================================================================#
-pressure(mn,ka) = (mn == 0 ? atan(-besselj(1,ka)/bessely(1,ka)) :
-            atan((besselj(mn-1,ka)-besselj(mn+1,ka))/(bessely(mn+1,ka)-bessely(mn-1,ka))))
-function cylscat(ϕ,ka,nterm=10)
-    IntI,IntS = (ones(length(ϕ))*besselj(0,ka), zeros(length(ϕ)))
-    for m=1:nterm-1; IntI = IntI + 2*im .^(m) * besselj(m,ka) .* cos.(m*(ϕ)) end
-    for m=0:nterm-1;
-        IntS = IntS - (m == 0 ? 1.0 : 2.0)*im .^(m+1.0) * exp(-im*pressure(m,ka)) *
-                    sin.(pressure(m,ka)) * (besselj(m,ka)+im*bessely(m,ka)) .* cos.(m*(ϕ))
-    end
-    return IntI + IntS
+end #hide
+
+# # Solving the scattering of hard infinite cylinder for each mesh
+# We first start with computing the analytical solution
+src_angle = angle.(mesh_disc_quad.sources[1,:] + im*mesh_disc_quad.sources[2,:])
+p = plane_wave_scattering_circle(src_angle,k*r,150)
+plt_pressure = plot(src_angle,abs.(p),label="Analytical")
+# We now loop over all elements
+begin #hide
+for mesh in meshes
+    F,_,C=assemble_parallel!(mesh,k,mesh.sources;n=4,gOn=false,progress=false);
+    pI = exp.(im*k*mesh.sources[1,:])
+    src_angle = angle.(mesh.sources[1,:] + im*mesh.sources[2,:])
+    pB = (F + Diagonal(C .- 1.0))\pI
+    plot!(plt_pressure,src_angle,abs.(pB),label="BEM",linestyle=:dash)
 end
-
-
-freq = 100.0    # Frequency of interest [Hertz]
-c = 340.0       # Speed up sound [m/s]
-k = 2*π*freq/c  # Wavenumber [m^(-1)]
-
-# geometryOrder: Denotes the order of the geometry.
-
-# physicsOrder: Denotes the order of the physics
-# -2 = Continuous Quadratic
-# -1 = Continuous Linear
-#  0 = Discontinuous Constant Elements
-#  1 = Discontinuous Linear Elements
-#  2 = Discontinuous Quadratic Elements
-physicsOrder = 0
-
-# Setting the number of elements
-# A rule of thumb says 6 elements per wavelength
-el_wl = 40*freq/c
-# The circumference of a circle is 2π. We can compute the number of elements required as
-nElements = Int(ceil(el_wl*2π))
-# Number of geometric points
-N  = 19
-
-coordinates = createCircle(collect(1:N-1))
-coordinates = [coordinates coordinates[:,1]]
-spline = ParametricSpline(1:size(coordinates,2),coordinates;periodic=true)
-Nspline = size(spline.c,2)
-n_gauss = 10
-# assemble(spline,k,n;interior=false,gOn=true,fOn=true,cOn=true,
-#                 physicsOrder=-1,fieldPoints=[],nElements=10,N=10)
-F,_,C,src    = assemble(spline,k,n_gauss;interior=false,gOn=false,fOn=true,cOn=true,
-                            physicsOrder=-1,nElements=nElements,N=N)
-
-pIncident   = exp.(im*k*src[1,:])
-# diag(C)p = G*v - F*p + pIncident
-# With boundary condition v=0 we have that: p = (diag(C) + F)\pIncident
-ps = (F + Diagonal(C))\pIncident
-
-# Compute angles of the collocation points
-θ  = angle.(src[1,:] + im*src[2,:]); θ[θ .< 0] .+= 2π
-# Compute analytical solution
-pA = cylscat(θ,k,150)
-# Plot Results
-plot(θ,abs.(pA),label="Analytical")
-scatter!(θ,abs.(ps),label="BEM")
-title!("Frequency = $(freq)")
-xlabel!("Angle")
-ylabel!("|p|")
+end #hide
+# Displaying the solution
+current() #hide
