@@ -27,7 +27,7 @@ examples_path = normpath(joinpath(@__DIR__, "..", "..", "examples"));
 tri_mesh_file = joinpath(examples_path, "meshes","tri_sphere")
 tri_mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=:linear)
 ```
-Furthermore, mesh can be visualized by creating `SimpleMesh` that is compatible with the `MeshViz` library.
+Furthermore, the mesh can be visualized by creating `SimpleMesh` that is compatible with the `MeshViz` library.
 ```@example introduction
 simple_tri_mesh = create_simple_mesh(tri_mesh)
 viz(simple_tri_mesh;showfacets=true)
