@@ -22,11 +22,13 @@ end
 """
     shape_function_derivatives(mesh)
 
-Returns interpolation function derivative matrics (Dx,Dy,Dz) of the 'physics_function'.
+Returns interpolation function derivative matrics ``(\\mathbf{D}_x,\\mathbf{D}_y,\\mathbf{D}_z)`` of the 'physics_function'.
 This means that given the BEM interpolation of p the derivatives are given by
-    ∂p∂x = Dx*p,
-    ∂p∂y = Dy*p,
-    ∂p∂z = Dz*p
+```math
+    \\frac{\\partial\\mathbf{p}^\\parallel}{\\partial x} = \\mathbf{D}_x\\mathbf{p}, \\newline
+    \\frac{\\partial\\mathbf{p}^\\parallel}{\\partial y} = \\mathbf{D}_y\\mathbf{p}, \\newline
+    \\frac{\\partial\\mathbf{p}^\\parallel}{\\partial z} = \\mathbf{D}_z\\mathbf{p}.
+```
 NOTE! This is only the tangential part of the gradient.
 The reason being that the BEM interpolation on deal with surface values, and does
 therefore not contain the derivative information orthogonal to it.
