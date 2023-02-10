@@ -7,9 +7,14 @@ l_mul_r!(y,lx,tmp)  = @inbounds for i=1:length(lx) y[i] += lx[i]*tmp[i] end # y 
     l_GH_r!(G,luG,H,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true,uselu=false)
 
 Computes the product
-           ((lx*rx' + ly*ry' + lz*rz')∘(G^{-1}H))*x
-Without performing the hadamard product by applying the following three times
-           ((l*r')∘(G^{-1}H))*x = (diag(l)*G^{-1}*H*diag(r))*x
+```math
+    ((\\mathbf{l}_x\\mathbf{r}_x^\\top + \\mathbf{l}_y\\mathbf{r}_y^\\top + \\mathbf{l}_z\\mathbf{r}_z^\\top)\\circ (\\mathbf{G}^{-1}\\mathbf{H}))\\mathbf{x}
+```
+Without performing the Hadamard product by applying the following three times
+```math
+    ((\\mathbf{l}\\mathbf{r}^\\top)\\circ (\\mathbf{G}^{-1}\\mathbf{H}))\\mathbf{x} =
+    (\\text{diag}(\\mathbf{l})\\mathbf{G}^{-1}\\mathbf{H}\\text{diag}(\\mathbf{r}))\\mathbf{x}
+```
 """
 function l_GH_r!(G,luG,H,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true,uselu=false)
     # Compute ((rx*lx')∘(G^{-1}H))*x
@@ -47,9 +52,13 @@ end
     l_D_r!(D,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true)
 
 Computing the product
-           ((lx*rx' + ly*ry' + lz*rz')∘D)*x
-Without performing the hadamard product by applying the following three times
-          ((l*r')∘D)*x = (diag(l)*D*diag(r))*x
+```math
+    ((\\mathbf{l}_x\\mathbf{r}_x^\\top + \\mathbf{l}_y\\mathbf{r}_y^\\top + \\mathbf{l}_z\\mathbf{r}_z^\\top)\\circ \\mathbf{D})\\mathbf{x}
+```
+Without performing the Hadamard product by applying the following three times
+```math
+    ((\\mathbf{l}\\mathbf{r}^\\top)\\circ \\mathbf{D})\\mathbf{x} = (\\text{diag}(\\mathbf{l})\\mathbf{D}\\text{diag}(\\mathbf{r}))\\mathbf{x}
+```
 """
 function l_D_r!(D,lx,ly,lz,rx,ry,rz,tmp1,tmp2,y,x,setzero=true)
     # Compute ((lx*rx')∘D)*x
@@ -73,7 +82,17 @@ end
     LossyOneVariableInner{T}
 
 Memory efficient representation of the matrix
-(n₁n₁ᵀ + n₂n₂ᵀ + n₃n₃ᵀ)∘(Gᵥ⁻Hᵥ) + (t₁n₁ᵀ + t₂n₂ᵀ + t₃n₃ᵀ)∘Dt₁ + (s₁n₁ᵀ + s₂n₂ᵀ + s₃n₃ᵀ)∘Dt₂,
+```math
+(\\mathbf{n}_1\\mathbf{n}_1^\\top +
+ \\mathbf{n}_2\\mathbf{n}_2^\\top +
+ \\mathbf{n}_3\\mathbf{n}_3^\\top)\\circ(\\mathbf{G}_v^{-1}\\mathbf{H}_v) +
+(\\mathbf{t}_1\\mathbf{n}_1^\\top +
+ \\mathbf{t}_2\\mathbf{n}_2^\\top +
+ \\mathbf{t}_3\\mathbf{n}_3^\\top)\\circ\\mathbf{D}_{t_1} +
+(\\mathbf{s}_1\\mathbf{n}_1^\\top +
+ \\mathbf{s}_2\\mathbf{n}_2^\\top +
+ \\mathbf{s}_3\\mathbf{n}_3^\\top )\\circ\\mathbf{D}_{t_2},
+```
 which is part of the LossyOneVariableOuter{T}.
 
 Multiplication with the struct is implemented and can therefore be used memory efficiently
@@ -125,7 +144,10 @@ end
 """
     LossyOneVariableOuter{T}
 
-Struct representing the system matrix (A) in the 1-variable system: A*pₐ = b.
+Struct representing the system matrix in the 1-variable system:
+```math
+    \\mathbf{A}\\mathbf{p}_a = \\mathbf{b}.
+```
 """
 struct LossyOneVariableOuter{T} <: LinearMaps.LinearMap{T}
     N::Int64                            # Total system size (10n
@@ -268,11 +290,11 @@ function LossyOneVariableOuter(mesh::Mesh3d,freq;S=1,depth=1,exterior=true,
     one = ones(N)/2
 
     # Thermal matrices
-    println("Thermal Matrices:")
+    @info "Thermal Matrices:"
     Fₕ,Bₕ = assemble_parallel!(mesh,kₕ,sources;sparse=true,depth=depth);
     Aₕ = (exterior ?  -Fₕ + Diagonal(one) : Fₕ - Diagonal(C₀))
     # Viscous matrices
-    println("Viscous matrices:")
+    @info "Viscous matrices:"
     Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=true,depth=depth);
     Aᵥ = (exterior ?  -Fᵥ + Diagonal(one) : Fᵥ - Diagonal(C₀))
 
@@ -290,7 +312,7 @@ function LossyOneVariableOuter(mesh::Mesh3d,freq;S=1,depth=1,exterior=true,
                                 inner_tmp1, inner_tmp2,false)
 
     # Computing relevant constants
-    println("Acoustic Matrices:")
+    @info "Acoustic Matrices:"
     Ga = FMMGOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
     Ha = FMMHOperator(mesh,kₐ;n=n,eps=thres,offset=offset,nearfield=nearfield)
     return LossyOneVariableOuter(N,Ha,Ga,Aₕ,Bₕ,luGh,Aᵥ,Bᵥ,
