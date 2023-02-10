@@ -115,6 +115,229 @@ function unroll_interpolations(interpolations)
 end
 
 """
+    create_coefficient_map(weights,physics_topology,physics_function,n_gauss)
+
+Returns the mappgin from nodal values to coefficients for the FMM.
+This mapping is represented by a (sparse) matrix ``C`` with rows given as
+```math
+    \\underbrace{\\text{jacobian}(\\mathbf{u}_j)w_j\\mathbf{T}^{e(j)}(\\mathbf{u}_j)\\mathbf{L}^{e(j)}}_{j\\text{th row of } \\mathbf{C}}
+```
+"""
+function create_coefficient_map(weights,physics_topology,physics_function,n_gauss)
+    # Computing row and column indicies
+    I = inverse_rle(collect(1:length(weights)),number_of_shape_functions(physics_function)*ones(Int,length(weights)))
+    J = repeat(physics_topology,n_gauss,1)[:]
+    # Extracting number of shape functions and number of elements
+    n_shape = number_of_shape_functions(physics_function)
+    n_elements = size(physics_topology,2)
+    # Pre-Allocation of values
+    V_mat = zeros(n_shape,n_elements*n_gauss)
+    # Compute values of rows
+    for i = 1:n_elements*n_gauss
+        V_mat[:,i] = weights[i]*physics_function.interpolation[:,mod(i-1,n_gauss)+1]
+    end
+    return sparse(I,J,V_mat[:])
+end
+
+"""
+    scale_columns!(weights,normals,scalings)
+
+Saves the ``i``th column of `normals` scaled by the ``i``th value of `scalings` in `weights`.
+"""
+function scale_columns!(weights,normals,scalings)
+    for i = eachindex(scalings)
+        weights[1,i] = normals[1,i]*scalings[i]
+        weights[2,i] = normals[2,i]*scalings[i]
+        weights[3,i] = normals[3,i]*scalings[i]
+    end
+    return weights
+end
+#==========================================================================================
+                        Defining G-operator (single-layer potential)
+==========================================================================================#
+"""
+    FMMGOperator
+
+A `LinearMap` that represents the BEM ``\\mathbf{G}`` matrix through the FMM.
+This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
+```math
+\\begin{aligned}
+    \\left(\\int_{\\Gamma} G(\\mathbf{x},\\mathbf{z})\\mathbf{T}(\\mathbf{x}) \\mathrm{d}S_\\mathbf{x}\\right)\\mathbf{y}
+    &\\approx \\left(\\sum_{e=1}^{N}\\left(\\sum_{i=1}^{Q}G(\\mathbf{x}^e(\\mathbf{u}_i),\\mathbf{z})\\text{jacobian}(\\mathbf{u}_i)w_i\\mathbf{T}^e(\\mathbf{u}_i)\\right)\\mathbf{L}^e\\right)\\mathbf{y}         \\newline
+    &= \\left(\\sum_{j=1}^{NQ}G(\\mathbf{x}_j,\\mathbf{z})\\underbrace{\\text{jacobian}(\\mathbf{u}_j)w_j\\mathbf{T}^{e(j)}(\\mathbf{u}_j)\\mathbf{L}^{e(j)}}_{j\\text{th row of } \\mathbf{C}}\\right)\\mathbf{y}   \\newline
+    &=
+    \\begin{bmatrix}
+        G(\\mathbf{x}_1,\\mathbf{z}) & G(\\mathbf{x}_2,\\mathbf{z}) & \\dots & G(\\mathbf{x}_{NQ},\\mathbf{z})
+    \\end{bmatrix}
+    \\mathbf{C}\\mathbf{y},
+\\end{aligned}
+```
+where the subscript ``j`` refers to an ordering of the collection of Gaussian points from all elements and ``e(j)`` is a function that returns the element number that Gaussian point ``j`` is located on. Note that ``\\mathbf{C}`` is the same same for all ``k``'s. The remaining multiplication with the Green's functions is done utilizing the Flatiron Institute Fast Multipole libraries.
+"""
+struct FMMGOperator{T} <: LinearMaps.LinearMap{T}
+    # Dimensions of operator
+    n::Int64                            # Number of sources
+    m::Int64                            # Number of targets
+    # Physical Quantities
+    k::T                                # Wavenumber
+    eps::Float64                        # Precision
+    # FMM setup
+    targets::AbstractMatrix{Float64}    # FMM-targets (size = 3,n)
+    sources::AbstractMatrix{Float64}    # FMM-sources (size = 3,m)
+    # Mapping from global to coefficients
+    C::AbstractMatrix{Float64}
+    # For storing coefficients
+    coefficients::AbstractVecOrMat{T}
+    # Correting near field computations
+    nearfield_correction::AbstractMatrix{T}
+end
+# Overloading size. Used to check dimension of inputs
+Base.size(A::FMMGOperator) = (A.n, A.n)
+function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
+                            A::FMMGOperator{T},
+                            x::AbstractVector) where {T <: ComplexF64}
+    # Checking dimensions
+    LinearMaps.check_dim_mul(y, A, x)
+    # Compute coefficients
+    mul!(A.coefficients,A.C,x)
+    # Computing the FMM sum
+    vals = hfmm3d(A.eps,A.k,A.sources,charges=A.coefficients,targets=A.targets,pgt=1)
+    # Ouput equal to the FMM contributions + near field corrections
+    # Note that the uses a Greens function that does not divide by 4π.
+    y .= vals.pottarg/4π + A.nearfield_correction*x
+end
+function FMMGOperator(mesh,k;eps=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=1)
+    # Setting up elements with the correct number of Gaussian points
+    shape_function   = deepcopy(mesh.shape_function)
+    physics_function = deepcopy(mesh.physics_function)
+    set_interpolation_nodes!(shape_function,gauss_points_triangle(n_gauss)...)
+    copy_interpolation_nodes!(physics_function,shape_function)
+    # Interpolating on the mesh using the previous computed shape/physics functions
+    interpolations    = interpolate_elements(mesh,shape_function)
+    sources,weights,_ = unroll_interpolations(interpolations)
+    # Creating map from nodes to FMM coefficients
+    C_map = create_coefficient_map(weights,mesh.physics_topology,physics_function,n_gauss)
+    # Making sure the wave number is complex
+    zk = Complex(k)
+    # Extracting mesh information
+    targets = mesh.sources
+    N = size(targets,2)
+    M = size(sources,2)
+    # Computing near-field correction
+    if nearfield
+        _,C = partial_assemble_parallel!(mesh,zk,targets,shape_function;fOn=false,depth=depth)
+        _,S = assemble_parallel!(mesh,zk,targets;
+                                sparse=true,depth=depth,fOn=false,progress=false,offset=offset);
+        nearfield_correction = - C + S
+    else
+        nearfield_correction = spzeros(ComplexF64,N,N)
+    end
+    # Creating temporary array
+    coefficients = zeros(eltype(zk),M)
+    return FMMGOperator(N,M,zk,eps,targets,sources,C_map,coefficients,nearfield_correction)
+end
+#==========================================================================================
+                            Defining H-operator (double-layer)
+==========================================================================================#
+"""
+    FMMHOperator
+
+A `LinearMap` that represents the BEM ``\\mathbf{H}`` matrix through the FMM.
+This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
+```math
+\\begin{aligned}
+    \\left(\\int_{\\Gamma}\\frac{\\partial G(\\mathbf{x}, \\mathbf{z})}{\\partial\\mathbf{n}(\\mathbf{x})}\\mathbf{T}(\\mathbf{x}) \\mathrm{d}S_{\\mathbf{x}}\\right)\\mathbf{y}
+    &\\approx
+    \\left(\\sum_{e=1}^{N}\\left(\\sum_{i=1}^{Q}\\frac{\\partial G(\\mathbf{x}^e(\\mathbf{u}_i), \\mathbf{z})}{\\partial\\mathbf{n}(\\mathbf{x})}\\text{jacobian}(\\mathbf{u}_i)w_i\\mathbf{T}^e(\\mathbf{u}_i)\\right)\\mathbf{L}^e\\right)\\mathbf{y}\\newline
+    &= \\left(\\sum_{j=1}^{NQ}\\nabla G(\\mathbf{x}_j, \\mathbf{z})\\cdot \\mathbf{n}(\\mathbf{x}_j)\\underbrace{\\text{jacobian}(\\mathbf{u}_j)w_j\\mathbf{T}^{e(j)}(\\mathbf{u}_j)\\mathbf{L}^{e(j)}}_{j\\text{th row of }\\mathbf{C}}\\right)\\mathbf{y}\\newline
+    &=
+    \\begin{bmatrix}
+        \\nabla G(\\mathbf{x}_1, \\mathbf{z}) \\cdot \\mathbf{n}(\\mathbf{x}_1) &
+        \\dots &
+        \\nabla G(\\mathbf{x}_{NQ}, \\mathbf{z})\\cdot \\mathbf{n}(\\mathbf{x}_{NQ})
+    \\end{bmatrix}
+    \\mathbf{C}\\mathbf{y},
+\\end{aligned}
+```
+where ``\\mathbf{C}`` is coefficient mapping (the same for all ``k``). The remaining multiplication with the Green's functions is performed utilizing the Flatiron Institute Fast Multipole libraries.
+"""
+struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
+    n::Int64                            # Number of nodes
+    m::Int64                            # Number of gauss nodes
+    # Physical Quantities
+    k::T                                # Wavenumber
+    eps::Float64                        # Precision
+    # Acoustic Matrices
+    targets::AbstractMatrix{Float64}    # FMM-targets (size = 3,n)
+    sources::AbstractMatrix{Float64}    # FMM-sources (size = 3,m)
+    normals::AbstractMatrix{Float64}    # FMM-directions
+    #
+    C::AbstractMatrix{Float64}          # Coefficient mapping
+    coefficients::AbstractVecOrMat{T}   # FMM-Coefficients
+    dipvecs::AbstractVecOrMat{T}        # FMM-dipole vectors
+    # Correting near field computations
+    nearfield_correction::AbstractMatrix{T}
+end
+Base.size(A::FMMHOperator) = (A.n, A.n)
+function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
+                            A::FMMHOperator{T},
+                            x::AbstractVector) where {T <: ComplexF64}
+    # Checking dimensions
+    LinearMaps.check_dim_mul(y, A, x)
+    # Map the mesh nodes to the gauss nodes
+    mul!(A.coefficients,A.C,x)
+    # Scale "dipoles"
+    scale_columns!(A.dipvecs,A.normals,A.coefficients)
+    # Computing the FMM sum
+    vals = hfmm3d(A.eps,A.k,A.sources,targets=A.targets,dipvecs=A.dipvecs,pgt=1)
+    # Ouput equal to the FMM contributions + near field corrections
+    # Note that FMM3D uses a Greens function that does not divide by 4π.
+    y .= vals.pottarg/4π + A.nearfield_correction*x
+end
+
+function FMMHOperator(mesh,k;n_gauss=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
+                                integral_free_term = [],progress=false)
+    # Creating physics and geometry for the FMM operator
+    shape_function   = deepcopy(mesh.shape_function)
+    physics_function = deepcopy(mesh.physics_function)
+    set_interpolation_nodes!(shape_function,gauss_points_triangle(n_gauss)...)
+    copy_interpolation_nodes!(physics_function,shape_function)
+    # Making sure that the wavenumber is complex (required for the FMM3D library)
+    zk = Complex(k)
+    # Interpolating on each element
+    interpolations = interpolate_elements(mesh,shape_function)
+    # Unrolling element interpolations
+    sources,weights,normals = unroll_interpolations(interpolations)
+    # Create coefficient map
+    C_map = create_coefficient_map(weights,mesh.physics_topology,physics_function,n_gauss)
+    # Set targets equal to sources
+    targets = mesh.sources
+    # Getting size of FMM matrix
+    N = size(targets,2)
+    M = size(sources,2)
+    # Computing dipole directional strenght. Making sure they're complex (required by FMM3D)
+    # Allocating arrays for intermediate computations
+    coefficients = zeros(eltype(zk),length(weights))
+    dipvecs = zeros(eltype(zk),3,length(weights))
+    # If not set by the user set the integral free term equal to a half
+    if isempty(integral_free_term)
+        nearfield_correction = Diagonal(ones(eltype(zk),N)/2)
+    elseif length(integral_free_term) == M
+        nearfield_correction = Diagonal(integral_free_term)
+    end
+    # Computing near-field correction
+    if nearfield
+        C,_ = partial_assemble_parallel!(mesh,zk,targets,shape_function;gOn=false,depth=depth)
+        S,_ = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,gOn=false,offset=offset,progress=progress);
+        nearfield_correction += - C + S
+    end
+    return FMMHOperator(N,M,zk,eps,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
+end
+
+#==========================================================================================
+                                Deprecated functions
+==========================================================================================#
+"""
     nodes_to_gauss!(gauss_points,elmement_interpolation,physics_topology,x)
 
 Computes the global coordinates of all the Gauss points.
@@ -129,207 +352,4 @@ function nodes_to_gauss!(gauss_points,elmement_interpolation,physics_topology,x)
         gauss_points[(i-1)*n_interps+1:i*n_interps] = elm_interp*x[physics_topology[:,i]]
     end
     return gauss_points
-end
-#==========================================================================================
-                        Defining G-operator (single-layer potential)
-==========================================================================================#
-"""
-    FMMGOperator
-
-A `LinearMap` that represents the BEM G matrix through the FMM.
-"""
-struct FMMGOperator{T} <: LinearMaps.LinearMap{T}
-    n::Int64                            # Number of nodes
-    m::Int64                            # Number of gauss nodes
-    # Physical Quantities
-    k::T                                # Wavenumber
-    eps::Float64                        # Precision
-    # Acoustic Matrices
-    targets::AbstractMatrix{Float64}    # FMM-targets (size = 3,n)
-    sources::AbstractMatrix{Float64}    # FMM-sources (size = 3,m)
-    weights::AbstractVecOrMat{T}        # Nodal weights (size = m)
-    # For mapping nodal-values to gauss-nodes
-    element_interpolation::AbstractMatrix{Float64} # To go from p to
-    physics_topology::AbstractMatrix{Int64}
-    # Correting near field computations
-    nearfield_correction::AbstractMatrix{T}
-    # To avoid repeating allocation when multiplying
-    tmp_weights::AbstractVecOrMat{T}
-end
-# Overloading size. Used to check dimension of inputs
-Base.size(A::FMMGOperator) = (A.n, A.n)
-function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
-                            A::FMMGOperator{T},
-                            x::AbstractVector) where {T <: ComplexF64}
-    # Checking dimensions
-    LinearMaps.check_dim_mul(y, A, x)
-    # Map the mesh nodes to the gauss nodes
-    nodes_to_gauss!(A.tmp_weights,A.element_interpolation,A.physics_topology,x)
-    # Multiplying by the pre-computed weights
-    integrand_mul!(A.tmp_weights,A.weights)
-    # Computing the FMM sum
-    vals = hfmm3d(A.eps,A.k,A.sources,charges=A.tmp_weights,targets=A.targets,pgt=1)
-    # Ouput equal to the FMM contributions + near field corrections
-    # Note that the uses a Greens function that does not divide by 4π.
-    y .= vals.pottarg/4π + A.nearfield_correction*x
-end
-function FMMGOperator(eps,k,targets,sources,weights,elm_interp,physics_topology)
-    # Making sure the wavenumber is complex (required for the FMM3D library)
-    zk = Complex(k)
-    # Getting size of the FMM operator.
-    n = size(targets,2)
-    m = size(sources,2)
-    # Allocating array for intermediate computations
-    tmp = zeros(eltype(zk),length(weights))
-    # The near-field correction is here set to the zero matrix. Warn the user.
-    @warn "No-near field correction computed"
-    nearfield_correction = 0*I
-    return FMMGOperator(n,m,zk,eps,targets,sources,weights,elm_interp,
-                            physics_topology,nearfield_correction,tmp)
-end
-function FMMGOperator(mesh,k;eps=1e-6,n=3,nearfield=true,offset=0.2,depth=1)
-    # Creating physics and geometry for the FMM operator
-    shape_function   = deepcopy(mesh.shape_function)
-    physics_function = deepcopy(mesh.physics_function)
-    set_interpolation_nodes!(shape_function,gauss_points_triangle(n)...)
-    copy_interpolation_nodes!(physics_function,shape_function)
-    # Making sure the wave number is complex
-    zk = Complex(k)
-    # Interpolating on the mesh using the previous computed shape/physics functions
-    interpolations = interpolate_elements(mesh,shape_function)
-    sources,weights,_ = unroll_interpolations(interpolations)
-    # Extracting mesh information
-    targets = mesh.sources
-    physics_topology = mesh.physics_topology
-    element_interpolation = physics_function.interpolation
-    N = size(targets,2)
-    M = size(sources,2)
-    # Computing near-field correction
-    if nearfield
-        _,C = partial_assemble_parallel!(mesh,zk,targets,shape_function;fOn=false,depth=depth)
-        _,S = assemble_parallel!(mesh,zk,targets;
-                                sparse=true,depth=depth,fOn=false,progress=false,offset=offset);
-        nearfield_correction = - C + S
-    else
-        nearfield_correction = spzeros(ComplexF64,N,N)
-    end
-    # Creating temporary array
-    tmp = zeros(eltype(zk),length(weights))
-    # FMM3D also requires the weights to be complex
-    return FMMGOperator(N,M,zk,eps,targets,sources,Complex.(weights),element_interpolation,
-                            physics_topology,nearfield_correction,tmp)
-end
-#==========================================================================================
-                            Defining H-operator (double-layer)
-==========================================================================================#
-"""
-    FMMHOperator
-
-A `LinearMap` that represents the BEM H matrix through the FMM.
-"""
-struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
-    n::Int64                            # Number of nodes
-    m::Int64                            # Number of gauss nodes
-    # Physical Quantities
-    k::T                                # Wavenumber
-    eps::Float64                        # Precision
-    # Acoustic Matrices
-    targets::AbstractMatrix{Float64}    # FMM-targets (size = 3,n)
-    sources::AbstractMatrix{Float64}    # FMM-sources (size = 3,m)
-    weights::AbstractMatrix{T}          # Nodal normals.*weights (size = m)
-    #
-    element_interpolation::AbstractMatrix{Float64} # To go from p to
-    physics_topology::AbstractMatrix{Int64}
-    # Correting near field computations
-    nearfield_correction::AbstractMatrix{T}
-    #
-    tmp::AbstractVecOrMat{T}
-    tmp_weights::AbstractVecOrMat{T}
-    #
-    # C                                   # C-constants
-end
-Base.size(A::FMMHOperator) = (A.n, A.n)
-function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
-                            A::FMMHOperator{T},
-                            x::AbstractVector) where {T <: ComplexF64}
-    # Checking dimensions
-    LinearMaps.check_dim_mul(y, A, x)
-    # Map the mesh nodes to the gauss nodes
-    nodes_to_gauss!(A.tmp,A.element_interpolation,A.physics_topology,x)
-    # Scale "dipoles"
-    scale_columns!(A.tmp_weights,A.weights,A.tmp)
-    # Computing the FMM sum
-    vals = hfmm3d(A.eps,A.k,A.sources,targets=A.targets,dipvecs=A.tmp_weights,pgt=1)
-    # Ouput equal to the FMM contributions + near field corrections
-    # Note that FMM3D uses a Greens function that does not divide by 4π.
-    y .= vals.pottarg/4π + A.nearfield_correction*x
-end
-function scale_columns!(weights,normals,tmp)
-    for i = eachindex(tmp)
-        weights[1,i] = normals[1,i]*tmp[i]
-        weights[2,i] = normals[2,i]*tmp[i]
-        weights[3,i] = normals[3,i]*tmp[i]
-    end
-    return weights
-end
-function FMMHOperator(eps,k,targets,sources,normals,weights,elm_interp,physics_topology,
-                    integral_free_term = [])
-    # Making sure the wavenumber is complex (required for the FMM3D library)
-    zk = Complex(k)
-    # Getting size of the FMM operator.
-    N = size(targets,2)
-    M = size(sources,2)
-    # Compute dipole direction times dipole strengths
-    dipvecs = normals .* weights'
-    # Create tempory arrays
-    tmp = zeros(eltype(zk),length(weights))
-    tmp_weights = zeros(eltype(zk),3,length(weights))
-    # The near-field correction is here set to the zero matrix. Warn the user.
-    @warn "No-near field correction computed"
-    if isempty(integral_free_term)
-        nearfield_correction = Diagonal(ones(eltype(zk),N)/2)
-    elseif length(integral_free_term) == N
-        nearfield_correction = Diagonal(integral_free_term)
-    end
-    # FMM3D uses a Greens function that does not divide by 4π.
-    return FMMHOperator(N,M,zk,eps,targets,sources,dipvecs,elm_interp,physics_topology,
-                            nearfield_correction,tmp,tmp_weights)
-end
-function FMMHOperator(mesh,k;n=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
-                                integral_free_term = [],progress=false)
-    # Creating physics and geometry for the FMM operator
-    shape_function   = deepcopy(mesh.shape_function)
-    physics_function = deepcopy(mesh.physics_function)
-    set_interpolation_nodes!(shape_function,gauss_points_triangle(n)...)
-    copy_interpolation_nodes!(physics_function,shape_function)
-    # Making sure that the wavenumber is complex (required for the FMM3D library)
-    zk = Complex(k)
-    # Interpolating on each element
-    interpolations = interpolate_elements(mesh,shape_function)
-    # Unrolling element interpolations
-    sources,weights,normals = unroll_interpolations(interpolations)
-    # Set targets equal to sources
-    targets = mesh.sources
-    # Getting size of FMM matrix
-    N = size(targets,2)
-    M = size(sources,2)
-    # Computing dipole directional strenght. Making sure they're complex (required by FMm3D)
-    dipvecs = Complex.(normals .* weights')
-    # Allocating arrays for intermediate computations
-    tmp = zeros(eltype(zk),length(weights))
-    tmp_weights = zeros(eltype(zk),3,length(weights))
-    # If not set by the user set the integral free term equal to a half
-    if isempty(integral_free_term)
-        nearfield_correction = Diagonal(ones(eltype(zk),N)/2)
-    elseif length(integral_free_term) == M
-        nearfield_correction = Diagonal(integral_free_term)
-    end
-    # Computing near-field correction
-    if nearfield
-        C,_ = partial_assemble_parallel!(mesh,zk,targets,shape_function;gOn=false,depth=depth)
-        S,_ = assemble_parallel!(mesh,zk,targets;sparse=true,depth=depth,gOn=false,offset=offset,progress=progress);
-        nearfield_correction += - C + S
-    end
-    return FMMHOperator(N,M,zk,eps,targets,sources,dipvecs,physics_function.interpolation,
-                            mesh.physics_topology,nearfield_correction,tmp,tmp_weights)
 end
