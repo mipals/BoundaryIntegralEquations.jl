@@ -18,10 +18,10 @@ function uncomment_objects(str)
     str
 end
 
-for example in examples
-    example_filepath = normpath(joinpath(EXAMPLES_DIR, example))
-    Literate.markdown(example_filepath, OUTPUT_DIR; execute=true, postprocess = uncomment_objects)
-end
+# for example in examples
+#     example_filepath = normpath(joinpath(EXAMPLES_DIR, example))
+#     Literate.markdown(example_filepath, OUTPUT_DIR; execute=true, postprocess = uncomment_objects)
+# end
 
 makedocs(
     doctest=false,

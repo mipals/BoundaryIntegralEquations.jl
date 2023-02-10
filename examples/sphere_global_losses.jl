@@ -11,13 +11,13 @@ using IterativeSolvers
 geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
-# tri_mesh_file = "examples/meshes/sphere_1m"
-# tri_mesh_file = "examples/meshes/sphere_1m_fine"
-# tri_mesh_file = "examples/meshes/sphere_1m_finer"
-tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
-# tri_mesh_file = "examples/meshes/sphere_1m_finest"
-# tri_mesh_file = "examples/meshes/sphere_1m_35k"
-# tri_mesh_file = "examples/meshes/sphere_1m_77k"
+mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes")
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_fine");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_finer");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_finest");
+tri_mesh_file = joinpath(mesh_path,"sphere_1m_35k");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_77k");
 @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                        physics_order=tri_physics_orders[2])
 
@@ -25,11 +25,11 @@ tri_mesh_file = "examples/meshes/sphere_1m_extremely_fine"
 #==========================================================================================
                                     3d Visualization
 ==========================================================================================#
-using MeshViz
-import WGLMakie as wgl
-simple_mesh = create_simple_mesh(mesh)
-wgl.set_theme!(resolution=(800, 800))
-viz(simple_mesh, showfacets = true)
+# using MeshViz
+# import WGLMakie as wgl
+# simple_mesh = create_simple_mesh(mesh)
+# wgl.set_theme!(resolution=(800, 800))
+# viz(simple_mesh, showfacets = true)
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
@@ -49,7 +49,7 @@ normals  = mesh.normals
 #===========================================================================================
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
-LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=false,depth=1,n=3)
+LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1,n=3)
 #* Creating the right-hand side
 id = 1
 if id == 1
@@ -80,7 +80,7 @@ ang_axis = coordinates[:,2]*180.0/pi
 perm = sortperm(ang_axis)
 
 # Plotting
-K = 1
+K = 10
 gr(size=(600,300))
 scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM-global",marker=:cross,
         markersize=2,color=:black,dpi=600,xtickfontsize=15,ytickfontsize=15,

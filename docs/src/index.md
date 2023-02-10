@@ -1,4 +1,4 @@
-# BoundaryIntegralEquations.jl Documentation
+# BoundaryIntegralEquations.jl
 
 `BoundaryIntegralEquations.jl` provides the basis functionalities for implementing Boundary Element Methods.
 
