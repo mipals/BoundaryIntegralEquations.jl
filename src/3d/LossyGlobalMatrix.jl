@@ -76,6 +76,9 @@ function LossyGlobalOuter(mesh::Mesh,freq;
                             progress=true,integral_free_term=[],
                             depth=1,sparse_assembly=true,exterior=true,
                             m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
+    if fmm_on == false && size(mesh.normals,2) > 20000
+        @warn "Using a dense formulation with a mesh of this size can be problematic"
+    end
     if (typeof(mesh.physics_function) <: DiscontinuousTriangularConstant)
         ArgumentError("Constant elements will have a tangential derivative equal to zero.")
     end
