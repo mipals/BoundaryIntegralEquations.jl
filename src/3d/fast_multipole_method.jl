@@ -120,8 +120,9 @@ end
 Returns the mappgin from nodal values to coefficients for the FMM.
 This mapping is represented by a (sparse) matrix ``C`` with rows given as
 ```math
-    \\underbrace{\\text{jacobian}(\\mathbf{u}_j)w_j\\mathbf{T}^{e(j)}(\\mathbf{u}_j)\\mathbf{L}^{e(j)}}_{j\\text{th row of } \\mathbf{C}}
+    \\underbrace{\\text{jacobian}(\\mathbf{u}_j)w_j\\mathbf{T}^{e(j)}(\\mathbf{u}_j)\\mathbf{L}^{e(j)}}_{j\\text{th row of } \\mathbf{C}},
 ```
+where each of the ``j`` rows corresponds to the Gaussian points from all elements and ``e(j)`` is a function that returns the element number that Gaussian point ``j`` is located on.
 """
 function create_coefficient_map(weights,physics_topology,physics_function,n_gauss)
     # Computing row and column indicies
@@ -132,7 +133,7 @@ function create_coefficient_map(weights,physics_topology,physics_function,n_gaus
     n_elements = size(physics_topology,2)
     # Pre-Allocation of values
     V_mat = zeros(n_shape,n_elements*n_gauss)
-    # Compute values of rows
+    # Looping over each row of the coefficient mapping
     for i = 1:n_elements*n_gauss
         V_mat[:,i] = weights[i]*physics_function.interpolation[:,mod(i-1,n_gauss)+1]
     end
@@ -332,24 +333,4 @@ function FMMHOperator(mesh,k;n_gauss=3,eps=1e-6,nearfield=true,offset=0.2,depth=
         nearfield_correction += - C + S
     end
     return FMMHOperator(N,M,zk,eps,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
-end
-
-#==========================================================================================
-                                Deprecated functions
-==========================================================================================#
-"""
-    nodes_to_gauss!(gauss_points,elmement_interpolation,physics_topology,x)
-
-Computes the global coordinates of all the Gauss points.
-"""
-function nodes_to_gauss!(gauss_points,elmement_interpolation,physics_topology,x)
-    # Getting number of interpolations pr. element
-    n_interps  = size(elmement_interpolation,2)
-    # Copying the element interpolation
-    elm_interp = copy(elmement_interpolation')
-    # Compute the Gaussian points on each element
-    @inbounds for i = axes(physics_topology,2)
-        gauss_points[(i-1)*n_interps+1:i*n_interps] = elm_interp*x[physics_topology[:,i]]
-    end
-    return gauss_points
 end

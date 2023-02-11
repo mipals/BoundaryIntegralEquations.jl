@@ -26,8 +26,3 @@ BoundaryIntegralEquations.FMMGOperator
 ```@docs
 BoundaryIntegralEquations.FMMHOperator
 ```
-
-## Deprecated functions
-```@docs
-BoundaryIntegralEquations.nodes_to_gauss!
-```
