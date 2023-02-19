@@ -2,11 +2,14 @@
                                     Helper functions
 ==========================================================================================#
 """
+    create_kernel_matrix(X, Y, k)
+
+Creates a `KernelMatrix` representing the single layer potential.
 ```math
 \\frac{e^{ikr_j}}{4\\pi r_j}
 ```
 """
-function g_matrix(X, Y, k)
+function create_kernel_matrix(X, Y, k)
     f = (x, y) -> begin
         # EPS = 1e-8 # fudge factor to avoid division by zero
         d = norm(x - y)
@@ -66,7 +69,7 @@ function HGOperator(mesh,k;eps=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     X = [Point3D(x) for x in eachcol(targets)]
     Y = [Point3D(x) for x in eachcol(sources)]
     # Assembly of H-matrix
-    H = assemble_hmat(g_matrix(X, Y, k);rtol=eps)
+    H = assemble_hmat(create_kernel_matrix(X, Y, k);rtol=eps)
     return HGOperator(k,H,C_map,nearfield_correction,coefficients)
 end
 
