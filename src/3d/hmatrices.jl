@@ -2,14 +2,11 @@
                                     Helper functions
 ==========================================================================================#
 """
-    create_kernel_matrix(X, Y, k)
+    create_single_layer_matrix(X, Y, k)
 
 Creates a `KernelMatrix` representing the single layer potential.
-```math
-\\frac{e^{ikr_j}}{4\\pi r_j}
-```
 """
-function create_kernel_matrix(X, Y, k)
+function create_single_layer_matrix(X, Y, k)
     f = (x, y) -> begin
         # EPS = 1e-8 # fudge factor to avoid division by zero
         d = norm(x - y)
@@ -21,7 +18,8 @@ end
                         Defining G-operator (single-layer potential)
 ==========================================================================================#
 """
-    HGOperator(G,C,nearfield_correction,coefficients)
+    HGOperator(k,G,C,nearfield_correction,coefficients)
+    HGOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
 
 A `LinearMap` that represents the BEM ``\\mathbf{G}`` matrix through the H-matrix approach.
 This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
@@ -55,7 +53,7 @@ function LinearMaps._unsafe_mul!(y, A::HGOperator, x::AbstractVector)
     mul!(y,A.nearfield_correction,x,true,true);
     return y
 end
-function HGOperator(mesh,k;eps=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
+function HGOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     # Making sure the wave number is complex
     zk = Complex(k)
     # Setup operator
@@ -69,7 +67,7 @@ function HGOperator(mesh,k;eps=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     X = [Point3D(x) for x in eachcol(targets)]
     Y = [Point3D(x) for x in eachcol(sources)]
     # Assembly of H-matrix
-    H = assemble_hmat(create_kernel_matrix(X, Y, k);rtol=eps)
+    H = assemble_hmat(create_single_layer_matrix(X, Y, k);rtol=tol)
     return HGOperator(k,H,C_map,nearfield_correction,coefficients)
 end
 
@@ -97,7 +95,8 @@ function Base.getindex(K::HelmholtzDoubleLayer,i::Int,j::Int)
 end
 Base.size(K::HelmholtzDoubleLayer) = length(K.X), length(K.Y)
 """
-    HHOperator(H,C,nearfield_correction,coefficients,normals)
+    HHOperator(k,H,C,nearfield_correction,coefficients)
+    HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
 
 A `LinearMap` that represents the BEM ``\\mathbf{H}`` matrix through the H-matrix approach.
 This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following

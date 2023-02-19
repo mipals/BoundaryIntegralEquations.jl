@@ -182,7 +182,8 @@ end
                         Defining G-operator (single-layer potential)
 ==========================================================================================#
 """
-    FMMGOperator(n,m,k,eps,targets,sources,C,coefficients,nearfield_correction)
+    FMMGOperator(k,tol,targets,sources,C,coefficients,nearfield_correction)
+    FMMGOperator(mesh,k;tol=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=1)
 
 A `LinearMap` that represents the BEM ``\\mathbf{G}`` matrix through the FMM.
 This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
@@ -205,7 +206,7 @@ The remaining multiplication with the Green's functions is done utilizing the Fl
 struct FMMGOperator{T} <: LinearMaps.LinearMap{T}
     # Physical Quantities
     k::T                                # Wavenumber
-    eps::Float64                        # Precision
+    tol::Float64                        # Precision
     # FMM setup
     targets::AbstractMatrix{Float64}    # FMM-targets (size = 3,n)
     sources::AbstractMatrix{Float64}    # FMM-sources (size = 3,m)
@@ -226,12 +227,12 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Compute coefficients
     mul!(A.coefficients,A.C,x)
     # Computing the FMM sum
-    vals = hfmm3d(A.eps,A.k,A.sources,charges=A.coefficients,targets=A.targets,pgt=1)
+    vals = hfmm3d(A.tol,A.k,A.sources,charges=A.coefficients,targets=A.targets,pgt=1)
     # Ouput equal to the FMM contributions + near field corrections
     # Note that the uses a Greens function that does not divide by 4π.
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
-function FMMGOperator(mesh,k;eps=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=1)
+function FMMGOperator(mesh,k;tol=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     # Making sure the wave number is complex
     zk = Complex(k)
     # Setup operator
@@ -240,13 +241,14 @@ function FMMGOperator(mesh,k;eps=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=
     targets = mesh.sources
     # Allocating array for intermediate computations
     coefficients = zeros(eltype(zk),size(sources,2))
-    return FMMGOperator(zk,eps,targets,sources,C_map,coefficients,nearfield_correction)
+    return FMMGOperator(zk,tol,targets,sources,C_map,coefficients,nearfield_correction)
 end
 #==========================================================================================
                             Defining H-operator (double-layer)
 ==========================================================================================#
 """
-    FMMHOperator(n,m,k,eps,targets,sources,C,coefficients,dipvecs,nearfield_correction)
+    FMMHOperator(k,tol,targets,sources,normals,C,coefficients,dipvecs,nearfield_correction)
+    FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1,)
 
 A `LinearMap` that represents the BEM ``\\mathbf{H}`` matrix through the FMM.
 This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
@@ -272,7 +274,7 @@ The remaining multiplication with the Green's functions is performed utilizing t
 struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
     # Physical Quantities
     k::T                                # Wavenumber
-    eps::Float64                        # Precision
+    tol::Float64                        # Precision
     # Acoustic Matrices
     targets::AbstractMatrix{Float64}    # FMM-targets (size = 3,n)
     sources::AbstractMatrix{Float64}    # FMM-sources (size = 3,m)
@@ -295,13 +297,13 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Scale "dipoles"
     scale_columns!(A.dipvecs,A.normals,A.coefficients)
     # Computing the FMM sum
-    vals = hfmm3d(A.eps,A.k,A.sources,targets=A.targets,dipvecs=A.dipvecs,pgt=1)
+    vals = hfmm3d(A.tol,A.k,A.sources,targets=A.targets,dipvecs=A.dipvecs,pgt=1)
     # Ouput equal to the FMM contributions + near field corrections
     # Note that FMM3D uses a Greens function that does not divide by 4π.
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 
-function FMMHOperator(mesh,k;n_gauss=3,eps=1e-6,nearfield=true,offset=0.2,depth=1,
+function FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1,
                                     integral_free_term = [])
     # Making sure the wave number is complex
     zk = Complex(k)
@@ -312,5 +314,5 @@ function FMMHOperator(mesh,k;n_gauss=3,eps=1e-6,nearfield=true,offset=0.2,depth=
     # Allocating arrays for intermediate computations
     coefficients = zeros(eltype(zk),size(sources,2))
     dipvecs      = zeros(eltype(zk),3,size(sources,2))
-    return FMMHOperator(zk,eps,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
+    return FMMHOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
 end
