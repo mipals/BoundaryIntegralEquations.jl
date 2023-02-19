@@ -4,11 +4,12 @@ const EXAMPLES_DIR = joinpath(@__DIR__, "..", "examples")
 const OUTPUT_DIR   = joinpath(@__DIR__, "src/examples")
 
 examples = [
-    "2d_element_usage.jl",
-    "3d_element_usage.jl",
-    "3d_visualization.jl",
+    # "2d_element_usage.jl",
+    # "3d_element_usage.jl",
+    # "3d_visualization.jl",
     "3d_fmm.jl",
-    "2d_infinite_cylinder.jl",
+    "3d_hmatrix.jl",
+    # "2d_infinite_cylinder.jl",
 ]
 
 function uncomment_objects(str)
@@ -61,6 +62,7 @@ makedocs(
             "examples/3d_element_usage.md",
             "examples/3d_visualization.md",
             "examples/3d_fmm.md",
+            "examples/3d_hmatrix.md",
             ]
         ]
     )

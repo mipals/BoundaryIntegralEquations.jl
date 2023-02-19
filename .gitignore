@@ -4,6 +4,7 @@
 *.DS_store
 .vscode
 docs/build
+docs/Manifest.jl
 examples/sphere_losses_timings.jl
 examples/sphere_losses.jl
 examples/meshes/sphere_1m_finest.mphtxt

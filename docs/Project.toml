@@ -1,5 +1,4 @@
 [deps]
-BoundaryIntegralEquations = "ebf54fa4-afc0-484a-8ee1-77aaf84d33dc"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FMM3D = "1e13804c-f9b7-11ea-0ef0-29f3b1745df8"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
@@ -11,6 +10,7 @@ Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 MeshViz = "9ecf9c4f-6e5a-4b5e-83ae-06f2c7a661d8"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TransformsBase = "28dd2a49-a57a-4bfb-84ca-1a49db9b96b8"
 WGLMakie = "276b4fcb-3e11-5398-bf8b-a0c2d153d008"
 
 [compat]

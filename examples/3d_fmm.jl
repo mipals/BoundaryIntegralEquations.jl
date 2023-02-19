@@ -1,4 +1,4 @@
-# # Scattering of a hard sphere (3D)
+# # Scattering of a hard sphere (FMM)
 # # Importing related packages
 using LinearAlgebra
 using BoundaryIntegralEquations
