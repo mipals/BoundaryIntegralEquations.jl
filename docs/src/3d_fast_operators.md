@@ -22,7 +22,7 @@ BoundaryIntegralEquations.setup_fast_operator
 ```
 
 ```@docs
-BoundaryIntegralEquations.g_matrix
+BoundaryIntegralEquations.create_single_layer_matrix
 ```
 
 ## Fast Multipole Operators
