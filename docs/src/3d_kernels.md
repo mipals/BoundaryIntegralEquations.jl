@@ -1,6 +1,6 @@
 # Kernels
 ```@docs
-BoundaryIntegralEquations.greens3d!(integrand,r,k)
+BoundaryIntegralEquations.greens3d!
 ```
 
 ```@docs

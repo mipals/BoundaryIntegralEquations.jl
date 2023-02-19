@@ -1,4 +1,4 @@
-# Fast Multipole Operators
+# Fast Operators
 
 ## Helper Functions
 ```@docs
@@ -17,7 +17,15 @@ BoundaryIntegralEquations.create_coefficient_map
 BoundaryIntegralEquations.scale_columns!
 ```
 
-## FMM operators
+```@docs
+BoundaryIntegralEquations.setup_fast_operator
+```
+
+```@docs
+BoundaryIntegralEquations.g_matrix
+```
+
+## Fast Multipole Operators
 
 ```@docs
 BoundaryIntegralEquations.FMMGOperator
@@ -25,4 +33,13 @@ BoundaryIntegralEquations.FMMGOperator
 
 ```@docs
 BoundaryIntegralEquations.FMMHOperator
+```
+
+## H-Matrix Operators
+```@docs
+BoundaryIntegralEquations.HGOperator
+```
+
+```@docs
+BoundaryIntegralEquations.HHOperator
 ```

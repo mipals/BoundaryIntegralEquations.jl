@@ -1,4 +1,28 @@
 # Meshes in 3D
+
+## Loading meshes
+```@docs
+BoundaryIntegralEquations.load_mesh_file
+```
+
+```@docs
+BoundaryIntegralEquations.read_comsol_mesh
+```
+
+```@docs
+BoundaryIntegralEquations.load3dTriangularMesh
+```
+
+```@docs
+BoundaryIntegralEquations.load3dTriangularComsolMesh
+```
+
+```@docs
+BoundaryIntegralEquations.load3dQuadComsolMesh
+```
+
+## Mesh manipulation
+
 ```@docs
 BoundaryIntegralEquations.Mesh3d
 ```
@@ -44,5 +68,5 @@ BoundaryIntegralEquations.normalize!
 ```
 
 ```@docs
-BoundaryIntegralEquations.jacobian!
+BoundaryIntegralEquations.jacobian!(basisElement::SurfaceFunction,coordinates,normals,tangent,sangent,jacobian)
 ```

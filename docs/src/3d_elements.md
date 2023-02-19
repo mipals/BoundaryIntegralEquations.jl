@@ -2,7 +2,7 @@
 
 ## Element Modifications
 ```@docs
-BoundaryIntegralEquations.set_nodal_interpolation!
+BoundaryIntegralEquations.set_nodal_interpolation!(surface_function::SurfaceFunction)
 ```
 
 ```@docs

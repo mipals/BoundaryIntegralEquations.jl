@@ -43,17 +43,17 @@ makedocs(
         # ],
 
         "2D" => [
-            "Kernels" => "2d_kernels.md",
+            "Kernels"       => "2d_kernels.md",
             "Element Types" => "2d_elements.md",
-            "Meshes" => "2d_meshes.md",
+            "Meshes"        => "2d_meshes.md",
         ],
         "3D" => [
-            "Kernels" => "3d_kernels.md",
-            "Element Types" => "3d_elements.md",
-            "Meshes" => "3d_meshes.md",
-            "Fast Multipole Operators" => "3d_fmm.md",
-            "Viscous and Thermal Losses" => "3d_losses.md",
-            "Experimental Features" => "3d_experimental.md",
+            "Kernels"                       => "3d_kernels.md",
+            "Element Types"                 => "3d_elements.md",
+            "Meshes"                        => "3d_meshes.md",
+            "Fast Operators"                => "3d_fast_operators.md",
+            "Viscous and Thermal Losses"    => "3d_losses.md",
+            "Experimental Features"         => "3d_experimental.md",
             ],
         "Examples" => [
             "examples/2d_element_usage.md",
