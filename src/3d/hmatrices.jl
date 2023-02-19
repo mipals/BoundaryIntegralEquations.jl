@@ -85,11 +85,11 @@ struct HelmholtzDoubleLayer <: AbstractMatrix{ComplexF64}
     X::Vector{Point3D}
     Y::Vector{Point3D}
     NY::Vector{Point3D} # normals at Y coordinate
-    k::Float64
+    k
 end
 function Base.getindex(K::HelmholtzDoubleLayer,i::Int,j::Int)
     # r = K.X[i] - K.Y[j]
-    r = K.Y[i] - K.X[j]
+    r = K.Y[j] - K.X[i]
     d = norm(r)
     return exp(im*K.k*d)/(4π*d^3) * (im*K.k*d - 1) * dot(r, K.NY[j])
 end
@@ -133,7 +133,6 @@ function LinearMaps._unsafe_mul!(y, A::HHOperator, x::AbstractVector)
     return y
 end
 function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
-    # Making sure the wave number is complex
     zk = Complex(k)
     # Setup operator
     sources,normals,C_map,nearfield_correction = setup_fast_operator(mesh,zk,n_gauss,
@@ -150,6 +149,6 @@ function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     Xclt = ClusterTree(X)
     Yclt = ClusterTree(Y)
     # Assembling H-matrix representing the double-layer potential
-    H = assemble_hmat(HelmholtzDoubleLayer(X,Y,NY,k),Xclt,Yclt;comp=PartialACA(;rtol=tol))
+    H = assemble_hmat(HelmholtzDoubleLayer(X,Y,NY,zk),Xclt,Yclt;comp=PartialACA(;rtol=tol))
     return HHOperator(k,H,C_map,nearfield_correction + 0.5I,coefficients)
 end

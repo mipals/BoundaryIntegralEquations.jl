@@ -116,7 +116,7 @@ export assemble_parallel!
 export FMMGOperator, FMMHOperator
 
 # H-Matrices
-# export HGOperator #, HHOperator # The H-operator still does not work
+export HGOperator, HHOperator
 
 # Visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz

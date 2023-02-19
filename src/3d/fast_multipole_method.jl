@@ -314,5 +314,5 @@ function FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=
     # Allocating arrays for intermediate computations
     coefficients = zeros(eltype(zk),size(sources,2))
     dipvecs      = zeros(eltype(zk),3,size(sources,2))
-    return FMMHOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
+    return FMMHOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction + 0.5I)
 end
