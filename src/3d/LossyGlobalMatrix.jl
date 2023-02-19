@@ -124,7 +124,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=sparse_assembly,depth=depth,progress=progress);
     Aᵥ = (exterior ?  Fᵥ + C0 : -Fᵥ + C0)
     ### Computing tangential derivatives
-    Dx,Dy,Dz = shape_function_derivatives(mesh;global_derivatives=true)
+    Dx,Dy,Dz = shape_function_derivatives(mesh)
 
     nx = mesh.normals[1,:]
     ny = mesh.normals[2,:]

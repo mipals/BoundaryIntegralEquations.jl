@@ -2,6 +2,8 @@
         Acoustical Green's Function and Derivatives - Vectors (used for collocation)
 ==========================================================================================#
 """
+    greens3d!(integrand,r,k)
+
 Green's function for the Helmholtz Equation in 3d:
 
 ```math
@@ -14,10 +16,12 @@ function greens3d!(integrand,r,k)
     end
 end
 """
+    freens3d!(integrand,r,interpolation,sources,normals,k)
+
 Normal derivative of the 3D Helmholtz Green's function with respect to interpolation nodes:
 
 ```math
-\\frac{e^{ikr_j}}{4\\pi r_j}(ikr_j - 1) (x_j - y)\\cdot n
+\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
 ```
 """
 function freens3d!(integrand,r,interpolation,sources,normals,k)
@@ -29,6 +33,8 @@ function freens3d!(integrand,r,interpolation,sources,normals,k)
     end
 end
 """
+    freens3dk0!(integrand,r,interpolation,sources,normals)
+
 freens3d! with k=0.
 
 ```math
@@ -57,10 +63,12 @@ end
                                     Kernels for debugging.
 ==========================================================================================#
 """
-    onefunction!
+    onefunction!(integrand,r,k)
+    onefunction!(integrand,r,interpolation,source,normals)
+    onefunction!(integrand,r,interpolation,source,normals,k)
 
-Fills `integrand` with ones. Can be used to e.g. compute surface areas.
+Fills `integrand` with ones. Other inputs disregarded. Can be used to compute surface areas.
 """
-onefunction!(integrand,r,k)                              = fill!(integrand,1.0)
-onefunction!(integrand,r,interpolation,source,normals)   = fill!(integrand,1.0)
-onefunction!(integrand,r,interpolation,source,normals,k) = fill!(integrand,1.0)
+onefunction!(integrand,r,k)                              = fill!(integrand,1)
+onefunction!(integrand,r,interpolation,source,normals)   = fill!(integrand,1)
+onefunction!(integrand,r,interpolation,source,normals,k) = fill!(integrand,1)

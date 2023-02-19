@@ -1,5 +1,10 @@
 import GeometryBasics
 
+"""
+    load_mesh_file(file)
+
+Loads 3D mesh files.
+"""
 function load_mesh_file(file)
     # Read mesh
     mesh = load(file)
@@ -28,17 +33,25 @@ function load_mesh_file(file)
     return coords, topology, ents
 end
 
-function load3dTriangularMesh(meshFile;m=3,n=3,
+"""
+    load3dTriangularMesh(mesh_file;m=3,n=3,geometry_order=:linear,physics_order=:geometry,
+                                    beta_type=:legendre,entites=false,removed_entites=[-1])
+
+Returns a `Mesh3d` from the geoemtry described in `mesh_file`.
+
+Supports .obj, .ply, .stl, .off, .2DM files using `MeshIO.jl` and `FileIO.jl`.
+"""
+function load3dTriangularMesh(mesh_file;m=3,n=3,
                 geometry_order=:linear,
                 physics_order=:geometry,beta_type=:legendre,
-                entites=false,removedEntites=[-1])
+                entites=false,removed_entites=[-1])
 
     if geometry_order !== :linear
         error("Currently only linear element supported")
     end
 
     # Figuring out the element type
-    initialCoordinates,initialTopology,ents = load_mesh_file(meshFile)
+    initialCoordinates,initialTopology,ents = load_mesh_file(mesh_file)
     if geometry_order == :quadratic
         shape_function = TriangularQuadratic(m,n)
     elseif geometry_order == :linear
@@ -48,7 +61,7 @@ function load3dTriangularMesh(meshFile;m=3,n=3,
         error("Only quadratic and linear geometries are currently supported")
     end
 
-    mask = .!convert.(Bool,sum(ents' .∈ removedEntites,dims=1))[:]
+    mask = .!convert.(Bool,sum(ents' .∈ removed_entites,dims=1))[:]
     usedNodes   = sort(unique(initialTopology[:,mask]))
     topology    = remove_unused_nodes(initialTopology[:,mask])
     coordinates = initialCoordinates[:,usedNodes]

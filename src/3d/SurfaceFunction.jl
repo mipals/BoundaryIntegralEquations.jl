@@ -422,7 +422,7 @@ end
 #==========================================================================================
                         Setting interpolation nodes equal to the
 ==========================================================================================#
-# Triangular Elements
+# Defines coordinates for nodal interpolation of different Triangular elements
 get_nodal_nodes_u(::TriangularLinear)    = [0.0; 1.0; 0.0]
 get_nodal_nodes_v(::TriangularLinear)    = [0.0; 0.0; 1.0]
 get_nodal_nodes_u(::TriangularQuadratic) = [0.0; 1.0; 0.0; 0.5; 0.5; 0.0]
@@ -437,7 +437,7 @@ end
 function get_nodal_nodes_v(sf::DiscontinuousTriangularQuadratic)
     return [sf.beta; sf.beta; 1-2*sf.beta; sf.beta; (1-sf.beta)/2; (1-sf.beta)/2]
 end
-# Quadrilateral Elements
+# Defines coordinates for nodal interpolation of different Quadrilateral Elements
 get_nodal_nodes_u(::QuadrilateralLinearSerendipity) = [-1.0; 1.0; 1.0;-1.0]
 get_nodal_nodes_v(::QuadrilateralLinearSerendipity) = [-1.0;-1.0; 1.0; 1.0]
 get_nodal_nodes_u(::QuadrilateralLinear4)           = [-1.0; 1.0;-1.0; 1.0]
@@ -465,14 +465,21 @@ function get_nodal_nodes_v(sf::DiscontinuousQuadrilateralQuadraticLagrange)
     return [sf.beta-1; sf.beta-1; 1-sf.beta; 1-sf.beta; sf.beta-1; 0; 0; 0; 1-sf.beta]
 end
 """
-    setInterpolationNodal!(surface_function::SurfaceFunction)
-Sets the interpolation nodes `shape_function` to be the nodal positions.
+    set_nodal_interpolation!(surface_function::SurfaceFunction)
+
+Sets the interpolation nodes `surface_function` to be the nodal positions.
 """
 function set_nodal_interpolation!(surface_function::SurfaceFunction)
     nodes_u = get_nodal_nodes_u(surface_function)
     nodes_v = get_nodal_nodes_v(surface_function)
     set_interpolation_nodes!(surface_function,nodes_u,nodes_v)
 end
+
+"""
+    set_interpolation_nodes!(surface_function,nodes_u,nodes_v)
+
+Set the interpolation nodes of the `surface_function` to be (`nodes_u`,`nodes_v`).
+"""
 function set_interpolation_nodes!(surface_function,nodes_u,nodes_v)
     surface_function.gauss_u = nodes_u
     surface_function.gauss_v = nodes_v
@@ -482,12 +489,21 @@ function set_interpolation_nodes!(surface_function,nodes_u,nodes_v)
                                                                         nodes_v')
     surface_function.interpolation = basisFunction(surface_function,nodes_u',nodes_v')
 end
+"""
+    set_interpolation_nodes!(surface_function::SurfaceFunction,physics_function::SurfaceFunction)
+
+Sets the interpolation nodes of surface_function equal to that of the physics function.
+"""
 function set_interpolation_nodes!(surface_function::SurfaceFunction,physics_function::SurfaceFunction)
-    surface_function.weights = physics_function.weights
     nodes_u = get_nodal_nodes_u(physics_function)
     nodes_v = get_nodal_nodes_v(physics_function)
     set_interpolation_nodes!(surface_function,nodes_u,nodes_v)
 end
+"""
+    set_interpolation_nodes!(surface_function::SurfaceFunction,gauss_u,gauss_v,weights)
+
+
+"""
 function set_interpolation_nodes!(surface_function::SurfaceFunction,gauss_u,gauss_v,weights)
     surface_function.weights = weights
     set_interpolation_nodes!(surface_function,gauss_u,gauss_v)

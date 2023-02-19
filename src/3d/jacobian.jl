@@ -68,7 +68,7 @@ end
 """
     jacobian!(basisElement::SurfaceFunction,coordinates,normals,tangent,sangent,jacobian)
 
-Inplace computations of the jacobian of the basisElement::SurfaceFunction at the coordinates.
+Inplace computations of the jacobian of the `basisElement::SurfaceFunction`` at the coordinates.
 The results are saved in `tangent`, `sangent`, `normals` and `jacobian`.
 """
 function jacobian!(basisElement::SurfaceFunction,

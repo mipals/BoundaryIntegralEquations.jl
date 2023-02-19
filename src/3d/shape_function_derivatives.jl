@@ -102,7 +102,7 @@ function shape_function_derivatives(mesh;global_derivatives=true)
     end
 
     # Compute indices
-    I = create_row_indices(lengths,idx[end])
+    I = inverse_rle(1:length(lengths),lengths)
     J = vcat(source_connections...)
 
     # Global derivatives is really what should be used. The local are only here for

@@ -44,19 +44,19 @@ function normalize_vector!(normals)
 end
 
 """
-    tangents!(normals, tangentX, tangentY)
+    tangents!(normals, tangent1, tangent2)
 
 Inplace computation of two tagents of the columns of `normals`.
-Results are saved in `tangentX` and `tangentY` respectively.
+Results are saved in `tangent1` and `tangent2` respectively.
 """
-function tangents!(normals, tangentX, tangentY)
+function tangents!(normals, tangent1, tangent2)
     # Defining standard basis vectors
     e2 = [0.0;1.0;0.0]
     e1 = [1.0;0.0;0.0]
-    for i = 1:size(tangentX,2)
+    for i = 1:size(tangent1,2)
         normal  = @view normals[:,i]
-        dX      = @view tangentX[:,i]
-        dY      = @view tangentY[:,i]
+        dX      = @view tangent1[:,i]
+        dY      = @view tangent2[:,i]
         cross!(dX,e2,normal)
         cross!(dY,normal,dX)
         if abs.(dot(e2,normal) - 1.0) <= 1e-10
@@ -64,9 +64,9 @@ function tangents!(normals, tangentX, tangentY)
             cross!(dX,dY,normal)
         end
     end
-    normalize_vector!(tangentX)
-    normalize_vector!(tangentY)
-    return tangentX,tangentY
+    normalize_vector!(tangent1)
+    normalize_vector!(tangent2)
+    return tangent1,tangent2
 end
 
 """
@@ -80,35 +80,30 @@ function get_element_normals(shape_function::SurfaceFunction,coordinates,topolog
     surface_function = deepcopy(shape_function)
     # Setting the interpolation to be on the nodal values
     set_nodal_interpolation!(surface_function)
-
     # Getting number shape functions as well as number of elements
     n_shape_functions = number_of_shape_functions(surface_function)
     n_elements        = size(topology,2)
-
     # Pre-Allocations
     normals  = zeros(size(coordinates))
-    avg      = zeros(1,size(coordinates,2))
-    tangentX = zeros(3,n_shape_functions)
-    tangentY = zeros(3,n_shape_functions)
+    average  = zeros(1,size(coordinates,2))
+    tangent1 = zeros(3,n_shape_functions)
+    tangent2 = zeros(3,n_shape_functions)
     normal   = zeros(3,n_shape_functions)
-
     for element = 1:n_elements
         # Extracting element properties (connectivity and coordinates)
-        element_nodes        = @view topology[:,element]
-        element_coordinates  = @view coordinates[:,element_nodes]
+        element_nodes       = @view topology[:,element]
+        element_coordinates = @view coordinates[:,element_nodes]
         # Computing nodal normals
-        mul!(tangentX,element_coordinates,surface_function.derivatives_u)
-        mul!(tangentY,element_coordinates,surface_function.derivatives_v)
-        cross_product!(normal,tangentX,tangentY)
+        mul!(tangent1,element_coordinates,surface_function.derivatives_u)
+        mul!(tangent2,element_coordinates,surface_function.derivatives_v)
+        cross_product!(normal,tangent1,tangent2)
         # Normalizing the normal before adding it to the list
         normals[:,element_nodes] .+= normal ./ sqrt.(sum(normal.^2,dims=1))
         # Add one to average (Midpoints are always connected to 2 elements. Corners varies.)
-        avg[element_nodes]       .+= 1.0
+        average[element_nodes]       .+= 1.0
     end
-
     # Setting normal equal to the average normal
-    normals = normals ./ avg
-
+    normals = normals ./ average
     return -normals ./ sqrt.(sum(abs2,normals,dims=1)) # Normalizing + fixing orientation
 end
 
@@ -132,8 +127,8 @@ function compute_sources(shape_function,physics_function,topology,coordinates)
     # Preallocation
     sources   = zeros(3,n_sources)
     normals   = similar(sources)
-    tangentX  = zeros(3,n_shape_functions)
-    tangentY  = zeros(3,n_shape_functions)
+    tangent1  = zeros(3,n_shape_functions)
+    tangent2  = zeros(3,n_shape_functions)
     normal    = zeros(3,n_shape_functions)
     @inbounds for element = 1:n_elements
         # Access element topology and coordinates
@@ -143,9 +138,9 @@ function compute_sources(shape_function,physics_function,topology,coordinates)
         # Interpolate on element to find source position
         sources[:,element_sources] = element_coordinates * surface_function
         # Compute source normals
-        mul!(tangentX,element_coordinates,surface_function.derivatives_u)
-        mul!(tangentY,element_coordinates,surface_function.derivatives_v)
-        cross_product!(normal,tangentX,tangentY)
+        mul!(tangent1,element_coordinates,surface_function.derivatives_u)
+        mul!(tangent2,element_coordinates,surface_function.derivatives_v)
+        cross_product!(normal,tangent1,tangent2)
         normals[:,element_sources] .= -normal ./ sqrt.(sum(normal.^2,dims=1))
     end
     return sources,normals,physics_topology
