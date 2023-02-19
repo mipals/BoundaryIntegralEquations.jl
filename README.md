@@ -13,7 +13,7 @@ $$
 
 For the Fast Multipole Method this package utilizes the Julia interfaces for the Flatiron Institute Fast Multipole Libraries: [2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia).
 
-For H-matrices the package utilizes the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) developed by Luiz Faria.
+For H-matrices the package utilizes the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl).
 
 **N.B. The package is still under heavy development.**
 
