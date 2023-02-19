@@ -62,6 +62,11 @@ function interpolate_elements(mesh::Mesh3d,shape_function::SurfaceFunction)
     return element_interpolations
 end
 
+"""
+    define_center_element(surface_function)
+
+Returns a surface function with interpolation point equal to the center of the element.
+"""
 function define_center_element(surface_function::Triangular)
     center_element = deepcopy(surface_function)
     set_interpolation_nodes!(center_element,[1.0/3.0],[1.0/3.0])
@@ -73,6 +78,11 @@ function define_center_element(surface_function::Quadrilateral)
     return center_element
 end
 
+"""
+    maximum_sidelength(x,y,z)
+
+Computes the maximum distance between ``\\mathbf{x}, \\mathbf{y}, \\mathbf{z} \\in \\mathbb{R}^3``.
+"""
 function maximum_sidelength(x,y,z)
     d1 = hypot(x[1] - y[1],x[2] - y[2], x[3] - y[3])
     d2 = hypot(y[1] - z[1],y[2] - z[2], y[3] - z[3])
@@ -130,35 +140,65 @@ end
 #==========================================================================================
                                 Utility functions
 ==========================================================================================#
-function compute_distances!(r,interpolation,source)
+"""
+    compute_distances!(r,interpolation,sources)
+
+Computes the euclidean distance between the ``j``th column of `sources` and the ``i``th columns of `interpolation` and saves them in `r[i,j]`.
+In many case the sources only have a single column.
+"""
+function compute_distances!(r,interpolation,sources)
     @inbounds for i = 1:size(r,1), j = 1:size(r,2)
-        r[i,j] = hypot(interpolation[1,i] - source[1,j],
-                       interpolation[2,i] - source[2,j],
-                       interpolation[3,i] - source[3,j])
+        r[i,j] = hypot(interpolation[1,i] - sources[1,j],
+                       interpolation[2,i] - sources[2,j],
+                       interpolation[3,i] - sources[3,j])
     end
+    return r
 end
+"""
+    integrand_mul!(integrand,jacobian)
+
+Inplace multiplication of integrand[i] and jacobian[i] saved in integrand[i].
+Used to e.g. scale the jacobian at the Gaussian points with the Gaussian weights.
+"""
 function integrand_mul!(integrand,jacobian)
     @inbounds @fastmath for i = eachindex(integrand)
         integrand[i] = integrand[i]*jacobian[i]
     end
+    return integrand
 end
+"""
+    dotC!(C,integrand,jacobian)
+
+Adds the innerproduct of `integrand` and `jacobian` to C[1].
+"""
 function dotC!(C,integrand,jacobian)
-    # Cm = zero(eltype(C))
     @inbounds @fastmath for i = eachindex(integrand)
         C[1] = C[1] + integrand[i] * jacobian[i]
     end
-    # C[1] += Cm
+    return C
 end
+"""
+    dotC!(C,integrand,jacobian)
+
+Adds the product of `integrand[i]` and `jacobian[i]` to c[i].
+Used when e.g. computing the integral free term.
+"""
 function c_integrand_mul!(c,integrand,jacobian)
     @inbounds @fastmath for i = eachindex(c)
         c[i] += integrand[i]*jacobian[i]
     end
+    return c
 end
+"""
+    sum_to_c!(y,integrand)
 
-function sum_to_c!(y,integrand)
+Adds all elements of `integrand` to c.
+"""
+function sum_to_c!(c,integrand)
     @inbounds @fastmath for i = eachindex(integrand)
-        y[1] += integrand[i]
+        c[1] += integrand[i]
     end
+    return c
 end
 
 #==========================================================================================
@@ -229,15 +269,12 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources;fOn=true,gOn=true,cOn=true
 end
 function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
                                 fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
-    topology    = get_topology(mesh)
     n_elements  = number_of_elements(mesh)
     sources     = convert.(eltype(shape_function),in_sources)
     n_sources   = size(in_sources,2)
     n_nodes     = size(mesh.sources,2)
-    coordinates = convert.(eltype(shape_function),get_coordinates(mesh))
     physics_topology = mesh.physics_topology
     physics_function = mesh.physics_function
-    # n_physics_functions = number_of_shape_functions(physics_function)
     #======================================================================================
         Introducing three elements: (The hope here is to compute singular integrals)
         The numbers corresponds to the corner for which the GP-points are clustered
@@ -315,17 +352,15 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
 
 end
 
+
 function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
                                 fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
-    topology    = get_topology(mesh)
     n_elements  = number_of_elements(mesh)
     sources     = convert.(eltype(shape_function),in_sources)
     n_sources   = size(in_sources,2)
     n_nodes     = size(mesh.sources,2)
-    coordinates = convert.(eltype(shape_function),get_coordinates(mesh))
     physics_topology = mesh.physics_topology
     physics_function = mesh.physics_function
-    # n_physics_functions = number_of_shape_functions(physics_function)
     #======================================================================================
         Introducing three elements: (The hope here is to compute singular integrals)
         The numbers corresponds to the corner for which the GP-points are clustered
@@ -364,7 +399,6 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
     copy_interpolation_nodes!(physics_function5,shape_function5)
     copy_interpolation_nodes!(physics_function6,shape_function6)
 
-
     # Computing interpolation on each element
     interpolation_list1 = interpolate_elements(mesh,shape_function1)
     interpolation_list2 = interpolate_elements(mesh,shape_function2)
@@ -397,10 +431,6 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
         mid_integrand = zeros(ComplexF64,length(nodesX4))
         mid_r         = zeros(Float64,length(nodesX4))
         subvectorC    = @view C[source_node]
-        # if source_node == 1
-        #     println("hey")
-        # end
-        # element_coordinates = zeros(3,n_physics_functions)
         @inbounds for element = 1:n_elements
             # Access element topology and coordinates
             physics_nodes        = @view physics_topology[:,element]
@@ -464,10 +494,8 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::SurfaceFun
     shape_function1    = create_shape_function(shape_function;n=n,m=m)
     physics_function1  = deepcopy(physics_function)
     copy_interpolation_nodes!(physics_function1,shape_function1)
-    # mesh.physics_function = physics_function1
     interpolation_list = interpolate_elements(mesh,shape_function1)
-    # Avoiding to have gauss-node on a singularity. Should be handled differently,
-    # but, this is good for now.
+    # Avoiding to have gauss-node on a singularity. Should be handled differently.
     if typeof(shape_function) <: QuadrilateralQuadraticLagrange
         for (x,y) in zip(shape_function1.gauss_u,shape_function1.gauss_v)
             if isapprox.(x, 0.0, atol=1e-15) && isapprox.(y, 0.0, atol=1e-15)
