@@ -22,13 +22,16 @@ shape_connections(::QuadrilateralQuadraticLagrange) = [[1 2],[1 3],[1 2 3 4],[2 
 shape_connections(::QuadrilateralQuadratic) = [[1 2],[2 3],[3 4],[4 1]]
 
 
+"""
+    connected_topology(mesh)
+
+"""
 function connected_topology(mesh)
     n_coordinates = size(mesh.coordinates,2)
-    source_connections  = [zeros(Int64,0) for i = 1:n_coordinates]
-    element_connections = [zeros(Int64,0) for i = 1:n_coordinates]
+    element_connections = [zeros(Int64,0) for _ in 1:n_coordinates]
     # Maybe we should use actual topology for this to work?
     topology = mesh.topology
-    n_physics_functions,n_elements = size(mesh.topology)
+    _,n_elements = size(mesh.topology)
     for element = 1:n_elements
         for i = 1:3
             append!(element_connections[topology[i,element]],element)
@@ -36,7 +39,6 @@ function connected_topology(mesh)
     end
     return sort!.(unique.(element_connections))
 end
-
 function connected_sources(mesh,depth,physics_function::T) where
         {T <: Union{DiscontinuousTriangular,DiscontinuousQuadrilateral}}
     cone = connected_topology(mesh)
@@ -66,41 +68,45 @@ function connected_sources(mesh,depth,physics_function::T) where
     return cone, sort!.(unique.(source_connections))
 end
 
+"""
+    connected_sources(mesh,depth=0)
 
+Returns two list of vectors.
+* The first list have the ``i``th vector equal to the elements that connect to the ``i``th source through at maximum `depth` other nodes.
+* The second list have the ``i``th vector equal to the sources that connect to the ``i``th source through at maximum `depth` other nodes.
+
+For a better understanding of the `depth` see picture in Background Theory/The Fast Multipole Method and BEM. Here the red elements corresponds to depth=1 while red + blue elements corresponds to depth = 2.
+"""
 function connected_sources(mesh,depth=0)
     return connected_sources(mesh,depth,mesh.physics_function)
 end
 
+"""
+    connected_sources(mesh,depth,physics_function::T)
+
+
+"""
 function connected_sources(mesh,depth,physics_function::T) where
-    {T <: Union{ContinuousTriangular,ContinuousQuadrilateral}}
+                            {T <: Union{ContinuousTriangular,ContinuousQuadrilateral}}
     @assert depth ∈ [0, 1, 2]
+    # Extracting relevant data from mesh
     n_sources = size(mesh.sources,2)
-    source_connections  = [zeros(Int64,0) for i = 1:n_sources]
-    element_connections = [zeros(Int64,0) for i = 1:n_sources]
-    # Maybe we should use actual topology for this to work?
-    topology = mesh.topology
-    physics_topology = mesh.physics_topology
-    n_corners = number_of_corners(mesh.physics_function)
     n_physics_functions,n_elements = size(mesh.physics_topology)
+    physics_topology = mesh.physics_topology # Maybe we should use the geometrical topology?
+    # Create vector of vectors of the correct size
+    source_connections  = [zeros(Int64,0) for _ in 1:n_sources]
+    element_connections = [zeros(Int64,0) for _ in 1:n_sources]
+    # Loop over elements and add connections to list
     for element = 1:n_elements
         for i = 1:n_physics_functions
             append!(element_connections[physics_topology[i,element]],element)
             append!(source_connections[physics_topology[i,element]],physics_topology[:,element])
         end
     end
-    if depth == 1
-        # conns = shape_connections(mesh.physics_function)
-        # for element = 1:n_elements
-        #     for idx = (n_corners + 1):n_physics_functions
-        #         for j ∈ conns[idx-n_corners]
-        #             append!(element_connections[physics_topology[idx,element]],element_connections[j,element])
-        #             append!(source_connections[physics_topology[idx,element]],  source_connections[j,element])
-        #         end
-        #     end
-        # end
-    elseif depth == 2
-        element_connections2 = [zeros(Int64,0) for i = 1:n_sources]
-        source_connections2  = [zeros(Int64,0) for i = 1:n_sources]
+    # If depth = 2 go one step further and add connections of connections
+    if depth == 2
+        element_connections2 = [zeros(Int64,0) for _ in 1:n_sources]
+        source_connections2  = [zeros(Int64,0) for _ in 1:n_sources]
         for source=1:n_sources
             for idx ∈ source_connections[source]
                 append!(element_connections2[source],element_connections[idx])
@@ -112,18 +118,11 @@ function connected_sources(mesh,depth,physics_function::T) where
     return sort!.(unique.(element_connections)), sort!.(unique.(source_connections))
 end
 
-function create_row_indices(lengths,total_counts)
-    row_indices = zeros(Int64,total_counts)
-    row = 1
-    idx = 0
-    for i ∈ lengths
-        row_indices[idx+1:idx+i] .= row
-        row = row + 1
-        idx = idx + i
-    end
-    return row_indices
-end
+"""
+    mygemm_vec3!(C, B, A)
 
+Mutating matrix-matrix product. Efficient for smallish matrix products.
+"""
 function mygemm_vec3!(C, B, A)
     @inbounds @fastmath for n ∈ eachindex(C)
         Cmn = zero(eltype(C))
@@ -134,58 +133,70 @@ function mygemm_vec3!(C, B, A)
     end
 end
 
-function sparse_computing_integrals!(physics_interpolation,shape_function,
+"""
+sparse_computing_integrals!(physics_interpolation,shape_function,
                                     normals, tangents,sangents,
                                     interpolation,jacobian_mul_weights,r,integrand,
                                     element_coordinates,
                                     fOn,gOn,submatrixF,submatrixG,k,source)
 
+
+"""
+function sparse_computing_integrals!(physics_interpolation,shape_function,
+                                    normals, tangents,sangents,
+                                    interpolation,jacobian_mul_weights,r,integrand,
+                                    element_coordinates,
+                                    fOn,gOn,submatrixF,submatrixG,k,source)
+    # Interpolate on element
     mul!(interpolation,element_coordinates,shape_function.interpolation)
+    # Compute jacobian and normals
     jacobian!(shape_function,element_coordinates,
                 normals,tangents,sangents,jacobian_mul_weights)
+    # Scale the jacobian with the weights
     integrand_mul!(jacobian_mul_weights,shape_function.weights)
+    # Compute distance between interpolation and source. Save in r
     compute_distances!(r,interpolation,source)
-    # jacobian_openbem!(shape_function,element_coordinates,normals,tangents,sangents,jacobian_mul_weights)
-    # jacobian_mul_weights .*= shape_function.weights
+    # If chosen evaluate the normal derivative of the Green's function
     if fOn
-        ### Evaluating the F-kernel (double-layer kernel) at the global nodes
         freens3d!(integrand,r,interpolation,source,normals,k)
-        # F3d!(interpolation,source,k,normals,r,integrand,-1)
         # Multiplying integrand with jacobian and weights
         integrand_mul!(integrand,jacobian_mul_weights)
-        # integrand .= integrand .* jacobian_mul_weights
         # Approximating integral and adding the value to the BEM matrix
         mygemm_vec3!(submatrixF,physics_interpolation,integrand)
-        # submatrixF .+= physics_interpolation*integrand
-        # mul!(submatrixF,physics_interpolation,integrand,true,true)
     end
+    # If chosen evalte the Green's function
     if gOn
-        ### Evaluating the G-kernel (single-layer kernel) at the global nodes
         greens3d!(integrand,r,k)
         integrand_mul!(integrand,jacobian_mul_weights)
         mygemm_vec3!(submatrixG,physics_interpolation,integrand)
-        # G3d!(k,r,integrand,-1)
-        # Multiplying integrand with jacobian and weights
-        # integrand .= integrand .* jacobian_mul_weights
-        # Approximating the integral and the adding the values to the BEM matrix
-        # submatrixG .+= physics_interpolation*integrand
-        # mul!(submatrixG,physics_interpolation,integrand,true,true)
     end
 end
 
+"""
+    find_physics_nodes!(physics_nodes,idxs,di,physics_top)
+
+Finds correct correct position in `F`- and `G`-vectors to put contribution of element.
+"""
 function find_physics_nodes!(physics_nodes,idxs,di,physics_top)
-    @inbounds for i = 1:length(physics_nodes)
+    @inbounds for i = eachindex(physics_nodes)
         physics_nodes[i] = idxs + di[physics_top[i]]
     end
     # [(idx[source_node] + di[t]) for t in physics_topology[:,element]]
 end
 
+"""
+sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
+                          fOn=true,gOn=true,depth=1,offset=nothing,progress=true)
+
+Computes the subpart of the BEM matrices corresponding elements near the collocation point.
+If `depth=1` only elements directly connected to the collocation point is included.
+If `depth=2` two layers of elements connected to the collocation point is included.
+"""
 function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         fOn=true,gOn=true,depth=1,offset=nothing,
         progress=true) where {T <: Union{TriangularLinear,DiscontinuousTriangularLinear}}
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
-    n_nodes     = size(mesh.sources,2)
     coordinates = mesh.coordinates
     physics_topology = mesh.physics_topology
     physics_function = mesh.physics_function
@@ -298,7 +309,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         if progress; next!(prog); end # For the progress meter
     end
 
-    I = create_row_indices(lengths,idx[end])
+    I = inverse_rle(1:n_sources,lengths)
     J = vcat(source_connections...)
 
     return sparse(I,J,F), sparse(I,J,G)
@@ -479,7 +490,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
         if progress; next!(prog); end # For the progress meter
     end
 
-    I = create_row_indices(lengths,idx[end])
+    I = inverse_rle(1:n_sources,lengths)
     J = vcat(source_connections...)
 
     return sparse(I,J,F), sparse(I,J,G)
