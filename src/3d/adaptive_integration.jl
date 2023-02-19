@@ -3,6 +3,7 @@ This file contains the adaptive integration from OpenBEM with only very minor ch
 ==========================================================================================#
 """
     gauss_points_triangle(n)
+
 Returns u,v,w where (u,v) are local coordinates on a triangle with corners
                 |\
                 | \
@@ -64,23 +65,45 @@ end
 #==========================================================================================
                                 Utility Functions
 ==========================================================================================#
+"""
+    maximum_side_length(element_coordinates)
+
+Computes the maximum norm of distances between nodes in cycle.
+"""
 function maximum_side_length(element_coordinates)
-    # Define a cycle of nodes as 0 -> 1 -> 2 -> 0
-    # Find maximum norm of distances between nodes in cycle
     return maximum(sqrt.(sum(diff([element_coordinates element_coordinates[:,1]],dims=2).^2,dims=1)))
 end
+"""
+    minimum_side_length(element_coordinates)
+
+Computes the minimum norm of distances between nodes in cycle.
+"""
 function minimum_side_length(element_coordinates)
-    # Define a cycle of nodes as 0 -> 1 -> 2 -> 0
-    # Find minimum norm of distances between nodes in cycle
     return minimum(sqrt.(sum(diff([element_coordinates element_coordinates[:,1]],dims=2).^2,dims=1)))
 end
+"""
+    minimum_distance(element_coordinates,source)
+
+Computes the minimum distance from source to each node in element.
+"""
 function minimum_distance(element_coordinates,source)
-    # Find minimum distance from source to each node in element
     return minimum(sqrt.(sum((element_coordinates .- source).^2,dims=1)))
 end
+"""
+    compute_center(element_coordinates)
+
+Computes the center of element_coordinates.
+"""
 function compute_center(element_coordinates)
     return sum(element_coordinates,dims=2)/3;
 end
+
+"""
+    singularity_check(p,coords,sing_check,factor=2.0)
+
+Check distance from `p` to `coords` and compares it to element size.
+If the distance if larger than a certain `factor` we need to subdivide element.
+"""
 function singularity_check(p,coords,sing_check,factor=2.0)
     if sing_check
         max_node_dist = max_node_distance(coords)
@@ -94,14 +117,24 @@ function singularity_check(p,coords,sing_check,factor=2.0)
         return false
     end
 end
+"""
+    max_distance(coords,p)
+
+Computes maximum distance from `p` to the coordinates in `coords`.
+"""
 function max_distance(coords,p)
-    max_dist = 0.0
+    max_dist = zero(eltype(p))
     @inbounds for i = 1:size(coords,2)
         tmp = hypot(coords[1,i] - p[1], coords[2,i] - p[2], coords[3,i] - p[3])
         max_dist = tmp > max_dist ? tmp : max_dist
     end
     return max_dist
 end
+"""
+    min_distance(coords,p)
+
+Computes minimum distance from `p` to the coordinates in `coords`.
+"""
 function min_distance(coords,p)
     min_dist = Inf
     @inbounds for i = 1:size(coords,2)
@@ -110,9 +143,13 @@ function min_distance(coords,p)
     end
     return min_dist
 end
+"""
+    max_node_distance(coords)
+
+Computes maximum distance between nodes in `coords`.
+"""
 function max_node_distance(coords)
-    # maximum(sqrt.(sum(diff([coords'; coords[:,1:2:end]'; coords[:,2:2:end]'],dims=1).^2,dims=2)))
-    max_node_dist = 0.0
+    max_node_dist = zero(eltype(coords))
     @inbounds for i = 2:size(coords,2)
         tmp = hypot(coords[1,i] - coords[1,i-1],
                     coords[2,i] - coords[2,i-1],
