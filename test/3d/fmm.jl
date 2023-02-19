@@ -5,7 +5,6 @@ using Test
 using BoundaryIntegralEquations
 using LinearAlgebra
 using IterativeSolvers
-
 #==========================================================================================
                             Testing mesh interpolation schemes
 ==========================================================================================#

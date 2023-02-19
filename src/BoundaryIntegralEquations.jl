@@ -25,6 +25,12 @@ using FMM3D
 using FileIO
 using MeshIO
 using Base.Threads
+using StaticArrays
+using HMatrices
+#==========================================================================================
+                                        Constants
+==========================================================================================#
+const Point3D = SVector{3,Float64}
 #==========================================================================================
                             General Properties of Shape Functions
 ==========================================================================================#
@@ -62,6 +68,7 @@ include("3d/assembly_collocation_losses.jl")
 include("3d/LossyGlobalMatrix.jl")
 include("3d/visualizations.jl")
 include("3d/fast_multipole_method.jl")
+include("3d/hmatrices.jl")
 # Old/Experimental features
 include("3d/experimental/LossyBlockMatrix.jl")
 include("3d/experimental/LossyBlockMatrixCompact.jl")
@@ -105,8 +112,11 @@ export Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
 # Assembly
 export assemble_parallel!
 
-# Fast mulitpole
+# Fast mulitpole Method
 export FMMGOperator, FMMHOperator
+
+# H-Matrices
+# export HGOperator #, HHOperator # The H-operator still does not work
 
 # Visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz
