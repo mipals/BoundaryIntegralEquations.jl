@@ -3,7 +3,6 @@
 *.jl.mem
 *.DS_store
 .vscode
-Manifest.toml
 docs/build
 examples/sphere_losses_timings.jl
 examples/sphere_losses.jl
