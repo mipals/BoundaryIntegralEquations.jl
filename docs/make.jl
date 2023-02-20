@@ -67,7 +67,7 @@ makedocs(
         ]
     )
 
-    # servedocs(skip_dir=joinpath("docs","src","examples"))
+# servedocs(skip_dir=joinpath("docs","src","examples"))
 
 deploydocs(
     repo = "github.com/mipals/BoundaryIntegralEquations.jl.git",
