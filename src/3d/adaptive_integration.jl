@@ -73,6 +73,7 @@ Computes the maximum norm of distances between nodes in cycle.
 function maximum_side_length(element_coordinates)
     return maximum(sqrt.(sum(diff([element_coordinates element_coordinates[:,1]],dims=2).^2,dims=1)))
 end
+
 """
     minimum_side_length(element_coordinates)
 
@@ -81,6 +82,7 @@ Computes the minimum norm of distances between nodes in cycle.
 function minimum_side_length(element_coordinates)
     return minimum(sqrt.(sum(diff([element_coordinates element_coordinates[:,1]],dims=2).^2,dims=1)))
 end
+
 """
     minimum_distance(element_coordinates,source)
 
@@ -89,6 +91,7 @@ Computes the minimum distance from source to each node in element.
 function minimum_distance(element_coordinates,source)
     return minimum(sqrt.(sum((element_coordinates .- source).^2,dims=1)))
 end
+
 """
     compute_center(element_coordinates)
 
@@ -117,6 +120,7 @@ function singularity_check(p,coords,sing_check,factor=2.0)
         return false
     end
 end
+
 """
     max_distance(coords,p)
 
@@ -130,6 +134,7 @@ function max_distance(coords,p)
     end
     return max_dist
 end
+
 """
     min_distance(coords,p)
 
@@ -143,6 +148,7 @@ function min_distance(coords,p)
     end
     return min_dist
 end
+
 """
     max_node_distance(coords)
 
@@ -205,6 +211,7 @@ function subdivide_triangle(shape_function::Triangular,
     end
     return DivsOUT
 end
+
 function singular_triangle_integration(shape_function::SurfaceFunction,
                                      n,source,element_coordinates,TolE=1e-6)
     element_size = maximum_side_length(element_coordinates)

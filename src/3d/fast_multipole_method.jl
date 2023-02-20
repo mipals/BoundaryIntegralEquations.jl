@@ -217,8 +217,10 @@ struct FMMGOperator{T} <: LinearMaps.LinearMap{T}
     # Correting near field computations
     nearfield_correction::AbstractMatrix{T}
 end
+
 # Overloading size. Used to check dimension of inputs
 Base.size(A::FMMGOperator) = (size(A.targets,2), size(A.targets,2))
+
 function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
                             A::FMMGOperator{T},
                             x::AbstractVector) where {T <: ComplexF64}
@@ -232,6 +234,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Note that the uses a Greens function that does not divide by 4π.
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
+
 function FMMGOperator(mesh,k;tol=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     # Making sure the wave number is complex
     zk = Complex(k)
@@ -286,7 +289,9 @@ struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
     # Correting near field computations
     nearfield_correction::AbstractMatrix{T}
 end
+
 Base.size(A::FMMHOperator) = (size(A.targets,2), size(A.targets,2))
+
 function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
                             A::FMMHOperator{T},
                             x::AbstractVector) where {T <: ComplexF64}

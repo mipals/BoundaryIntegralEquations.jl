@@ -46,13 +46,16 @@ struct HGOperator{T} <: LinearMaps.LinearMap{T}
     nearfield_correction::AbstractMatrix{T}
     coefficients::AbstractVecOrMat{T}
 end
+
 Base.size(A::HGOperator) = (size(A.G,1),size(A.G,1))
+
 function LinearMaps._unsafe_mul!(y, A::HGOperator, x::AbstractVector)
     mul!(A.coefficients,A.C,x)
     mul!(y,A.G,A.coefficients);
     mul!(y,A.nearfield_correction,x,true,true);
     return y
 end
+
 function HGOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     # Making sure the wave number is complex
     zk = Complex(k)
@@ -87,13 +90,16 @@ struct HelmholtzDoubleLayer <: AbstractMatrix{ComplexF64}
     NY::Vector{Point3D} # normals at Y coordinate
     k
 end
+
 function Base.getindex(K::HelmholtzDoubleLayer,i::Int,j::Int)
     # r = K.X[i] - K.Y[j]
     r = K.Y[j] - K.X[i]
     d = norm(r)
     return exp(im*K.k*d)/(4π*d^3) * (im*K.k*d - 1) * dot(r, K.NY[j])
 end
+
 Base.size(K::HelmholtzDoubleLayer) = length(K.X), length(K.Y)
+
 """
     HHOperator(k,H,C,nearfield_correction,coefficients)
     HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
@@ -125,13 +131,16 @@ struct HHOperator{T} <: LinearMaps.LinearMap{T}
     nearfield_correction::AbstractMatrix{T}
     coefficients::AbstractVecOrMat{T}
 end
+
 Base.size(H::HHOperator) = (size(H.H,1),size(H.H,1))
+
 function LinearMaps._unsafe_mul!(y, A::HHOperator, x::AbstractVector)
     mul!(A.coefficients,A.C,x)
     mul!(y,A.H,A.coefficients);
     mul!(y,A.nearfield_correction,x,true,true);
     return y
 end
+
 function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     zk = Complex(k)
     # Setup operator

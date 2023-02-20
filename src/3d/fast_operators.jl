@@ -2,8 +2,6 @@
 # handle the multiplication with the structured matrix with $G[i,j] = K(x_i,x_j)$
 # Reason: Currently the FMM- and H-operators is essentially a copy of the same code.
 # would be nice to combine the code.
-
-
 """
     FastGOperator(k,tol,targets,sources,C,coefficients,nearfield_correction,G)
     FastGOperator(mesh,k;tol=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=1)

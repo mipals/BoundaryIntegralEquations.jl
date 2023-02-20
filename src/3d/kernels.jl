@@ -15,6 +15,7 @@ function greens3d!(integrand,r,k)
         integrand[i,j] = exp(im*k*r[i,j])/(4π*r[i,j])
     end
 end
+
 """
     freens3d!(integrand,r,interpolation,sources,normals,k)
 
@@ -32,6 +33,7 @@ function freens3d!(integrand,r,interpolation,sources,normals,k)
                          normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
     end
 end
+
 """
     freens3dk0!(integrand,r,interpolation,sources,normals)
 
@@ -48,6 +50,7 @@ function freens3dk0!(integrand,r,interpolation,sources,normals)
                             normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
     end
 end
+
 """
     freens3dk0_to_freens3d!(integrand,r,k)
 
@@ -58,7 +61,6 @@ function freens3dk0_to_freens3d!(integrand,r,k)
         integrand[i,j] = integrand[i,j]*exp(im*k*r[i,j])*(1 - im*k*r[i,j])
     end
 end
-
 #==========================================================================================
                                     Kernels for debugging.
 ==========================================================================================#

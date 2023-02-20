@@ -21,7 +21,6 @@ shape_connections(::TriangularQuadratic) = [[1 2],[2 3],[3 1]]
 shape_connections(::QuadrilateralQuadraticLagrange) = [[1 2],[1 3],[1 2 3 4],[2 4],[3 4]]
 shape_connections(::QuadrilateralQuadratic) = [[1 2],[2 3],[3 4],[4 1]]
 
-
 """
     connected_topology(mesh)
 
@@ -39,6 +38,7 @@ function connected_topology(mesh)
     end
     return sort!.(unique.(element_connections))
 end
+
 function connected_sources(mesh,depth,physics_function::T) where
         {T <: Union{DiscontinuousTriangular,DiscontinuousQuadrilateral}}
     cone = connected_topology(mesh)
@@ -314,7 +314,6 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
 
     return sparse(I,J,F), sparse(I,J,G)
 end
-
 
 function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     fOn=true,gOn=true,depth=1,offset=nothing,

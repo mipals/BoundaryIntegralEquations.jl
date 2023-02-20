@@ -14,6 +14,7 @@ function my_mul!(C, A, B)
     end
     return C
 end
+
 """
     cross!(normal::AbstractVector,a::AbstractVector,b::AbstractVector)
 
@@ -25,6 +26,7 @@ function cross!(normal::AbstractVector{T},a::AbstractVector{T},b::AbstractVector
     normal[3] = a[1]*b[2]-a[2]*b[1]
     return normal
 end
+
 """
     cross_product!(normals,tangent,sangent)
 
@@ -40,6 +42,7 @@ function cross_product!(normals,tangent,sangent)
     end
     return normals
 end
+
 """
     column_norms!(jacobian,normals)
 
@@ -51,6 +54,7 @@ function column_norms!(jacobian,normals)
     end
     return jacobian
 end
+
 """
     normalize!(normals,jacobian)
 

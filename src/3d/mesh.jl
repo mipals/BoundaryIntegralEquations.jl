@@ -187,6 +187,7 @@ function get_beta_tri_linear(beta_type)
         return 0.25
     end
 end
+
 function get_beta_tri_quadratic(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
@@ -196,6 +197,7 @@ function get_beta_tri_quadratic(beta_type)
         return 0.1667
     end
 end
+
 function get_beta_quad_linear(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
@@ -207,6 +209,7 @@ function get_beta_quad_linear(beta_type)
         return 0.5
     end
 end
+
 function get_beta_quad_quadratic(beta_type)
     if typeof(beta_type) <: Number
         return beta_type
@@ -218,7 +221,6 @@ function get_beta_quad_quadratic(beta_type)
         return 1.0/3.0
     end
 end
-
 
 """
     get_hmax(mesh::Mesh3d)

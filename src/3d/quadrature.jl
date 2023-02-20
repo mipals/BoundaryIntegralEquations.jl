@@ -111,7 +111,6 @@ function rotated_triangular_quadpoints(n=4,m=4)
     # Returning grid and weights
     return ξ,η,weights
 end
-
 #==========================================================================================
                                 Spherical Coordinates
 ==========================================================================================#
@@ -143,7 +142,6 @@ function rotated_midpoint_triangular_quadpoints(n,m,vertex_number)
         return Y, 1 .- X .- Y,W
     end
 end
-
 #==========================================================================================
                                 Spherical Coordinates
 ==========================================================================================#
@@ -205,8 +203,8 @@ function polar_gaussian(n_rad)
     y = radius .* sin.(angles)
 
     return x,y,w
-
 end
+
 """
     polar_gaussianMidpoint(n)
 

@@ -8,6 +8,7 @@ struct SurfaceElement{T<:AbstractFloat}
     center::AbstractArray{T,1}
     max_side_length::T
 end
+
 function create_shape_function(shape_function::SurfaceFunction;n=4,m=4)
     nodes_u,nodes_v,weights = getQuadpoints(shape_function,m,n)
     new_shape_function      = deepcopy(shape_function)
@@ -17,10 +18,12 @@ function create_shape_function(shape_function::SurfaceFunction;n=4,m=4)
     interpolate_on_nodes!(new_shape_function)
     return new_shape_function
 end
+
 function interpolate_elements(mesh::Mesh3d;n=4,m=4)
     shape_function = create_shape_function(mesh.shape_function;n=n,m=m)
     interpolate_elements(mesh,shape_function)
 end
+
 function interpolate_elements(mesh::Mesh3d,shape_function::SurfaceFunction)
 
     @assert typeof(mesh.shape_function) <: typeof(shape_function)
@@ -72,6 +75,7 @@ function define_center_element(surface_function::Triangular)
     set_interpolation_nodes!(center_element,[1.0/3.0],[1.0/3.0])
     return center_element
 end
+
 function define_center_element(surface_function::Quadrilateral)
     center_element = deepcopy(surface_function)
     set_interpolation_nodes!(center_element,[0.0],[0.0])
@@ -114,7 +118,6 @@ function find_closest_corner(source,element_coordinates)
     return closest_corner
 end
 
-
 """
     create_rotated_element(basisElement::Triangular,m,n,clusterCorner)
 
@@ -135,8 +138,6 @@ function create_rotated_element(shape_function,n::Real,m::Real,clusterCorner)
     interpolate_on_nodes!(rotated_element)
     return rotated_element
 end
-
-
 #==========================================================================================
                                 Utility functions
 ==========================================================================================#
@@ -154,6 +155,7 @@ function compute_distances!(r,interpolation,sources)
     end
     return r
 end
+
 """
     integrand_mul!(integrand,jacobian)
 
@@ -166,6 +168,7 @@ function integrand_mul!(integrand,jacobian)
     end
     return integrand
 end
+
 """
     dotC!(C,integrand,jacobian)
 
@@ -177,6 +180,7 @@ function dotC!(C,integrand,jacobian)
     end
     return C
 end
+
 """
     dotC!(C,integrand,jacobian)
 
@@ -189,6 +193,7 @@ function c_integrand_mul!(c,integrand,jacobian)
     end
     return c
 end
+
 """
     sum_to_c!(y,integrand)
 
@@ -200,7 +205,6 @@ function sum_to_c!(c,integrand)
     end
     return c
 end
-
 #==========================================================================================
                                 Assembly Functions
 ==========================================================================================#
@@ -251,7 +255,6 @@ function computing_integrals!(physics_interpolation,interpolation_element,
     end
 end
 
-
 """
     assemble_parallel!(mesh::Mesh3d,k,sources;m=4,n=4,progress=true)
 
@@ -267,6 +270,7 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources;fOn=true,gOn=true,cOn=true
                                 fOn=fOn,gOn=gOn,cOn=cOn,m=m,n=n,progress=progress)
     end
 end
+
 function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
                                 fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
     n_elements  = number_of_elements(mesh)
@@ -351,7 +355,6 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
     return F, G, C
 
 end
-
 
 function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::TriangularQuadratic;
                                 fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true)
@@ -478,7 +481,6 @@ function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::Triangular
     return F, G, C
 
 end
-
 
 function assemble_parallel!(mesh::Mesh3d,k,in_sources,shape_function::SurfaceFunction;
                             fOn=true,gOn=true,cOn=true,m=4,n=4,progress=true)

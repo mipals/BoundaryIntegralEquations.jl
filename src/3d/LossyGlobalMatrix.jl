@@ -19,7 +19,9 @@ struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
     tmp1::AbstractArray{T}
     tmp2::AbstractArray{T}
 end
+
 Base.size(A::LossyGlobalInner) = (A.n, A.n)
+
 # Defining multiplication with `LossyGlobalInner`
 function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
                             A::LossyGlobalInner{T},
@@ -30,10 +32,10 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     y .= A.Dr*(A.Nd*x) - A.Nd'*(gmres(A.Gv,A.Hv*(A.Nd*x)))
     return y
 end
+
 function Base.Matrix(A::LossyGlobalInner)
     return A.Dr*A.Nd - A.Nd'*(Matrix(A.Gv)\(A.Hv*A.Nd))
 end
-
 #==========================================================================================
                             Defining LossyGlobalOuter
 ==========================================================================================#
@@ -60,8 +62,6 @@ struct LossyGlobalOuter{T} <: LinearMaps.LinearMap{T}
     mu_a::T
     mu_h::T
 end
-
-
 #==========================================================================================
                     Constructor (Assembling) of a LossyBlockMatrix
 ==========================================================================================#
