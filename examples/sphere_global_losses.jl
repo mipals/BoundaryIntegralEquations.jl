@@ -16,7 +16,7 @@ mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples",
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_finer");
 tri_mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_finest");
-tri_mesh_file = joinpath(mesh_path,"sphere_1m_35k");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_35k");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_77k");
 @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                        physics_order=tri_physics_orders[2])
@@ -70,7 +70,7 @@ else
     coordinates = [radius*ones(n,1) acos.(tmp_coordinates[3,:]/radius)]
 end
 rhs = LGM.Ga*gmres(LGM.inner,(LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0));verbose=true);
-@time pa = gmres(LGM,rhs;verbose=true,reltol=1e-17);
+@time pa = gmres(LGM,rhs;verbose=true);
 #? Try to solve using a direct solver / dense matrix
 
 #* Generating analytical solution
@@ -93,7 +93,6 @@ xlabel!("Angle")
 #===========================================================================================
                                 Checking results
 ===========================================================================================#
-# pa = p_b
 ph   = -LGM.tau_a/LGM.tau_h * pa
 dph  = -gmres(LGM.Gh,LGM.Hh*ph)
 #* 517 iterations for 69k DOF at freq=1000
@@ -133,40 +132,10 @@ using Test
 @test LGM.Dr*v ≈ -LGM.Nd'*dvn
 # #* We can fix this by solving a rectangular system instead
 # rhs_v = -[LGM.Hv*v; LGM.Dr*v]
-# V   = [LGM.Gv; LGM.Nd']
+# V    = [LGM.Gv; LGM.Nd']
 # dvn2 = lsqr(V,rhs_v;atol=1e-15,btol=1e-13,verbose=true);
 # @test LGM.Dr*v ≈ -LGM.Nd'*dvn2            # Now this is satisfied
 # @test LGM.Hv*v ≈ -LGM.Gv*dvn2 atol = 1e-4 # But the BEM system has a higher error
-
-# rhs_w = -[LGM.Gv*dvn; LGM.Nd'*dvn]
-# W  = [LGM.Hv; LGM.Dr]
-# v2  = lsqr(W,rhs_w;verbose=true);
-# @test LGM.Dr*v2 ≈ -LGM.Nd'*dvn            # Now this is satisfied
-# @test LGM.Hv*v2 ≈ -LGM.Gv*dvn atol = 1e-4 # But the BEM system has a higher error
-
-# #* The rectangular system solves the scaling, but since "v" is the same we still have problems
-# scaling_v  =  median(abs.(-LGM.Nd'*dvn2) ./ abs.(LGM.Dr*v))
-# scalings_v = (-LGM.Nd'*dvn2) ./ (LGM.Dr*v)
-
-# scaling_w  =  median(abs.(-LGM.Nd'*dvn) ./ abs.(LGM.Dr*v2))
-# scalings_w = (-LGM.Nd'*dvn) ./ (LGM.Dr*v2)
-
-#! Pretty slow as all things are dense
-B = [zeros(ComplexF64,n,n)                  LGM.Dr - LGM.Nd'*(Matrix(LGM.Gv)\Matrix(LGM.Hv));
- LGM.mu_a*LGM.Dc + LGM.Nd*(LGM.mu_h*(Matrix(LGM.Gh)\Matrix(LGM.Hh)) - LGM.phi_a*(LGM.Ga\LGM.Ha)) I]
-rhs_b = [zeros(n); v0]
-solB = gmres(B,rhs_b;verbose=true, maxiter=500) # Requires a lot iterations. Not promising
-p_b = solB[0n+1:1n]
-v_b = solB[1n+1:4n]
-dvn_b =  -gmres(LGM.Gv,LGM.Hv*v_b;verbose=true)
-
-scaling_b  =  median(abs.(-LGM.Nd'*dvn_b) ./ abs.(LGM.Dr*v_b))
-scalings_b = (-LGM.Nd'*dvn_b) ./ (LGM.Dr*v_b)
-
-@test LGM.Dr*v_b ≈ -LGM.Nd'*dvn_b atol=1e-3
-
-plot(ang_axis[perm], abs.(pa./p_b)[perm])
-scatter!(ang_axis[perm], abs.(pa./p_b)[perm],markersize=1)
 #===========================================================================================
                                    Plotting solutions
 ===========================================================================================#
@@ -177,10 +146,9 @@ dvx = dvn[0n+1:1n]
 dvy = dvn[1n+1:2n]
 dvz = dvn[2n+1:3n]
 #* Normal compontent of the viscous flow
-v_n0   = LGM.Nd'*v ./ scalings  #? why is the scaling needed
-# v_n0   = LGM.Nd'*v
+v_n0   = LGM.Nd'*v
 #* Computing the tangential velocity by substracting the normal information
-v_t = v - LGM.Nd*v_n0
+v_t = v + LGM.Nd*v_n0
 vt_sum = sqrt.(v_t[0n+1:1n].^2 + v_t[1n+1:2n].^2 + v_t[2n+1:3n].^2)
 #! Skipping points. Useful when the mesh is large
 K = 1
