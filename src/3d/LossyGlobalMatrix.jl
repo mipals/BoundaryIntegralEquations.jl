@@ -15,9 +15,6 @@ struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
     Nd::AbstractArray       # Collection of normal tr
     # Gradients
     Dr::AbstractArray       # [Dx  Dy  Dz]
-    # Temporary allocations. For testing purposes
-    tmp1::AbstractArray{T}
-    tmp2::AbstractArray{T}
 end
 
 Base.size(A::LossyGlobalInner) = (A.n, A.n)
@@ -61,6 +58,8 @@ struct LossyGlobalOuter{T} <: LinearMaps.LinearMap{T}
     # Combinations
     mu_a::T
     mu_h::T
+    # Temporary solution
+    tmp
 end
 #==========================================================================================
                     Constructor (Assembling) of a LossyBlockMatrix
@@ -142,9 +141,8 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     mu_a = ϕₐ - τₐ*ϕₕ/τₕ
     mu_h =      τₐ*ϕₕ/τₕ # ϕₐ - mu_a
 
-    tmp1 = zeros(eltype(Hv),3nSource) # Are not used right now
-    tmp2 = zeros(eltype(Hv),3nSource) # Are not used right now
-    inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr,tmp1,tmp2)
+    tmp1 = zeros(eltype(Hv),nSource) # Currently not used
+    inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr)
 
     return LossyGlobalOuter(nSource,
                         Ha,Ga,
@@ -152,7 +150,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;
                         Hv,Gv,
                         Nd,Dc,Dr,
                         inner,
-                        ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
+                        ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h, tmp1)
 end
 #==========================================================================================
     Defining relevant routines for LinearMaps.jl to work on the LossyBlockMatrix format
@@ -167,9 +165,11 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     LinearMaps.check_dim_mul(y, A, x)
     # Adding the contribution from Ha
     y .= -A.phi_a*(A.Ha*x)
+    # Create temporary
+    A.tmp .= (A.mu_h*gmres(A.Gh,A.Hh*x) +
+                A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
+                A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
     # We only want to call the multiplication with Ga once pr. iteration
-    y += A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) +
-               A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
-               A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
+    mul!(y,A.Ga,A.tmp,true,true)
     return y
 end
