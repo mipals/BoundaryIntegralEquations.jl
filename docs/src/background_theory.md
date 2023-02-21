@@ -75,7 +75,7 @@ Applying this the surface integral can be transformed into local coordinates and
 where $\mathbf{u}_i$ is the quadrature point with corresponding weights $w_i$.
 
 ## The Boundary Element Method
-In simple terms the Boundary Element Method (BEM) is a method for solving Boundary Integral Equations through a discretization of both the unknown function and domain. In this thesis the main focus is solving the BIE through the so-called collocation approach. This approach is a particular case of the Galerkin approach where the test function is equal to the sum of Dirac-delta functions
+In simple terms the Boundary Element Method (BEM) is a method for solving Boundary Integral Equations through a discretization of both the unknown function and domain. In this package the main focus is solving BIEs through the so-called collocation approach. This approach is a particular case of the Galerkin approach where the test function is equal to the sum of Dirac-delta functions
 
 ```math
 \phi(\mathbf{y}) =  \mathbf{a}^\top

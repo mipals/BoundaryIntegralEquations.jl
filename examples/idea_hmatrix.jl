@@ -15,9 +15,9 @@ tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctr
 mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes")
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_fine");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_finer");
-tri_mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_finest");
-# tri_mesh_file = joinpath(mesh_path,"sphere_1m_35k");
+tri_mesh_file = joinpath(mesh_path,"sphere_1m_35k");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_77k");
 @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
                                                        physics_order=tri_physics_orders[2])
@@ -53,13 +53,20 @@ yh = Gh*x
 @time Gf*x;
 @time Gh*x;
 
-
 @time xf = gmres(Gf,yf;verbose=true,maxiter=100)
 @time xh = gmres(Gh,yh;verbose=true,maxiter=100)
 
 norm(xf - x)/norm(x)
 norm(xh - x)/norm(x)
 norm(xh - xf)/norm(xf)
+
+using Plots
+plot(Gh.G;aspect_ratio=1)
+
+# Memory usage
+prod(size(Gh.G))*2*8/(2^30) # For the rectangular "G"-matrix
+prod(size(Gh))*2*8/(2^30)   # For the BEM-matrix
+
 
 # The IFGF is currently problematic as it only accepts AbstractTrees = "0.3" (we need 0.4)
 using StaticArrays
