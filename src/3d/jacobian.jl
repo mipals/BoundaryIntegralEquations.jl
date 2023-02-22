@@ -21,9 +21,9 @@ end
 Inplace computation of the cross product `a × b`. Result saved in normal.
 """
 function cross!(normal::AbstractVector{T},a::AbstractVector{T},b::AbstractVector{T}) where {T}
-    normal[1] = a[2]*b[3]-a[3]*b[2]
-    normal[2] = a[3]*b[1]-a[1]*b[3]
-    normal[3] = a[1]*b[2]-a[2]*b[1]
+    normal[1] = a[2]*b[3] - a[3]*b[2]
+    normal[2] = a[3]*b[1] - a[1]*b[3]
+    normal[3] = a[1]*b[2] - a[2]*b[1]
     return normal
 end
 
