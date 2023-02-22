@@ -58,8 +58,6 @@ struct LossyGlobalOuter{T} <: LinearMaps.LinearMap{T}
     # Combinations
     mu_a::T
     mu_h::T
-    # Temporary solution
-    tmp
 end
 #==========================================================================================
                     Constructor (Assembling) of a LossyBlockMatrix
@@ -141,7 +139,6 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     mu_a = ϕₐ - τₐ*ϕₕ/τₕ
     mu_h =      τₐ*ϕₕ/τₕ # ϕₐ - mu_a
 
-    tmp1 = zeros(eltype(Hv),nSource) # Currently not used
     inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr)
 
     return LossyGlobalOuter(nSource,
@@ -150,7 +147,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;
                         Hv,Gv,
                         Nd,Dc,Dr,
                         inner,
-                        ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h, tmp1)
+                        ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
 end
 #==========================================================================================
     Defining relevant routines for LinearMaps.jl to work on the LossyBlockMatrix format
@@ -166,10 +163,8 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Adding the contribution from Ha
     y .= -A.phi_a*(A.Ha*x)
     # Create temporary
-    A.tmp .= (A.mu_h*gmres(A.Gh,A.Hh*x) +
+    y .+= A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) +
                 A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
-                A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
-    # We only want to call the multiplication with Ga once pr. iteration
-    mul!(y,A.Ga,A.tmp,true,true)
+                 A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
     return y
 end
