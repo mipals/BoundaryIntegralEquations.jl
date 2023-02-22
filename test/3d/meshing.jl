@@ -6,6 +6,7 @@ using LinearAlgebra
 using Test
 import BoundaryIntegralEquations: tangents!, number_of_shape_functions
 import BoundaryIntegralEquations: interpolation_function_derivatives
+import SparseArrays: nnz
 #==========================================================================================
                                     Creating Tests
 ==========================================================================================#
@@ -40,6 +41,11 @@ import BoundaryIntegralEquations: interpolation_function_derivatives
         if go == :linear && po == :linear
             @test mesh.coordinates ≈ mesh.sources
         end
+        if po ∈ [:disctriconstant,:disctrilinear,:disctriquadratic]
+            nnz(Dx) == number_of_shape_functions(mesh.physics_function)*size(mesh.sources,2)
+            nnz(Dx) == number_of_shape_functions(mesh.physics_function)*size(mesh.sources,2)
+            nnz(Dy) == number_of_shape_functions(mesh.physics_function)*size(mesh.sources,2)
+        end
     end
 end
 
@@ -72,5 +78,10 @@ end
         @test isapprox(sum(abs.(Dx*ones(n_sources))/n_sources), 0.0, atol=1e-14)
         @test isapprox(sum(abs.(Dy*ones(n_sources))/n_sources), 0.0, atol=1e-14)
         @test isapprox(sum(abs.(Dz*ones(n_sources))/n_sources), 0.0, atol=1e-14)
+        if po ∈ [:discquadconstant,:discquadlinear,:discquadquadratic]
+            nnz(Dx) == number_of_shape_functions(mesh.physics_function)*size(mesh.sources,2)
+            nnz(Dx) == number_of_shape_functions(mesh.physics_function)*size(mesh.sources,2)
+            nnz(Dy) == number_of_shape_functions(mesh.physics_function)*size(mesh.sources,2)
+        end
     end
 end
