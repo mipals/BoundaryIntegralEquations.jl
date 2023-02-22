@@ -84,7 +84,7 @@ function LossyBlockMatrix(mesh::Mesh,freq;depth=1,
     tangents₂ = convert(typeof(Bᵥ),mesh.sangents)
 
     ### Computing tangential derivatives
-    Dt₁, Dt₂ = shape_function_derivatives(mesh;global_derivatives=false)
+    Dt₁, Dt₂ = interpolation_function_derivatives(mesh;global_derivatives=false)
     # Dt₁, Dt₂ = shapeFunctionDerivative(mesh)
     Dt₁ = convert.(eltype(Bᵥ),Dt₁)
     Dt₂ = convert.(eltype(Bᵥ),Dt₂)
@@ -390,7 +390,7 @@ The caveat being that the shape function derivatives are computed from the globa
 function fullGlobal(M::LossyBlockMatrix,mesh)
     n = M.n
     A = spzeros(eltype(M),M.N,M.N)
-    Dx,Dy,Dz = shape_function_derivatives(mesh)
+    Dx,Dy,Dz = interpolation_function_derivatives(mesh)
     nvect0 = mesh.normals
     tvect1 = mesh.tangentsX
     tvect2 = mesh.tangentsY

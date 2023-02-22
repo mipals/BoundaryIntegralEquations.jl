@@ -8,7 +8,7 @@ BoundaryIntegralEquations.LossyGlobalInner
 ```
 
 ```@docs
-BoundaryIntegralEquations.shape_function_derivatives
+BoundaryIntegralEquations.interpolation_function_derivatives
 ```
 
 ```@docs

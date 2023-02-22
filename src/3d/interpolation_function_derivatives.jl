@@ -20,7 +20,7 @@ end
             Computing shape function derivatives at each node as the average
 ==========================================================================================#
 """
-    shape_function_derivatives(mesh)
+    interpolation_function_derivatives(mesh)
 
 Returns interpolation function derivative matrics ``(\\mathbf{D}_x,\\mathbf{D}_y,\\mathbf{D}_z)`` of the 'physics_function'.
 This means that given the BEM interpolation of p the derivatives are given by
@@ -33,7 +33,7 @@ NOTE! This is only the tangential part of the gradient.
 The reason being that the BEM interpolation on deal with surface values, and does
 therefore not contain the derivative information orthogonal to it.
 """
-function shape_function_derivatives(mesh;global_derivatives=true)
+function interpolation_function_derivatives(mesh;global_derivatives=true)
     topology    = mesh.topology
     coordinates = mesh.coordinates
     n_elements  = number_of_elements(mesh)
