@@ -4,20 +4,20 @@
 Computes the double-integral ∫N(s)∫G(x,y)N(x)ᵀ ∂Γₓ∂Γₛ .
 """
 function computing_integrand!(integrand,Gxy,Ny,wy,Nx,wx)
-    @inbounds for i = 1:length(wy)
+    @inbounds for i in eachindex(wy)
         mul!(integrand,Ny[:,i],wx'*(Gxy[i,:] .* Nx'),wy[i],true)
     end
 end
 
 function computing_integrand_test!(integrand,Gxy,Ny,wy,Nx,wx,temporary1,temporary2)
-    @inbounds for i = 1:length(wy)
+    @inbounds for i in eachindex(wy)
         temporary1 .= Gxy[i,:] .* wx
         mul!(temporary2,Nx,temporary1)
         mul!(integrand,Ny[:,i],temporary2',wy[i],true)
     end
 end
 function computing_c_integrand!(integrand,Ny,wy)
-    @inbounds for i = 1:length(wy)
+    @inbounds for i in eachindex(wy)
         mul!(integrand,Ny[:,i],Ny[:,i]',wy[i],true)
     end
 end
