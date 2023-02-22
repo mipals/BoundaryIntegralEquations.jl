@@ -10,7 +10,7 @@ struct LossyGlobalInner{T} <: LinearMaps.LinearMap{T}
     n::Int64                # Number of nodes
     # Acoustic Matrices
     Hv::AbstractArray{T}    # Viscous BEM A
-    Gv::AbstractArray{T}    # Viscous BEM B
+    Gv                      # Viscous BEM B
     # Normal transformation
     Nd::AbstractArray       # Collection of normal tr
     # Gradients
@@ -26,7 +26,11 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Checking dimensions of input
     LinearMaps.check_dim_mul(y, A, x)
     # Extracting relevant values
-    y .= A.Dr*(A.Nd*x) - A.Nd'*(gmres(A.Gv,A.Hv*(A.Nd*x)))
+    if typeof(A.Gv) <: Factorization
+        y .= A.Dr*(A.Nd*x) - A.Nd'*(A.Gv\(A.Hv*(A.Nd*x)))
+    else
+        y .= A.Dr*(A.Nd*x) - A.Nd'*(gmres(A.Gv,A.Hv*(A.Nd*x)))
+    end
     return y
 end
 
@@ -41,9 +45,9 @@ struct LossyGlobalOuter{T} <: LinearMaps.LinearMap{T}
     Ha                          # Acoustical BEM H
     Ga                          # Acoustical BEM G
     Hh::AbstractArray{T}        # Thermal BEM H
-    Gh::AbstractArray{T}        # Thermal BEM G
+    Gh                          # Thermal BEM G
     Hv::AbstractArray{T}        # Viscous BEM H
-    Gv::AbstractArray{T}        # Viscous BEM GH
+    Gv                          # Viscous BEM GH
     Nd::AbstractArray           # [diag(nx);diag(ny);diag(nz)]
     Dc::AbstractArray           # [Dx; Dy; Dc]
     Dr::AbstractArray           # [Dx  Dy  Dz]
@@ -71,7 +75,7 @@ A `LinearMap` corresponding to the reduced lossy system.
 """
 function LossyGlobalOuter(mesh::Mesh,freq;
                             progress=true,integral_free_term=[],
-                            depth=1,sparse_assembly=true,exterior=true,
+                            depth=1,sparse_assembly=true,exterior=true,sparse_lu=false,
                             m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
     if fmm_on == false && size(mesh.normals,2) > 20000
         @warn "Using a dense formulation with a mesh of this size can be problematic"
@@ -139,15 +143,26 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     mu_a = ϕₐ - τₐ*ϕₕ/τₕ
     mu_h =      τₐ*ϕₕ/τₕ # ϕₐ - mu_a
 
-    inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr)
-
-    return LossyGlobalOuter(nSource,
-                        Ha,Ga,
-                        Hh,Gh,
-                        Hv,Gv,
-                        Nd,Dc,Dr,
-                        inner,
-                        ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
+    if sparse_lu
+        vlu = lu(Gv)
+        inner = LossyGlobalInner(nSource,Hv,vlu,Nd,Dr)
+        return LossyGlobalOuter(nSource,
+                                Ha,Ga,
+                                Hh,lu(Gh),
+                                Hv,vlu,
+                                Nd,Dc,Dr,
+                                inner,
+                                ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
+    else
+        inner = LossyGlobalInner(nSource,Hv,Gv,Nd,Dr)
+        return LossyGlobalOuter(nSource,
+                            Ha,Ga,
+                            Hh,Gh,
+                            Hv,Gv,
+                            Nd,Dc,Dr,
+                            inner,
+                            ϕₐ,ϕₕ,τₐ,τₕ,mu_a,mu_h)
+    end
 end
 #==========================================================================================
     Defining relevant routines for LinearMaps.jl to work on the LossyBlockMatrix format
@@ -163,8 +178,14 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Adding the contribution from Ha
     y .= -A.phi_a*(A.Ha*x)
     # Create temporary
-    y .+= A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) +
-                A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
-                 A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
+    if typeof(A.Gh) <: Factorization
+        y .+= A.Ga*(A.mu_h*(A.Gh\(A.Hh*x)) +
+                        A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
+                        A.Nd'*(A.Gv\(A.Hv*(A.Dc*x)))))
+    else
+        y .+= A.Ga*(A.mu_h*gmres(A.Gh,A.Hh*x) +
+                    A.mu_a*gmres(A.inner, A.Dr*(A.Dc*x) -
+                    A.Nd'*gmres(A.Gv,A.Hv*(A.Dc*x))))
+    end
     return y
 end
