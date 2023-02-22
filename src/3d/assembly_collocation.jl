@@ -94,10 +94,6 @@ function maximum_sidelength(x,y,z)
     return max(d1,d2,d3)
 end
 
-function compute_distance(source,center)
-    return hypot(source[1] - center[1], source[2] - center[2], source[3] - center[3])
-end
-
 """
     find_closest_corner(source,element_coordinates)
 
