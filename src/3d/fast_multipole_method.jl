@@ -231,7 +231,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Computing the FMM sum
     vals = hfmm3d(A.tol,A.k,A.sources,charges=A.coefficients,targets=A.targets,pgt=1)
     # Ouput equal to the FMM contributions + near field corrections
-    # Note that the uses a Greens function that does not divide by 4π.
+    # The FMM3D library does not divide by 4π so we do it manually
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 
@@ -304,7 +304,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Computing the FMM sum
     vals = hfmm3d(A.tol,A.k,A.sources,targets=A.targets,dipvecs=A.dipvecs,pgt=1)
     # Ouput equal to the FMM contributions + near field corrections
-    # Note that FMM3D uses a Greens function that does not divide by 4π.
+    # The FMM3D library does not divide by 4π so we do it manually
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 
