@@ -3,10 +3,10 @@ get_offset(physics_element::ContinuousTriangular)       = 0.0
 get_offset(physics_element::DiscontinuousQuadrilateral) = 0.0
 get_offset(physics_element::ContinuousQuadrilateral)    = 0.1
 
-get_beta(physicsElement::Triangular) = 0.0
-get_beta(physicsElement::DiscontinuousTriangularConstant)  = 0.5
-get_beta(physicsElement::DiscontinuousTriangularLinear)    = 0.05
-get_beta(physicsElement::DiscontinuousTriangularQuadratic) = 0.05
+get_beta(physics_element::Triangular) = 0.0
+get_beta(physics_element::DiscontinuousTriangularConstant)  = 0.5
+get_beta(physics_element::DiscontinuousTriangularLinear)    = physics_element.beta
+get_beta(physics_element::DiscontinuousTriangularQuadratic) = physics_element.beta
 #==========================================================================================
                                 TriangularQuadratic Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
@@ -41,31 +41,50 @@ end
 
 function connected_sources(mesh,depth,physics_function::T) where
         {T <: Union{DiscontinuousTriangular,DiscontinuousQuadrilateral}}
-    cone = connected_topology(mesh)
-    topology = mesh.topology
-    physics_topology = mesh.physics_topology
-    n_physics,n_elements = size(mesh.physics_topology)
-    element_connections = [zeros(Int64,0) for i = 1:n_elements]
-    n_corners = number_of_corners(physics_function)
-    for element = 1:n_elements
-        for i = 1:n_corners
-            append!(element_connections[element], cone[topology[i,element]])
-        end
-    end
-
-    n_sources = size(mesh.sources,2)
-    source_connections  = [zeros(Int64,0) for i = 1:n_sources]
-    for element = 1:n_elements
-        for elm ∈ element_connections[element]
-            for i = 1:n_physics
-                append!(source_connections[physics_topology[i,element]],physics_topology[:,elm])
+    # @warn "For now only depth is working for discontinouous elements"
+    @assert depth ∈ [1,2]
+    n_physics_functions = number_of_shape_functions(mesh.physics_function)
+    _,n_elements = size(mesh.topology)
+    # If depth == 1 we only extract wrong integration from the element itself
+    if depth == 1
+        # Get local element connections
+        source_connections = [mesh.physics_topology[:,element] for element in 1:n_elements]
+        # Create list of element number
+        element_connections = [[element_number] for element_number in 1:n_elements]
+    elseif depth == 2
+        # First we must use the geoemtry to find neighbouring elements. We only use corners
+        n_corners_pr_element = number_of_corners(mesh.shape_function)
+        topology = mesh.topology
+        corners = sort(unique(topology[1:n_corners_pr_element,:]))
+        n_corners = length(corners)
+        # Maybe we should use the geometrical topology?
+        # Create vector of vectors of the correct size
+        corner_connections = [zeros(Int64,0) for _ in 1:n_corners]
+        # Loop over elements and add connections to list
+        for element = 1:n_elements
+            for corner = 1:n_corners_pr_element
+                append!(corner_connections[topology[corner,element]],element)
             end
         end
+        # We now add the element-connection list by running thorugh each corner
+        element_connections = [zeros(Int64,0) for _ in 1:n_elements]
+        for element = 1:n_elements
+            for corner = 1:n_corners_pr_element
+                append!(element_connections[element],corner_connections[topology[corner,element]])
+            end
+        end
+        element_connections = sort!.(unique.(element_connections))
+        source_connections = [zeros(Int64,0) for _ in 1:n_elements]
+        for element in 1:n_elements
+            append!(source_connections[element],mesh.physics_topology[:,element_connections[element]])
+        end
+        source_connections = sort!.(unique.(source_connections))
     end
-
-    cone = inverse_rle(element_connections,n_physics*ones(Int64,length(element_connections)))
-
-    return cone, sort!.(unique.(source_connections))
+    # Copy element connections for every node on element
+    sene = inverse_rle(source_connections,n_physics_functions*ones(Int,n_elements))
+    # Copy element list for every node on element
+    cone = inverse_rle(element_connections,n_physics_functions*ones(Int,n_elements))
+    return cone,sene
 end
 
 """
@@ -77,18 +96,13 @@ Returns two list of vectors.
 
 For a better understanding of the `depth` see picture in Background Theory/The Fast Multipole Method and BEM. Here the red elements corresponds to depth=1 while red + blue elements corresponds to depth = 2.
 """
-function connected_sources(mesh,depth=0)
+function connected_sources(mesh,depth=1)
     return connected_sources(mesh,depth,mesh.physics_function)
 end
 
-"""
-    connected_sources(mesh,depth,physics_function::T)
-
-
-"""
 function connected_sources(mesh,depth,physics_function::T) where
                             {T <: Union{ContinuousTriangular,ContinuousQuadrilateral}}
-    @assert depth ∈ [0, 1, 2]
+    @assert depth ∈ [1, 2]
     # Extracting relevant data from mesh
     n_sources = size(mesh.sources,2)
     n_physics_functions,n_elements = size(mesh.physics_topology)
@@ -212,7 +226,7 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     beta = get_beta(physics_function)
     tmp  = DiscontinuousTriangularLinear(physics_function,beta)
     if typeof(offset) <: Real
-        offr = 0.0
+        offr = offset
     else
         offr = get_offset(physics_function)
     end

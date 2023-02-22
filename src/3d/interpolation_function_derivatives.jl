@@ -62,7 +62,7 @@ function interpolation_function_derivatives(mesh;global_derivatives=true)
     derivatives_u = shape_function.derivatives_u
     derivatives_v = shape_function.derivatives_v
 
-    _, source_connections = connected_sources(mesh,0)
+    _, source_connections = connected_sources(mesh,1)
     lengths = length.(source_connections)
     dict    = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
 
