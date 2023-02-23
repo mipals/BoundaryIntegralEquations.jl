@@ -75,6 +75,7 @@ A `LinearMap` corresponding to the reduced lossy system.
 """
 function LossyGlobalOuter(mesh::Mesh,freq;
                             progress=true,integral_free_term=[],
+                            hmatrix_on=false,
                             depth=1,sparse_assembly=true,exterior=true,sparse_lu=false,
                             m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
     if fmm_on == false && size(mesh.normals,2) > 20000
@@ -93,23 +94,29 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     ### Extracting the number of nodes (and hence also the total matrix size)
     nSource = size(sources,2)
 
+
+    # Defining Diagonal Entries
+    if isempty(integral_free_term)
+        C0 = Diagonal(ones(eltype(kₕ),nSource)/2)
+    elseif length(integral_free_term) == nSource
+        C0 = Diagonal(integral_free_term)
+    elseif !(length(integral_free_term) == nSource)
+        throw(DimensionMismatch("Length of user-specified integral free terms,"*
+        "$(length(integral_free_term)), is not equal to the number of sources, $(nSource)"))
+    end
     ### Assembling the 3 BEM systems
     if progress; @info("Acoustic Matrices:"); end
-    if fmm_on
-        # Defining Diagonal Entries
-        if isempty(integral_free_term)
-            C0 = Diagonal(ones(eltype(kₕ),nSource)/2)
-        elseif length(integral_free_term) == nSource
-            C0 = Diagonal(integral_free_term)
-        elseif !(length(integral_free_term) == nSource)
-            throw(DimensionMismatch("Length of user-specified integral free terms,"*
-            "$(length(integral_free_term)), is not equal to the number of sources, $(nSource)"))
-        end
+    if fmm_on && hmatrix_on
+        throw(ArgumentError("You can not both use the FMM and H-matrices"))
+    elseif fmm_on && !hmatrix_on
         Ga = FMMGOperator(mesh,kₐ;
                         n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
         Ha = FMMHOperator(mesh,kₐ;
                         integral_free_term=integral_free_term,
                         n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
+    elseif !fmm_on && hmatrix_on
+        Ga = HGOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = HHOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
     else
         Ha,Ga,C = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
         C0 = (exterior ? Diagonal(C) : Diagonal(1.0 - C))
