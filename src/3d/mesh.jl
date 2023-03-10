@@ -137,11 +137,12 @@ function compute_sources(shape_function,physics_function,topology,coordinates)
         element_sources     = @view physics_topology[:,element]
         # Interpolate on element to find source position
         sources[:,element_sources] = element_coordinates * surface_function
-        # Compute source normals
+        #! Compute source normals - Why are these constant?
         mul!(tangent1,element_coordinates,surface_function.derivatives_u)
         mul!(tangent2,element_coordinates,surface_function.derivatives_v)
         cross_product!(normal,tangent1,tangent2)
         normals[:,element_sources] .= -normal ./ sqrt.(sum(normal.^2,dims=1))
+        # normals[:,element_sources] .= -sources[:,element_sources] ./ sqrt.(sum(sources[:,element_sources].^2,dims=1))
     end
     return sources,normals,physics_topology
 end

@@ -11,3 +11,4 @@ examples/meshes/sphere_1m_finest.mphtxt
 examples/writing_to_vtk.jl
 examples/debug.jl
 docs/Manifest.toml
+examples/debug_discontiuous.jl
