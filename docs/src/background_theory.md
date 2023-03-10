@@ -78,40 +78,40 @@ where $\mathbf{u}_i$ is the quadrature point with corresponding weights $w_i$.
 In simple terms the Boundary Element Method (BEM) is a method for solving Boundary Integral Equations through a discretization of both the unknown function and domain. In this package the main focus is solving BIEs through the so-called collocation approach. This approach is a particular case of the Galerkin approach where the test function is equal to the sum of Dirac-delta functions
 
 ```math
-\phi(\mathbf{y}) =  \mathbf{a}^\top
+\phi(\mathbf{x}) =  \mathbf{a}^\top
                     \begin{bmatrix}
-                        \delta\left(\mathbf{y} - \mathbf{z}_1\right)\\ 
-                        \delta\left(\mathbf{y} - \mathbf{z}_2\right)\\ 
+                        \delta\left(\mathbf{x} - \mathbf{t}_1\right)\\ 
+                        \delta\left(\mathbf{x} - \mathbf{t}_2\right)\\ 
                         \vdots\\
-                        \delta\left(\mathbf{y} - \mathbf{z}_n\right)\\ 
+                        \delta\left(\mathbf{x} - \mathbf{t}_n\right)\\ 
                     \end{bmatrix},
 ```
 
-where ``\mathbf{a} \in \mathbb{C}^n`` is a vector of arbitrary constants and ``\mathbf{z}_i \in \mathbb{R}^3`` are the nodal mesh positions. 
+where ``\mathbf{a} \in \mathbb{C}^n`` is a vector of arbitrary constants and ``\mathbf{t}_i \in \mathbb{R}^3`` are the nodal mesh positions (target points). 
 
 ```math
 \mathbf{a}^\top
 \begin{bmatrix}
-    c(\mathbf{z}_1)p(\mathbf{z}_1)\\ 
-    c(\mathbf{z}_2)p(\mathbf{z}_2)\\ 
+    c(\mathbf{t}_1)p(\mathbf{t}_1)\\ 
+    c(\mathbf{t}_2)p(\mathbf{t}_2)\\ 
     \vdots \\ 
-    c(\mathbf{z}_n)p(\mathbf{z}_n)
+    c(\mathbf{t}_n)p(\mathbf{t}_n)
 \end{bmatrix} 
 + 
 \mathbf{a}^\top
 \begin{bmatrix}
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_1)}{\partial\mathbf{n}(\mathbf{x})}p(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_2)}{\partial\mathbf{n}(\mathbf{x})}p(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
+    \int_\Gamma\frac{\partial G(\mathbf{t}_1, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}p(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
+    \int_\Gamma\frac{\partial G(\mathbf{t}_2, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}p(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
     \vdots \\
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_n)}{\partial\mathbf{n}(\mathbf{x})} p(\mathbf{x})\ \mathrm{d}S_\mathbf{x}
+    \int_\Gamma\frac{\partial G(\mathbf{t}_n, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}p(\mathbf{y})\ \mathrm{d}S_\mathbf{y}
 \end{bmatrix}
 =
 \mathbf{a}^\top
 \begin{bmatrix}
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_1)v_f(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_2)v_f(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
+    sk\int_\Gamma G(\mathbf{t}_1, \mathbf{y})v_f(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
+    sk\int_\Gamma G(\mathbf{t}_2, \mathbf{y})v_f(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
     \vdots \\
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_n)v_f(\mathbf{x})\ \mathrm{d}S_\mathbf{x}
+    sk\int_\Gamma G(\mathbf{t}_n, \mathbf{y})v_f(\mathbf{y})\ \mathrm{d}S_\mathbf{y}
 \end{bmatrix}.
 ```
 
@@ -120,26 +120,26 @@ In its current form the solution to the above equation is a *function* which a c
 ```math
 \mathbf{a}^\top
 \begin{bmatrix}
-    c(\mathbf{z}_1)\mathbf{T}(\mathbf{z}_1)\mathbf{p}\\ 
-    c(\mathbf{z}_2)\mathbf{T}(\mathbf{z}_2)\mathbf{p}\\ 
+    c(\mathbf{t}_1)\mathbf{T}(\mathbf{t}_1)\mathbf{p}\\ 
+    c(\mathbf{t}_2)\mathbf{T}(\mathbf{t}_2)\mathbf{p}\\ 
     \vdots \\ 
-    c(\mathbf{z}_n)\mathbf{T}(\mathbf{z}_n)\mathbf{p}
+    c(\mathbf{t}_n)\mathbf{T}(\mathbf{t}_n)\mathbf{p}
 \end{bmatrix}
 + 
 \mathbf{a}^\top
 \begin{bmatrix}
-    \int_\Gamma \frac{\partial G(\mathbf{x}, \mathbf{z}_1)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\mathbf{p}\ \mathrm{d}S_\mathbf{x}\\
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_2)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\mathbf{p}\ \mathrm{d}S_\mathbf{x}\\
+    \int_\Gamma\frac{\partial G(\mathbf{t}_1, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\mathbf{p}\ \mathrm{d}S_\mathbf{y}\\
+    \int_\Gamma\frac{\partial G(\mathbf{t}_2, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\mathbf{p}\ \mathrm{d}S_\mathbf{y}\\
     \vdots \\
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_n)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\mathbf{p}\ \mathrm{d}S_\mathbf{x}
+    \int_\Gamma\frac{\partial G(\mathbf{t}_n, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\mathbf{p}\ \mathrm{d}S_\mathbf{y}
 \end{bmatrix}
 \approx
 \mathbf{a}^\top
 \begin{bmatrix}
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_1)\mathbf{T}(\mathbf{x})\mathbf{v}_f\ \mathrm{d}S_\mathbf{x}\\
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_2)\mathbf{T}(\mathbf{x})\mathbf{v}_f\ \mathrm{d}S_\mathbf{x}\\
+    sk\int_\Gamma G(\mathbf{t}_1, \mathbf{y})\mathbf{T}(\mathbf{y})\mathbf{v}_f\ \mathrm{d}S_\mathbf{y}\\
+    sk\int_\Gamma G(\mathbf{t}_2, \mathbf{y})\mathbf{T}(\mathbf{y})\mathbf{v}_f\ \mathrm{d}S_\mathbf{y}\\
     \vdots \\
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_n)\mathbf{T}(\mathbf{x})\mathbf{v}_f\ \mathrm{d}S_\mathbf{x}
+    sk\int_\Gamma G(\mathbf{t}_n, \mathbf{y})\mathbf{T}(\mathbf{y})\mathbf{v}_f\ \mathrm{d}S_\mathbf{y}
 \end{bmatrix}.
 ```
 
@@ -149,35 +149,35 @@ By the cardinal property of the basis functions it follows that
 \mathbf{a}^\top
 \left(
 \text{diag}\left(\begin{bmatrix}
-    c(\mathbf{z}_1)\\ 
-    c(\mathbf{z}_2)\\ 
+    c(\mathbf{t}_1)\\ 
+    c(\mathbf{t}_2)\\ 
     \vdots \\ 
-    c(\mathbf{z}_n)
+    c(\mathbf{t}_n)
 \end{bmatrix}\right)
 + 
 \begin{bmatrix}
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_1)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_2)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
+    \int_\Gamma\frac{\partial G(\mathbf{t}_1, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
+    \int_\Gamma\frac{\partial G(\mathbf{t}_2, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
     \vdots \\
-    \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_n)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}
+    \int_\Gamma\frac{\partial G(\mathbf{t}_n, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}
 \end{bmatrix}\right)\mathbf{p}
 \approx
 \mathbf{a}^\top
 \begin{bmatrix}
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_1)\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_2)\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\\
+    sk\int_\Gamma G(\mathbf{t}_1, \mathbf{y})\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
+    sk\int_\Gamma G(\mathbf{t}_2, \mathbf{y})\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}\\
     \vdots \\
-    sk\int_\Gamma G(\mathbf{x},\mathbf{z}_n)\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}
+    sk\int_\Gamma G(\mathbf{t}_n, \mathbf{y})\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}
 \end{bmatrix}\mathbf{v}_f.
 ```
 
 Since the above has to hold for all ``\mathbf{a} \in \mathbb{C}^n`` it follows that
 ```math
 \left(\text{diag}\left(\begin{bmatrix}
-    c(\mathbf{z}_1)\\ 
-    c(\mathbf{z}_2)\\ 
+    c(\mathbf{t}_1)\\ 
+    c(\mathbf{t}_2)\\ 
     \vdots \\ 
-    c(\mathbf{z}_n)
+    c(\mathbf{t}_n)
 \end{bmatrix}\right)
 + 
 \mathbf{F}\right)\mathbf{p}
@@ -188,20 +188,20 @@ sk\mathbf{G}\mathbf{v}_s.
 For simplification purposes the above is sometimes written as
 
 ```math
-\mathbf{H}\mathbf{p} + \mathbf{G}\partial_\mathbf{n}\mathbf{p}.
+\mathbf{H}\mathbf{p} = \mathbf{G}\partial_\mathbf{n}\mathbf{p} .
 ```
 
 We now briefly explain how to compute the ``j``th row of ``\mathbf{H}``. To do so element description of the unknown function used differently as ``\mathbf{p}^e`` is not part of the equation. Instead, we use the split as follows 
 
 ```math
 \begin{aligned}
-\int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z}_j)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\mathbf{p}\ \mathrm{d}S_\mathbf{x} 
-&\approx \sum_{e=1}^{N}\left(\int_{\Gamma^e}\frac{\partial G(\mathbf{x}, \mathbf{z}_j)}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})(\mathbf{L}^e)^\top\mathbf{L}^e\ \mathrm{d}S_\mathbf{x}\right) \mathbf{p}\\
-&\approx \left(\underbrace{\sum_{e=1}^{N}\left(\sum_{i=1}^{Q(\mathbf{z}_j,e)}\frac{\partial G(\mathbf{x}^e(\mathbf{u}_i), \mathbf{z}_j)}{\partial\mathbf{n}(\mathbf{x}^e(\mathbf{u}_i))}\text{jacobian}(\mathbf{u}_i)w_i\mathbf{T}^e(\mathbf{u}_i)\right)\mathbf{L}^e}_{j\text{th row of }\mathbf{H}}\right)\mathbf{p},
+\int_\Gamma\frac{\partial G(\mathbf{t}_j, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\mathbf{p}\ \mathrm{d}S_\mathbf{y} 
+&\approx \sum_{e=1}^{N}\left(\int_{\Gamma^e}\frac{\partial G(\mathbf{t}_j, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})(\mathbf{L}^e)^\top\mathbf{L}^e\ \mathrm{d}S_\mathbf{y}\right) \mathbf{p}\\
+&\approx \left(\underbrace{\sum_{e=1}^{N}\left(\sum_{i=1}^{Q(\mathbf{z}_j,e)}\frac{\partial G(\mathbf{t}_j, \mathbf{y}^e(\mathbf{u}_i))}{\partial\mathbf{n}(\mathbf{y}^e(\mathbf{u}_i))}\text{jacobian}(\mathbf{u}_i)w_i\mathbf{T}^e(\mathbf{u}_i)\right)\mathbf{L}^e}_{j\text{th row of }\mathbf{H}}\right)\mathbf{p},
 \end{aligned}
 ```
 
-where the number of quadrature points, ``Q(\mathbf{z}_1,e)``, is depended on element location with respect to the collocation point ``\mathbf{z}_1``. Note that approximation in the first line of the above is due to approximation of the geometry using elements while the second approximation is due to the integration error. A similar approach can be applied for the rows of ``\mathbf{H}``.
+where the number of quadrature points, ``Q(\mathbf{z}_1,e)``, is depended on element location with respect to the collocation point ``\mathbf{t}_1``. Note that approximation in the first line of the above is due to approximation of the geometry using elements while the second approximation is due to the integration error. A similar approach can be applied for the rows of ``\mathbf{H}``.
 
 A downside of the BEM is that the resulting matrices ``\mathbf{H}, \mathbf{G} \in \mathbb{C}^{n\times n}`` are dense, meaning that storing the two matrices scales as ``\mathcal{O}(n^2)`` rendering the direct application of the method unusable large ``n``.
 
@@ -209,48 +209,59 @@ A downside of the BEM is that the resulting matrices ``\mathbf{H}, \mathbf{G} \i
 The Fast Multipole Method (FMM) can be used to accelerate the multiplication with the BEM matrices ``\mathbf{H}`` and ``\mathbf{G}``. Throughout the years many good resources that explain the intricacies of the FMM have been written. As such the details will here be left out. Instead, the focus will be on how to apply a 3rd-party FMM into an existing BEM framework. As an example the focus will be on the *Flatiron Institute Fast Multipole Libraries*, as this is the library currently interfaced in `BoundaryIntegralEquations.jl`. This library can be used to accelerate sums of the following form from ``O(M)`` to ``O(\text{log}(M))``
 ```math
     \begin{aligned}
-    u(\mathbf{z}) 
-    % &= \sum_{j=1}^M\left[c_j\frac{\mathrm{e}^{\ii k\|\mathbf{z} - \mathbf{x}_j\|}}{\|\mathbf{z} - \mathbf{x}_j\|} - \mathbf{v}_j\cdot\nabla\left(\frac{\mathrm{e}^{\ii k\|\mathbf{z} - \mathbf{x}_j\|}}{\|\mathbf{z} - \mathbf{x}_j\|}\right)\right]
-    &= \sum_{j=1}^M\left[4\pi c_jG(\mathbf{x}_j,\mathbf{z}) - 4\pi v_j\mathbf{n}(\mathbf{x}_j)\cdot\nabla G(\mathbf{x}_j,\mathbf{z})\right],
+    u(\mathbf{x}) 
+    &= \sum_{j=1}^M\left[4\pi c_jG(\mathbf{x}, \mathbf{y}_j) - 4\pi v_j\mathbf{n}(\mathbf{y}_j)\cdot\nabla G(\mathbf{x},\mathbf{y}_j)\right],
     \end{aligned}
 ```
-where the ``j``th term is excluded from the sum if ``\mathbf{z} = \mathbf{x}_j``. The question is now: *How can this be used to speed up multiplication with the BEM matrices?*
+where the ``j``th term is excluded from the sum if ``\mathbf{x} = \mathbf{y}_j``. The question is now: *How can this be used to speed up multiplication with the BEM matrices?*
 
-To see how we start by simplifying things by assuming that each element requires the same amount of quadrature points (this will cause numerical issues that are then fixed by a nearfield correction step), ``Q``, and that we want to multiply with a known vector ``\mathbf{y}``. Then for a row of ``\mathbf{G}`` we have that
+To see how we start by simplifying things by assuming that each element requires the same amount of quadrature points (this will cause numerical issues that are then fixed by a nearfield correction step), ``Q``, and that we want to multiply with a known vector ``\mathbf{z}``. Then for a row of ``\mathbf{G}`` we have that
 ```math
 \begin{aligned}
-    \left(\int_\Gamma G(\mathbf{x},\mathbf{z})\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\right)\mathbf{y}
+    \left(\underbrace{\int_\Gamma G(\mathbf{t}_k,\mathbf{y})\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}}_{k\text{th row of } \mathbf{G}}\right)\mathbf{z}
     &\approx
-    \left(\sum_{e=1}^{N}\left(\sum_{i=1}^{Q}G(\mathbf{x}^e(\mathbf{u}_i),\mathbf{z})\text{jacobian}(\mathbf{u}_i)w_i\mathbf{T}^e(\mathbf{u}_i)\right)\mathbf{L}^e\right)\mathbf{y}\\
-    &= \left(\sum_{j=1}^{NQ}G(\mathbf{x}_j,\mathbf{z})\underbrace{\text{jacobian}(\mathbf{u}_j)w_j\mathbf{T}^{e(j)}(\mathbf{u}_j)\mathbf{L}^{e(j)}}_{j\text{th row of } \mathbf{C}}\right)\mathbf{y}\\
+    \left(\sum_{e=1}^{N}\left(\sum_{i=1}^{Q}G(\mathbf{t}_k, \mathbf{y}^e(\mathbf{u}_i))\text{jacobian}(\mathbf{u}_i)w_i\mathbf{T}^e(\mathbf{u}_i)\right)\mathbf{L}^e\right)\mathbf{z}\\
+    &= \left(\sum_{j=1}^{NQ}G(\mathbf{x}, \mathbf{y}_j)\underbrace{\text{jacobian}(\mathbf{u}_j)w_j\mathbf{T}^{e(j)}(\mathbf{u}_j)\mathbf{L}^{e(j)}}_{j\text{th row of } \mathbf{C}}\right)\mathbf{z}\\
     &= 
     \begin{bmatrix}
-        G(\mathbf{x}_1,\mathbf{z}) & G(\mathbf{x}_2,\mathbf{z}) & \dots & G(\mathbf{x}_{NQ},\mathbf{z})
+        G(\mathbf{t}_k, \mathbf{y}_1) & G(\mathbf{t}_k, \mathbf{y}_2,) & \dots & G(\mathbf{t}_k, \mathbf{y}_{NQ})
     \end{bmatrix}
-    \mathbf{C}\mathbf{y}
+    \mathbf{C}\mathbf{z}
 \end{aligned}
 ```
-where the subscript ``j`` refers to an ordering of the collection of Gaussian points from all elements and ``e(j)`` is a function that returns the element number that Gaussian point ``j`` is located on. Furthermore, the matrix ``\mathbf{C}`` can be thought of as a transformation from ``\mathbf{y}`` into the coefficients ``4\pi c_j``. A similar approach can be applied to ``\mathbf{H}``
+where the subscript ``j`` refers to an ordering of the collection of Gaussian points from all elements and ``e(j)`` is a function that returns the element number that Gaussian point ``j`` is located on. Furthermore, the matrix ``\mathbf{C}`` can be thought of as a transformation from ``\mathbf{z}`` into the coefficients ``4\pi c_j``. A similar approach can be applied to ``\mathbf{H}``
 ```math
 \begin{aligned}
-    \left(\int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{z})}{\partial\mathbf{n}(\mathbf{x})}\mathbf{T}(\mathbf{x})\ \mathrm{d}S_\mathbf{x}\right)\mathbf{y}
+    \left(\underbrace{\int_\Gamma\frac{\partial G(\mathbf{t}_k, \mathbf{y})}{\partial\mathbf{n}(\mathbf{y})}\mathbf{T}(\mathbf{y})\ \mathrm{d}S_\mathbf{y}}_{k\text{th row of } \mathbf{H}}\right)\mathbf{y}
     &\approx 
-    \left(\sum_{e=1}^{N}\left(\sum_{i=1}^{Q}\frac{\partial G(\mathbf{x}^e(\mathbf{u}_i), \mathbf{z})}{\partial\mathbf{n}(\mathbf{x})}\text{jacobian}(\mathbf{u}_i)w_i\mathbf{T}^e(\mathbf{u}_i)\right)\mathbf{L}^e\right)\mathbf{y}\\
-    &= \left(\sum_{j=1}^{NQ}\nabla G(\mathbf{x}_j, \mathbf{z})\cdot \mathbf{n}(\mathbf{x}_j)\underbrace{\text{jacobian}(\mathbf{u}_j)w_j\mathbf{T}^{e(j)}(\mathbf{u}_j)\mathbf{L}^{e(j)}}_{j\text{th row of }\mathbf{C}}\right)\mathbf{y}\\
+    \left(\sum_{e=1}^{N}\left(\sum_{i=1}^{Q}\frac{\partial G(\mathbf{t}_k, \mathbf{y}^e(\mathbf{u}_i))}{\partial\mathbf{n}(\mathbf{y})}\text{jacobian}(\mathbf{u}_i)w_i\mathbf{T}^e(\mathbf{u}_i)\right)\mathbf{L}^e\right)\mathbf{z}\\
+    &= \left(\sum_{j=1}^{NQ}\nabla G(\mathbf{t}_k, \mathbf{y}_j)\cdot \mathbf{n}(\mathbf{y}_j)\underbrace{\text{jacobian}(\mathbf{u}_j)w_j\mathbf{T}^{e(j)}(\mathbf{u}_j)\mathbf{L}^{e(j)}}_{j\text{th row of }\mathbf{C}}\right)\mathbf{z}\\
     &= 
     \begin{bmatrix}
-        \nabla G(\mathbf{x}_1, \mathbf{z})\cdot \mathbf{n}(\mathbf{x}_1) &
+        \nabla G(\mathbf{t}_k, \mathbf{y}_1)\cdot \mathbf{n}(\mathbf{y}_1) &
         \dots &
-        \nabla G(\mathbf{x}_{NQ}, \mathbf{z})\cdot \mathbf{n}(\mathbf{x}_{NQ})
+        \nabla G(\mathbf{t}_k, \mathbf{y}_{NQ})\cdot \mathbf{n}(\mathbf{y}_{NQ})
     \end{bmatrix}
-    \mathbf{C}\mathbf{y},
+    \mathbf{C}\mathbf{z},
 \end{aligned}
 ```
-where ``\mathbf{C}`` is a matrix that transforms ``\mathbf{y}`` into the coefficients ``4\pi v_j``. The two equations highlights how the FMM can be applied for problems where the number of Gaussian points on each element is equal. However, in practical cases this approach will be victim to numerical instabilities due to numerical errors stemming from the integration of elements close to the collocation point. To resolve this issue the BEM matrices is split into parts
+where ``\mathbf{C}`` is a matrix that transforms ``\mathbf{z}`` into the coefficients ``4\pi v_j``. The two equations highlights how the FMM can be applied for problems where the number of Gaussian points on each element is equal. However, in practical cases this approach will be victim to numerical instabilities due to numerical errors stemming from the integration of elements close to the collocation point. To resolve this issue the BEM matrices is split into parts
 ```math
-        \mathbf{A} = \mathbf{G}\mathbf{C} + \mathbf{S}, \quad \mathbf{G} \in\mathbb{C}^{n\times NQ},\ \mathbf{S}\in\mathbb{C}^{n\times n},\ \mathbf{C}\in\mathbb{R}^{NQ\times n}.
+        \mathbf{A} = \mathbf{B}\mathbf{C} + \mathbf{S}, \quad \mathbf{G} \in\mathbb{C}^{n\times NQ},\ \mathbf{S}\in\mathbb{C}^{n\times n},\ \mathbf{C}\in\mathbb{R}^{NQ\times n}.
 ```
-Here ``\mathbf{G}`` is the part approximated by the FMM (using ``Q`` Gaussian points on each element), ``\mathbf{F}`` is either ``\mathbf{C}`` or ``\mathbf{V}`` from the two equations while ``\mathbf{S}`` a nearfield correction. In short the nearfield correction subtract the wrong integration done by using only ``Q`` Gaussian points and adds on the correct integration instead. It is important to note that ``\mathbf{S}`` and ``\mathbf{F}`` are both highly sparse matrices, meaning that both assembly and multiplication with these scale ``\mathcal{O}(n\tau)`` where ``\tau \ll n``. This means that using an approximate scheme for ``\mathbf{G}`` with a multiplication that scales linear in time and memory result in a representation of ``\mathbf{A}`` that scales similarly.
+Here ``\mathbf{B}`` is the part approximated by the FMM (using ``Q`` Gaussian points on each element), ``\mathbf{C}`` is the coefficient mapping, and ``\mathbf{S}`` the nearfield correction. In short the nearfield correction subtract the wrong integration done by using only ``Q`` Gaussian points and adds on the correct integration instead. It is important to note that ``\mathbf{S}`` and ``\mathbf{C}`` are both highly sparse matrices, meaning that both assembly and multiplication with these scale ``\mathcal{O}(n\tau)`` where ``\tau \ll n``. This means that using an approximate scheme for ``\mathbf{B}`` with a multiplication that scales linear in time and memory result in a representation of ``\mathbf{A}`` that scales similarly.
 
 ![Nearfield Correction](figures/nearfield_correction.png)
 
+## H-Matrices
+The ``\mathcal{H}``-matrix approach differs from the FMM by the fact that it does not accelerate the sums directly. Instead, it approximates parts of the matrix that corresponds to performing the integration for all the ``n`` collocation points at the same time. In particular, it approximates the ``\mathbf{B}`` part of the BE matrix split
+```math
+\mathbf{B} = 
+    \begin{bmatrix}
+        G(\mathbf{x}_1,\mathbf{y}_1)  & G(\mathbf{x}_1,\mathbf{y}_2) & \dots    & G(\mathbf{x}_1,\mathbf{y}_{NQ}) \\
+        G(\mathbf{x}_2,\mathbf{y}_1)  & G(\mathbf{x}_1,\mathbf{y}_2) & \dots    & G(\mathbf{x}_2,\mathbf{y}_{NQ}) \\
+        \vdots          & \vdots         & \ddots   & \vdots            \\
+        G(\mathbf{x}_n,\mathbf{y}_1)  & G(\mathbf{x}_n,\mathbf{y}_2) & \dots    & G(\mathbf{x}_n,\mathbf{y}_{NQ})
+    \end{bmatrix}.
+```
+The approximation itself is based on the fact that subblocks of the matrix is well approximated by low-rank matrices. In this library all ``\mathcal{H}``-matrix computations is done using the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) package developed by Luiz M. Faria. The specific format implemented in this library is the standard that the scales ``O(n\text{log}(n))`` in terms of memory and computation. At the same some experimentation of the newly developed Interpolated Factored Green's Function (IFGF) approach using the [IFGF.jl](https://github.com/WaveProp/IFGF.jl) package also developed by Luiz. Note, that an often mentioned strength of the ``\mathcal{H}``-matrix approach is that it is possible to compute the LU-factorization of the matrix efficiently, which is particularly important for high-frequency problems where an iterative solver might have issue converging. However, in the case of collocation BEM an LU-factorization can not directly be applied. Worse so when dealing with losses where the linear system of equation is a collection of matrix products.
