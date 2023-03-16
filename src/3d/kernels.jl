@@ -57,7 +57,7 @@ end
 Multiplies each term in `integrand` from `freens3dk0!` such that they equal `freens3d!`.
 """
 function freens3dk0_to_freens3d!(integrand,r,k)
-    @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+    @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = integrand[i,j]*exp(im*k*r[i,j])*(1 - im*k*r[i,j])
     end
 end
