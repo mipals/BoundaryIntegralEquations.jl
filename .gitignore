@@ -12,3 +12,4 @@ examples/writing_to_vtk.jl
 examples/debug.jl
 docs/Manifest.toml
 examples/debug_discontiuous.jl
+examples/separable.jl

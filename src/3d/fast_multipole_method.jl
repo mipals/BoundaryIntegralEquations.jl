@@ -309,7 +309,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
 end
 
 function FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1,
-                                    integral_free_term = [])
+                                    integral_free_term = [], interior=false)
     # Making sure the wave number is complex
     zk = Complex(k)
     # Setup operator
@@ -319,5 +319,12 @@ function FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=
     # Allocating arrays for intermediate computations
     coefficients = zeros(eltype(zk),size(sources,2))
     dipvecs      = zeros(eltype(zk),3,size(sources,2))
-    return FMMHOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction + 0.5I)
+    if isempty(integral_free_term)
+        integral_free_term = 0.5I
+    end
+    if interior
+        return FMMHOperator(zk,tol,targets,sources,normals,-C_map,coefficients,dipvecs,-nearfield_correction + integral_free_term)
+    else
+        return FMMHOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction + integral_free_term)
+    end
 end

@@ -141,7 +141,7 @@ function LinearMaps._unsafe_mul!(y, A::HHOperator, x::AbstractVector)
     return y
 end
 
-function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
+function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1,interior=false)
     zk = Complex(k)
     # Setup operator
     sources,normals,C_map,nearfield_correction = setup_fast_operator(mesh,zk,n_gauss,
@@ -159,5 +159,9 @@ function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
     Yclt = ClusterTree(Y)
     # Assembling H-matrix representing the double-layer potential
     H = assemble_hmat(HelmholtzDoubleLayer(X,Y,NY,zk),Xclt,Yclt;comp=PartialACA(;rtol=tol))
-    return HHOperator(k,H,C_map,nearfield_correction + 0.5I,coefficients)
+    if interior
+        return HHOperator(k,H,-C_map,-nearfield_correction + 0.5I,coefficients)
+    else
+        return HHOperator(k,H,C_map,nearfield_correction + 0.5I,coefficients)
+    end
 end
