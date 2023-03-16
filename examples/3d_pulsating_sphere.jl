@@ -43,14 +43,14 @@ b  = G*vs; # Computing right-hand side
 # Using this we can solve for the surface pressure
 p_bem = gmres(H,b;verbose=true);
 # Similarly we can compute the BEM solution using the Fast Multipole Operators
-Gf = FMMGOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
-Ff = FMMFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Gf = FMMGOperator(mesh,k);
+Ff = FMMFOperator(mesh,k);
 Hf = Diagonal(1.0 .- C) - Ff;
 bf = Gf*vs;                        # Computing right-hand side
 p_fmm = gmres(Hf,bf;verbose=true); # Solving the linear system
 # Finally the same system is solved using the H-matrix operators
-Gh = HGOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
-Fh = HFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Gh = HGOperator(mesh,k);
+Fh = HFOperator(mesh,k);
 Hh = Diagonal(1.0 .- C) - Fh;
 bh = Gh*vs;                      # Computing right-hand side
 p_h = gmres(Hh,bh;verbose=true); # Solving the linear system

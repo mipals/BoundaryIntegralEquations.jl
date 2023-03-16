@@ -9,11 +9,12 @@ examples = [
     # "3d_visualization.jl",
     # "3d_fmm.jl",
     # "3d_hmatrix.jl",
-    "3d_rigid_sphere.jl",
-    "3d_oscilating_sphere.jl",
-    "3d_pulsating_sphere.jl",
-    "3d_cube_wave.jl",
-    "3d_cube_wave_anachoic.jl",
+    # "3d_rigid_sphere.jl",
+    # "3d_oscilating_sphere.jl",
+    # "3d_pulsating_sphere.jl",
+    # "3d_cube_wave.jl",
+    # "3d_cube_wave_anachoic.jl",
+    "3d_lossy_sphere.jl",
     # "2d_infinite_cylinder.jl",
 ]
 
@@ -72,6 +73,7 @@ makedocs(
             "examples/3d_pulsating_sphere.md",
             "examples/3d_cube_wave.md",
             "examples/3d_cube_wave_anachoic.md",
+            "examples/3d_lossy_sphere.md",
             # "examples/3d_fmm.md",
             # "examples/3d_hmatrix.md",
             ]

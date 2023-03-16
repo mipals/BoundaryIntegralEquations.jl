@@ -77,8 +77,8 @@ v_bem[bc2] = p_bem[bc2]*(-im*k);
 
 # ## Solution using the FMM-BEM
 # First we define the two operators
-Gf = FMMGOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
-Ff = FMMFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Gf = FMMGOperator(mesh,k);
+Ff = FMMFOperator(mesh,k);
 Hf = Diagonal(C) - Ff;
 # Then we compute the right-hand side and the linear system similar to before. Note that the system matrix will be represented by a collection of linear maps
 bf = -(Hf*ps);

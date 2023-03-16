@@ -35,11 +35,11 @@ Fp,_,Cp = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,progress=false);
 Hp = Diagonal(1.0 .- Cp) + Fp;
 p_bem = gmres(Hp,pI;verbose=true);
 # Computing BEM solution using the FMM operator
-Ff = FMMFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Ff = FMMFOperator(mesh,k);
 Hf = Ff + 0.5I;
 p_fmm = gmres(Hf,pI;verbose=true);
 # Computing BEM solution using the H operator
-Fh = HFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Fh = HFOperator(mesh,k);
 Hh = Fh + 0.5I;
 p_h = gmres(Hh,pI;verbose=true);
 
