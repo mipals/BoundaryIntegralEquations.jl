@@ -7,8 +7,13 @@ examples = [
     # "2d_element_usage.jl",
     # "3d_element_usage.jl",
     # "3d_visualization.jl",
-    "3d_fmm.jl",
-    "3d_hmatrix.jl",
+    # "3d_fmm.jl",
+    # "3d_hmatrix.jl",
+    "3d_rigid_sphere.jl",
+    "3d_oscilating_sphere.jl",
+    "3d_pulsating_sphere.jl",
+    "3d_cube_wave.jl",
+    "3d_cube_wave_anachoic.jl",
     # "2d_infinite_cylinder.jl",
 ]
 
@@ -55,14 +60,20 @@ makedocs(
             "Fast Operators"                => "3d_fast_operators.md",
             "Viscous and Thermal Losses"    => "3d_losses.md",
             "Experimental Features"         => "3d_experimental.md",
+            "Analytical Expressions"        => "3d_analytical.md",
             ],
         "Examples" => [
             "examples/2d_element_usage.md",
             "examples/2d_infinite_cylinder.md",
             "examples/3d_element_usage.md",
             "examples/3d_visualization.md",
-            "examples/3d_fmm.md",
-            "examples/3d_hmatrix.md",
+            "examples/3d_rigid_sphere.md",
+            "examples/3d_oscilating_sphere.md",
+            "examples/3d_pulsating_sphere.md",
+            "examples/3d_cube_wave.md",
+            "examples/3d_cube_wave_anachoic.md",
+            # "examples/3d_fmm.md",
+            # "examples/3d_hmatrix.md",
             ]
         ]
     )
