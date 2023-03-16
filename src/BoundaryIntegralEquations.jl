@@ -113,10 +113,10 @@ export Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
 export assemble_parallel!
 
 # Fast mulitpole Method
-export FMMGOperator, FMMHOperator
+export FMMGOperator, FMMFOperator
 
 # H-Matrices
-export HGOperator, HHOperator
+export HGOperator, HFOperator
 
 # Visualizations
 export create_simple_mesh, create_bc_simple_mesh, viz

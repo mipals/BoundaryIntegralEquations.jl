@@ -101,8 +101,8 @@ end
 Base.size(K::HelmholtzDoubleLayer) = length(K.X), length(K.Y)
 
 """
-    HHOperator(k,H,C,nearfield_correction,coefficients)
-    HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
+    HFOperator(k,H,C,nearfield_correction,coefficients)
+    HFOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1)
 
 A `LinearMap` that represents the BEM ``\\mathbf{H}`` matrix through the H-matrix approach.
 This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
@@ -124,7 +124,7 @@ This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the follow
 where ``\\mathbf{C}`` is coefficient mapping (the same for all ``k``).
 The remaining multiplication with the Green's functions is performed utilizing the `HMatrices.jl` package.
 """
-struct HHOperator{T} <: LinearMaps.LinearMap{T}
+struct HFOperator{T} <: LinearMaps.LinearMap{T}
     k
     H
     C::AbstractMatrix{Float64}
@@ -132,16 +132,16 @@ struct HHOperator{T} <: LinearMaps.LinearMap{T}
     coefficients::AbstractVecOrMat{T}
 end
 
-Base.size(H::HHOperator) = (size(H.H,1),size(H.H,1))
+Base.size(H::HFOperator) = (size(H.H,1),size(H.H,1))
 
-function LinearMaps._unsafe_mul!(y, A::HHOperator, x::AbstractVector)
+function LinearMaps._unsafe_mul!(y, A::HFOperator, x::AbstractVector)
     mul!(A.coefficients,A.C,x)
     mul!(y,A.H,A.coefficients);
     mul!(y,A.nearfield_correction,x,true,true);
     return y
 end
 
-function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1,interior=false)
+function HFOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1,interior=false)
     zk = Complex(k)
     # Setup operator
     sources,normals,C_map,nearfield_correction = setup_fast_operator(mesh,zk,n_gauss,
@@ -159,9 +159,5 @@ function HHOperator(mesh,k;tol=1e-4,n_gauss=3,nearfield=true,offset=0.2,depth=1,
     Yclt = ClusterTree(Y)
     # Assembling H-matrix representing the double-layer potential
     H = assemble_hmat(HelmholtzDoubleLayer(X,Y,NY,zk),Xclt,Yclt;comp=PartialACA(;rtol=tol))
-    if interior
-        return HHOperator(k,H,-C_map,-nearfield_correction + 0.5I,coefficients)
-    else
-        return HHOperator(k,H,C_map,nearfield_correction + 0.5I,coefficients)
-    end
+    return HFOperator(k,H,C_map,nearfield_correction,coefficients)
 end

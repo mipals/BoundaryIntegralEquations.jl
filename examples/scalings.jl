@@ -16,7 +16,7 @@ Base.summarysize(LGM)/(2^30)
 ===========================================================================================#
 Ga = FMMGOperator(mesh,kₐ;n_gauss=1,tol=1e-6,offset=0.2,nearfield=true,depth=1)
 @time Ga*pa;
-Ha = FMMHOperator(mesh,kₐ;n_gauss=3,tol=1e-6,offset=0.2,nearfield=true,depth=1)
+Ha = FMMFOperator(mesh,kₐ;n_gauss=3,tol=1e-6,offset=0.2,nearfield=true,depth=1) + 0.5I
 @time Ha*pa;
 
 mem_matrix = Base.summarysize(LGM)/(2^20)

@@ -55,9 +55,10 @@ b = G*v_bem;
 p_bem = gmres(H,b;verbose=true);
 # ## Solution using the FMM-BEM
 # Similarly we can compute the BEM solution using the Fast Multipole Operators
-Hf = FMMHOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2,interior=true,integral_free_term=Diagonal(C) );
 Gf = FMMGOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
-bf = Gf*v_bem;                        # Computing right-hand side
+Ff = FMMFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Hf = Diagonal(C) - Ff;
+bf = Gf*v_bem;                     # Computing right-hand side
 p_fmm = gmres(Hf,bf;verbose=true); # Solving the linear system
 
 # # Field evaluations

@@ -38,7 +38,7 @@ Fp,_,Cp = assemble_parallel!(mesh,zk,mesh.sources,n=2,m=2,progress=false);
 Ap = Diagonal(1.0 .- Cp) + Fp;
 p_bem = gmres(Ap,pI;verbose=true);
 # Computing BEM soltuiong using the FMM operator
-Af = FMMHOperator(mesh,zk;nearfield=true,n_gauss=3,offset=0.2)
+Af = FMMFOperator(mesh,zk;nearfield=true,n_gauss=3,offset=0.2) + 0.5I;
 p_fmm = gmres(Af,pI;verbose=true);
 
 # # Plotting solution

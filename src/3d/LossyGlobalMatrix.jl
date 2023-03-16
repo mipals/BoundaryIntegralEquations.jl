@@ -111,12 +111,11 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     elseif fmm_on && !hmatrix_on
         Ga = FMMGOperator(mesh,kₐ;
                         n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
-        Ha = FMMHOperator(mesh,kₐ;
-                        integral_free_term=integral_free_term,
-                        n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = FMMFOperator(mesh,kₐ;
+                        n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth) + 0.5I
     elseif !fmm_on && hmatrix_on
         Ga = HGOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
-        Ha = HHOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ha = HFOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
     else
         Ha,Ga,C = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
         C0 = (exterior ? Diagonal(C) : Diagonal(1.0 - C))

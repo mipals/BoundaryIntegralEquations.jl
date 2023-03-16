@@ -91,7 +91,7 @@ function Base.getindex(K::HelmholtzDoubleLayer,i::Int,j::Int)
 end
 Base.size(K::HelmholtzDoubleLayer) = length(K.X), length(K.Y)
 
-Hf = FMMHOperator(mesh,k)
+Hf = FMMFOperator(mesh,k) + 0.5I
 NY = [Point3D(n) for n in eachcol(Hf.normals)]
 K = HelmholtzDoubleLayer(X,Y,NY,k)
 Xclt = ClusterTree(X)

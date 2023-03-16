@@ -41,5 +41,5 @@ BoundaryIntegralEquations.HGOperator
 ```
 
 ```@docs
-BoundaryIntegralEquations.HHOperator
+BoundaryIntegralEquations.HFOperator
 ```

@@ -250,8 +250,8 @@ end
                             Defining H-operator (double-layer)
 ==========================================================================================#
 """
-    FMMHOperator(k,tol,targets,sources,normals,C,coefficients,dipvecs,nearfield_correction)
-    FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1,)
+    FMMFOperator(k,tol,targets,sources,normals,C,coefficients,dipvecs,nearfield_correction)
+    FMMFOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1,)
 
 A `LinearMap` that represents the BEM ``\\mathbf{H}`` matrix through the FMM.
 This matrix has ``k``th row given by ``\\mathbf{z}=\\mathbf{z}_k`` in the following
@@ -274,7 +274,7 @@ where ``\\mathbf{C}`` is coefficient mapping (the same for all ``k``).
 
 The remaining multiplication with the Green's functions is performed utilizing the Flatiron Institute Fast Multipole libraries.
 """
-struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
+struct FMMFOperator{T} <: LinearMaps.LinearMap{T}
     # Physical Quantities
     k::T                                # Wavenumber
     tol::Float64                        # Precision
@@ -290,10 +290,10 @@ struct FMMHOperator{T} <: LinearMaps.LinearMap{T}
     nearfield_correction::AbstractMatrix{T}
 end
 
-Base.size(A::FMMHOperator) = (size(A.targets,2), size(A.targets,2))
+Base.size(A::FMMFOperator) = (size(A.targets,2), size(A.targets,2))
 
 function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
-                            A::FMMHOperator{T},
+                            A::FMMFOperator{T},
                             x::AbstractVector) where {T <: ComplexF64}
     # Checking dimensions
     LinearMaps.check_dim_mul(y, A, x)
@@ -308,8 +308,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     y .= vals.pottarg/4π + A.nearfield_correction*x
 end
 
-function FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1,
-                                    integral_free_term = [], interior=false)
+function FMMFOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=1)
     # Making sure the wave number is complex
     zk = Complex(k)
     # Setup operator
@@ -319,12 +318,5 @@ function FMMHOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=
     # Allocating arrays for intermediate computations
     coefficients = zeros(eltype(zk),size(sources,2))
     dipvecs      = zeros(eltype(zk),3,size(sources,2))
-    if isempty(integral_free_term)
-        integral_free_term = 0.5I
-    end
-    if interior
-        return FMMHOperator(zk,tol,targets,sources,normals,-C_map,coefficients,dipvecs,-nearfield_correction + integral_free_term)
-    else
-        return FMMHOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction + integral_free_term)
-    end
+    return FMMFOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
 end

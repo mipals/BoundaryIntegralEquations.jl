@@ -23,7 +23,7 @@ k  = 2π*frequency/c;    # Wavenumber
 # # Analytical Solution
 # The analytical description of the interior pressure of an z-oscilating sphere is given by
 # ```math
-#  p_\text{analytical}(x,y,z) = -3v_z z(\mathrm{i}kZ_0)\frac{j_1(kr)}{kr(j_0(ka) - 2j_2(ka))},
+#  p_\text{analytical}(x,y,z) = -3v_z z \mathrm{i}kZ_0\frac{j_1(kr)}{kr(j_0(ka) - 2j_2(ka))},
 # ```
 # where ``j_i`` is the spherical bessel function of the first kind, ``r`` is the distance from origo to the point ``(x,y,z)`` and ``v_z`` is the oscilating velocity in the ``z``-direction. For the points in the interior where the pressure will evaluated ``z`` will be equal to ``r`` as the remaining two coordinates are set to 0.
 # We now generate ``N`` points in 3-dimensional space
@@ -36,20 +36,22 @@ p_analytical = -3*vz*z*im*k*Z₀.*(sphericalbesselj.(1,k*z))./(k*z*(sphericalbes
 # # Solution using the BEM
 # We start by solving the BEM system using dense matrices. For this we need to first assemble the matrices
 F,G,C = assemble_parallel!(mesh,k,mesh.sources,n=3,m=3,progress=false);
-H  = -(Diagonal(C .- 1.0) + F); # Adding the integral free term
+H  = Diagonal(1.0 .- C) - F; # Adding the integral free term
 # We now setup the right-hand side
 vs = im*Z₀*k*mesh.normals[3,:]*vz;
 b = G*vs; # Computing right-hand side
 # Using this we can solve for the surface pressure
 p_bem = gmres(H,b;verbose=true);
 # Similarly we can compute the BEM solution using the Fast Multipole Operators
-Hf = FMMHOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2,interior=true);
 Gf = FMMGOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Ff = FMMFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Hf = Diagonal(1.0 .- C) - Ff;
 bf = Gf*vs;                        # Computing right-hand side
 p_fmm = gmres(Hf,bf;verbose=true); # Solving the linear system
 # Finally the same system is solved using the H-matrix operators
-Hh = HHOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2,interior=true);
 Gh = HGOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Fh = HFOperator(mesh,k;nearfield=true,n_gauss=3,offset=0.2);
+Hh = Diagonal(1.0 .- C) - Fh;
 bh = Gh*vs;                      # Computing right-hand side
 p_h = gmres(Hh,bh;verbose=true); # Solving the linear system
 
