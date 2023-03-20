@@ -73,3 +73,58 @@ function create_bc_simple_mesh(mesh,boundary_condition_entities,boundary_conditi
     # Returning a SimpleMesh of the points and connectivities
     return SimpleMesh(points, connectivities)
 end
+
+"""
+    create_vizualization_data(mesh,data)
+
+Returns a linear `SimpleMesh` and interpolated `data_viz` vector.
+
+Note that the interpolation of the data is linear even for quadratic elements.
+"""
+function create_vizualization_data(mesh,data)
+    return create_vizualization_data(mesh,data,mesh.physics_function)
+end
+function create_vizualization_data(mesh,data,physics_function::Triangular)
+    simple_mesh = create_simple_mesh(mesh)                        # Creating simple mesh
+    data_viz = data[sort!(unique(mesh.physics_topology[1:3,:]))]  # Removing quadratic parts
+    return simple_mesh, data_viz
+end
+# function create_vizualization_data(mesh,data,physics_function::DiscontinuousTriangularConstant)
+#     # Repeating edge-points
+#     T = reduce(hcat,[mesh.coordinates[:,top] for top in eachcol(mesh.topology[1:3,:])])
+#     # Creating point data
+#     points = Point.(T[1,:],T[2,:],T[3,:])
+#     # Creating a "discontinuous linear topology"
+#     new_topology = reshape(1:length(points),3,size(mesh.topology,2))
+#     # Creating vector of connectivities
+#     connectivities = [connect(Tuple(Float64.(face))) for face in eachcol(new_topology)]
+#     # Combining connectivities and points to create a simple mesh
+#     simple_mesh = SimpleMesh(points, connectivities)
+#     # Repeating the data for every corner on the triangle
+#     data_viz = repeat(data,inner=3)
+#     return simple_mesh, data_viz
+# end
+function create_vizualization_data(mesh,data,physics_function::DiscontinuousTriangular)
+    # Repeating edge-points
+    T = reduce(hcat,[mesh.coordinates[:,top] for top in eachcol(mesh.topology[1:3,:])])
+    # Creating point data
+    points = Point.(T[1,:],T[2,:],T[3,:])
+    # Extracting the linear part of the discontinuous topology
+    new_topology = reshape(1:length(points),3,size(mesh.topology,2))
+    # Creating vector of connectivities
+    connectivities = [connect(Tuple(Float64.(face))) for face in eachcol(new_topology)]
+    # Combining connectivities and points to create a simple mesh
+    simple_mesh = SimpleMesh(points, connectivities)
+    # Pre-allocation of data_viz
+    data_viz = zeros(eltype(data), length(points))
+    # Making a physics element that interpolates on the corner nodes
+    physics_copy = deepcopy(physics_function)
+    set_interpolation_nodes!(physics_copy,[0.0;1.0;0.0],[0.0;0.0;1.0])
+    # Extrapolating data to corner points
+    for (data_top, phys_top) in zip(eachcol(new_topology),eachcol(mesh.physics_topology))
+        for (i,interp) in enumerate(eachcol(physics_copy.interpolation))
+            data_viz[data_top[i]] = dot(data[phys_top],interp)
+        end
+    end
+    return simple_mesh, data_viz
+end
