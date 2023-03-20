@@ -119,7 +119,7 @@ export FMMGOperator, FMMFOperator
 export HGOperator, HFOperator
 
 # Visualizations
-export create_simple_mesh, create_bc_simple_mesh, viz
+export create_simple_mesh, create_bc_simple_mesh, viz, create_vizualization_data
 
 # Losses
 export LossyBlockMatrix,LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter
