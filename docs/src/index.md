@@ -9,35 +9,29 @@ c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})
 ```
 where ``G(\mathbf{x},\mathbf{y})`` is the Green's function of the Helmholtz operator.
 
-```@example introduction
-using JSServe                       # hide
-Page(exportable=true, offline=true) # hide
+For the Fast Multipole Method this package utilizes the Julia interfaces for the Flatiron Institute Fast Multipole Libraries: [2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia).
+
+For H-matrices the package utilizes the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl).
+
+**N.B. The package is still under heavy development.**
+
+## Installation
+The package can be downloaded directly from GitHub 
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/mipals/BoundaryIntegralEquations.jl")
 ```
 
-## Quick start guide
-```@example introduction
-import WGLMakie as Mke # hide
-Mke.set_theme!(resolution=(800, 800)) # hide
-```
+## Element types
+* (Dis)continuous (Constant, Linear and Quadratic) Line elements
+* (Dis)continuous (Constant, Linear and Quadratic) Triangular Elements
+* (Dis)continuous (Constant, Linear and Quadratic) Quadrilateral Elements
 
-A mesh can be loaded using the following
-```@example introduction
-using BoundaryIntegralEquations, MeshViz
-examples_path = normpath(joinpath(@__DIR__, "..", "..", "examples"));
-tri_mesh_file = joinpath(examples_path, "meshes","tri_sphere")
-tri_mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=:linear)
-```
-Furthermore, the mesh can be visualized by creating `SimpleMesh` that is compatible with the `MeshViz` library.
-```@example introduction
-simple_tri_mesh = create_simple_mesh(tri_mesh)
-viz(simple_tri_mesh;showfacets=true)
-```
-A similar approach can be used to import and visualize a mesh of quadrilaterals.
-```@example introduction
-quad_mesh_file = joinpath(examples_path, "meshes","quad_sphere")
-quad_mesh = load3dQuadComsolMesh(quad_mesh_file;geometry_order=:linear)
-```
-```@example introduction
-simple_quad_mesh = create_simple_mesh(quad_mesh)
-viz(simple_quad_mesh;showfacets=true)
-```
+## Mesh formats
+* COMSOLs *.mphtxt* files (best for applying boundary conditions)
+* .obj, .ply, .stl, .off, .2DM through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
+
+## Similar Packages
+* [BEAST.jl](https://github.com/krcools/BEAST.jl): Boundary Element Analysis and Simulation Toolkit. A general toolkit, with a focus on electromagnetics. Limitations with respect to element orders and only supplies Galerkin assembly. 
+* [NESSie.jl](https://github.com/tkemmer/NESSie.jl): Nonlocal Electrostatics in Structured Solvents. A specialized package written specifically for Nonlocal protein eletrostatics. 

@@ -7,9 +7,14 @@ using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
 # # Loading and visualizing the triangular cube mesh
 # First we define the path to the mesh file
-mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube");
+mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_extremely_coarse");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_extra_coarse");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_coarser");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_coarse");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube");
 # Now we read in the mesh
-mesh = load3dTriangularComsolMesh(mesh_file)
+physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic];
+mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=:linear, physics_order=physics_orders[5])
 # We now define the mesh entity that contain the boundary condition. In this case it is boundary 0.
 bc_ents = [0];
 # Now two simple meshes is created. One for the boundary condition and one for the remaining part of the mesh
@@ -32,13 +37,9 @@ k  = 2π*frequency/c;    # Wavenumber
 #  p_\text{analytical}(x) = -\frac{\mathrm{i}Z_0v_{0}\cos(k(1 - x))}{\sin(k)}
 # ```
 # where ``Z_0`` is the characteristic impedance and ``k`` is the wavenumber.
-# We start by defining a ``N`` linearly spaced points defined by ``(x,0.5,0.5)`` with ``x\in[0.1,0.9]``.
-N = 20;
-x = collect(0.1:(0.9-0.1)/(N-1):0.9);
-y = 0.5ones(N);
-z = 0.5ones(N);
 # We now compute the analytical expression is computed at the points
-p_analytical = -im*Z₀*v₀*cos.(k*(1 .- x))/(sin(k));
+x_ana = collect(0.00:0.01:1)
+p_analytical = -im*Z₀*v₀*cos.(k*(1 .- x_ana))/(sin(k));
 # ## Solution using the dense BEM
 # We start by solving the BEM system using dense matrices. For this we need to first assemble the matrices
 F,G,C = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,progress=false);
@@ -55,28 +56,32 @@ b = G*v_bem;
 p_bem = gmres(H,b;verbose=true);
 # ## Solution using the FMM-BEM
 # Similarly we can compute the BEM solution using the Fast Multipole Operators
-Gf = FMMGOperator(mesh,k);
-Ff = FMMFOperator(mesh,k);
-Hf = Diagonal(C) - Ff;
+Gf = FMMGOperator(mesh,k,depth=2);
+Ff = FMMFOperator(mesh,k,depth=2);
+Hf = 0.5I - Ff;
 bf = Gf*v_bem;                     # Computing right-hand side
 p_fmm = gmres(Hf,bf;verbose=true); # Solving the linear system
 
 # # Field evaluations
-# In order to compare the results with the analytical solution we must use the found surface pressures to compute pressure at the interior field points. We therefore start by creating a matrix of points (as columns)
+# In order to compare the results with the analytical solution we must use the found surface pressures to compute pressure at the interior field points. We therefore start by creating a matrix of points (as columns). Below ``N`` linearly spaced points defined by ``(x,0.5,0.5)`` with ``x\in[0.1,0.9]`` is created.
+N = 20;
+x = collect(0.1:(0.9-0.1)/(N-1):0.9);
+y = 0.5ones(N);
+z = 0.5ones(N);
 X_fieldpoints = [x'; y'; z'];
 # Using the described field-points we can assemble the (dense) matrices for the field point evaluation
-Fp,Gp,Cp = assemble_parallel!(mesh,k,X_fieldpoints,n=2,m=2,progress=false);
+Fp,Gp,Cp = assemble_parallel!(mesh,k,X_fieldpoints,n=5,m=5,progress=false);
 # Using the matrices we can evalute the pressure at the field points using the previously found surface pressure
 p_field  = Fp*p_bem + Gp*v_bem;
 pf_field = Fp*p_fmm + Gp*v_bem;
 # Plotting the field point pressure it can be seen that all 3 methods find the correct pressures
-plot(x,abs.(p_analytical./Z₀), label="Analytical")
+plot(x_ana,abs.(p_analytical./Z₀), label="Analytical")
 scatter!(x,abs.(p_field./Z₀),  label="Full", markershape=:rect)
 scatter!(x,abs.(pf_field./Z₀), label="FMM")
 ylabel!("|p/Z₀|"); xlabel!("r/a")
 
 # The surface pressures can also be plotted. Note that it is only possible to plot linear meshes, meaing that we must remove the quadratic parts.
-simple_mesh = create_simple_mesh(mesh)                          # Creating simple mesh
-p_corners = p_bem[sort!(unique(mesh.physics_topology[1:3,:]))]  # Removing quadratic parts
-fig, ax, hm  = viz(simple_mesh;showfacets=true, color=abs.(p_corners/Z₀))
-wgl.Colorbar(fig[1,2],label="|p|"); fig
+data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
+fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz/Z₀))
+#src wgl.scatter!(mesh.sources[1,:],mesh.sources[2,:],mesh.sources[3,:],color=abs.(p_fmm/Z₀))
+wgl.Colorbar(fig[1,2],label="|p/Z₀|"); fig

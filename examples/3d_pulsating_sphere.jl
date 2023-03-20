@@ -7,13 +7,15 @@ using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
 # # Loading Mesh
 # Loading and visualizing the triangular (spherical) mesh
-mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_coarser");
+mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_coarse");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m");
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_fine");
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_finer");
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_extremely_fine");
 mesh = load3dTriangularComsolMesh(mesh_file)
 # # Setting up constants
-frequency = 100.0;      # Frequency                [Hz]
+frequency = 54.59;      # Frequency                [Hz]
 c  = 343.0;             # Speed up sound           [m/s]
 ρ₀ = 1.21;              # Mean density             [kg/m^3]
 Z₀ = ρ₀*c;              # Characteristic impedance [Rayl]
@@ -26,13 +28,9 @@ k  = 2π*frequency/c;    # Wavenumber
 #  p_\text{analytical}(r) = \mathrm{i}Z_0v_r\left(\frac{a}{r}\right)\frac{ka\sin(kr)}{ka\cos(ka) - \sin(ka)}
 # ```
 # where ``a`` is the sphere radius and ``r (\leq a)`` is the distance from origo to the point ``(x,y,z)``.
-# We now generate ``N`` points in 3-dimensional space
-N = 20;
-x = zeros(N);
-y = zeros(N);
-z = collect(0.1:(0.9-0.1)/(N-1):0.9);
 # From this the analytical expression is computed
-p_analytical = im*Z₀*vr*(a./z).*(k*a*sin.(k*z))/(k*a*cos(k*a) - sin(k*a));
+z_ana = 0:0.01:1
+p_analytical = im*Z₀*vr*(a./z_ana).*(k*a*sin.(k*z_ana))/(k*a*cos(k*a) - sin(k*a));
 # # Solution using the BEM
 # We start by solving the BEM system using dense matrices. For this we need to first assemble the matrices
 F,G,C = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,progress=false);
@@ -48,31 +46,26 @@ Ff = FMMFOperator(mesh,k);
 Hf = Diagonal(1.0 .- C) - Ff;
 bf = Gf*vs;                        # Computing right-hand side
 p_fmm = gmres(Hf,bf;verbose=true); # Solving the linear system
-# Finally the same system is solved using the H-matrix operators
-Gh = HGOperator(mesh,k);
-Fh = HFOperator(mesh,k);
-Hh = Diagonal(1.0 .- C) - Fh;
-bh = Gh*vs;                      # Computing right-hand side
-p_h = gmres(Hh,bh;verbose=true); # Solving the linear system
 
 # # Field evaluations
-# In order to compare the results with the analytical solution we must use the found surface pressures to compute pressure at the interior field points. We therefore start by creating a matrix of points (as columns)
+# In order to compare the results with the analytical solution we must use the found surface pressures to compute pressure at the interior field points. We therefore start by creating a matrix of ``N`` points (as columns)
+N = 20;
+x = zeros(N);
+y = zeros(N);
+z = collect(0.1:(0.9-0.1)/(N-1):0.9);
 X_fieldpoints = [x'; y'; z'];
 # Using the described field-points we can assemble the (dense) matrices for the field point evaluation
 Fp,Gp,_ = assemble_parallel!(mesh,k,X_fieldpoints,n=2,m=2,progress=false);
 # Using the matrices we can evalute the pressure at the field points using the previously found surface pressure
 p_field  = Fp*p_bem + Gp*vs;
 pf_field = Fp*p_fmm + Gp*vs;
-ph_field = Fp*p_h   + Gp*vs;
 # Plotting the field point pressure it can be seen that all 3 methods find the correct pressures
-plot(z,abs.(p_analytical./Z₀),label="Analytical")
+plot(z_ana,abs.(p_analytical./Z₀),label="Analytical")
 scatter!(z,abs.(p_field./Z₀),  label="Full", markershape=:rect)
 scatter!(z,abs.(pf_field./Z₀), label="FMM")
-scatter!(z,abs.(ph_field./Z₀), label="H-Matrix", markershape=:xcross,color=:black)
 ylabel!("p/Z₀"); xlabel!("r/a")
 
 # The surface pressures can also be plotted. Note that it is only possible to plot linear meshes, meaing that we must remove the quadratic parts.
-simple_mesh = create_simple_mesh(mesh)                          # Creating simple mesh
-p_corners = p_bem[sort!(unique(mesh.physics_topology[1:3,:]))]  # Removing quadratic parts
-fig, ax, hm = viz(simple_mesh;showfacets=true, color=abs.(p_corners/Z₀))
-wgl.Colorbar(fig[1,2],label="|p|"); fig
+data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
+fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz/Z₀))
+wgl.Colorbar(fig[1,2],label="|p/Z₀|"); fig

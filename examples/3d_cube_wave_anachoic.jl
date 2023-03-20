@@ -2,16 +2,18 @@
 # # Importing related packages
 using LinearAlgebra, BoundaryIntegralEquations,IterativeSolvers, Plots, MeshViz, SpecialFunctions
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(600, 600))
+wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
 # # Loading Mesh
 # Loading and visualizing the triangular cube mesh
-mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube");
-geometry_orders     = [:linear,:quadratic];
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_extremely_coarse");
+mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_extra_coarse");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_coarser");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_coarse");
+#src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube");
 physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic];
-mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=geometry_orders[2],
-                                             physics_order=physics_orders[3])
+mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=:linear, physics_order=physics_orders[5])
 bc_pre = [1] .- 1; # The .-1 is due to COMSOL 0-indexing of exported entities
 bc_ana = [6] .- 1; # The .-1 is due to COMSOL 0-indexing of exported entities
 # Creating simple meshes for full mesh and boundary condition
@@ -25,9 +27,9 @@ viz!(simple_ana;showfacets=true,color=:blue)
 wgl.current_figure()
 # # Setting up constants
 frequency = 54.59;                              # Frequency                [Hz]
-c  = 343                                        # Speed up sound           [m/s]
-ρ₀ = 1.21                                       # Mean density             [kg/m^3]
-Z₀ = ρ₀*c                                       # Characteristic impedance [Rayl]
+c  = 343;                                       # Speed up sound           [m/s]
+ρ₀ = 1.21;                                      # Mean density             [kg/m^3]
+Z₀ = ρ₀*c;                                      # Characteristic impedance [Rayl]
 P₀ = 1.0;                                       # Pressure of plane wave   [m/s]
 l  = 1.0;                                       # Length of cube           [m]
 k  = 2π*frequency/c;                            # Computing the wavenumber
@@ -37,13 +39,9 @@ k  = 2π*frequency/c;                            # Computing the wavenumber
 #  p(x) = P_0\exp(-\mathrm{i}kx),
 # ```
 # where ``P_0`` is the magnitude of the planewave.
-# We start by defining a ``N`` linearly spaced points defined by ``(x,0.5,0.5)`` with ``x\in[0.1,0.9]``.
-N = 20;
-x = collect(0.1:(0.9-0.1)/(N-1):0.9);
-y = 0.5ones(N);
-z = 0.5ones(N);
 # We now compute the analytical expression is computed at the points
-p_analytical = P₀*exp.(-im*k*x);
+x_ana = collect(0.0:0.01:1)
+p_analytical = P₀*exp.(-im*k*x_ana);
 # ## Solution using the dense BEM
 # We start by solving the BEM system using dense matrices. For this we need to first assemble the matrices
 F,G,C = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,progress=false);
@@ -77,9 +75,9 @@ v_bem[bc2] = p_bem[bc2]*(-im*k);
 
 # ## Solution using the FMM-BEM
 # First we define the two operators
-Gf = FMMGOperator(mesh,k);
-Ff = FMMFOperator(mesh,k);
-Hf = Diagonal(C) - Ff;
+Gf = FMMGOperator(mesh,k,depth=2);
+Ff = FMMFOperator(mesh,k,depth=2);
+Hf = 0.5I - Ff;
 # Then we compute the right-hand side and the linear system similar to before. Note that the system matrix will be represented by a collection of linear maps
 bf = -(Hf*ps);
 Af = Hf*Diagonal(Hmask) + Gf*Diagonal(-Z)
@@ -94,7 +92,11 @@ v_fmm[bc1] = z_fmm[bc1];
 v_fmm[bc2] = p_fmm[bc2]*(-im*k);
 
 # # Field evaluations
-# In order to compare the results with the analytical solution we must use the found surface pressures to compute pressure at the interior field points. We therefore start by creating a matrix of points (as columns)
+# In order to compare the results with the analytical solution we must use the found surface pressures to compute pressure at the interior field points. We therefore start by creating a matrix of points (as columns). Thi is done by chosing ``N`` linearly spaced points defined by ``(x,0.5,0.5)`` with ``x\in[0.1,0.9]``.
+N = 20;
+x = collect(0.1:(0.9-0.1)/(N-1):0.9);
+y = 0.5ones(N);
+z = 0.5ones(N);
 X_fieldpoints = [x'; y'; z'];
 # Using the described field-points we can assemble the (dense) matrices for the field point evaluation
 Fp,Gp,Cp = assemble_parallel!(mesh,k,X_fieldpoints,n=2,m=2,progress=false);
@@ -102,10 +104,15 @@ Fp,Gp,Cp = assemble_parallel!(mesh,k,X_fieldpoints,n=2,m=2,progress=false);
 p_field  = Fp*p_bem + Gp*v_bem;
 pf_field = Fp*p_fmm + Gp*v_fmm;
 # Plotting the field point pressure it can be seen that all 3 methods find the correct pressures
-plot(x,real.(p_analytical/P₀),  label="Re-Analytical")
+plot(x_ana,real.(p_analytical/P₀),  label="Re-Analytical")
 scatter!(x,real.(p_field/P₀),   label="Re-Full", markershape=:rect)
 scatter!(x,real.(pf_field/P₀),  label="Re-FMM")
-plot!(x,imag.(p_analytical/P₀), label="Im-Analytical")
+plot!(x_ana,imag.(p_analytical/P₀), label="Im-Analytical")
 scatter!(x,imag.(p_field/P₀),   label="Im-Full", markershape=:rect)
 scatter!(x,imag.(pf_field/P₀),  label="Im-FMM")
 xlabel!("r/a")
+# The surface pressures can also be plotted. Note that it is only possible to plot linear meshes, meaing that we must remove the quadratic parts.
+data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
+fig, ax, hm = viz(data_mesh;showfacets=true, color=real.(data_viz/P₀))
+#src wgl.scatter!(mesh.sources[1,:],mesh.sources[2,:],mesh.sources[3,:],color=abs.(p_fmm/Z₀))
+wgl.Colorbar(fig[1,2],label="Re(p/p₀)"); fig
