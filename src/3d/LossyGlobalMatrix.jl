@@ -75,9 +75,9 @@ A `LinearMap` corresponding to the reduced lossy system.
 """
 function LossyGlobalOuter(mesh::Mesh,freq;
                             progress=true,integral_free_term=[],
-                            hmatrix_on=false,
+                            hmatrix_on=false,sparse_offset=nothing,
                             depth=1,sparse_assembly=true,exterior=true,sparse_lu=false,
-                            m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,offset=0.2)
+                            m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,fmm_offset=0.2)
     if fmm_on == false && size(mesh.normals,2) > 20000
         @warn "Using a dense formulation with a mesh of this size can be problematic"
     end
@@ -94,7 +94,6 @@ function LossyGlobalOuter(mesh::Mesh,freq;
     ### Extracting the number of nodes (and hence also the total matrix size)
     nSource = size(sources,2)
 
-
     # Defining Diagonal Entries
     if isempty(integral_free_term)
         C0 = Diagonal(ones(eltype(kₕ),nSource)/2)
@@ -110,25 +109,26 @@ function LossyGlobalOuter(mesh::Mesh,freq;
         throw(ArgumentError("You can not both use the FMM and H-matrices"))
     elseif fmm_on && !hmatrix_on
         Ga = FMMGOperator(mesh,kₐ;
-                        n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
+                        n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth)
         Ha = FMMFOperator(mesh,kₐ;
-                        n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth) + 0.5I
+                        n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth) + I/2
     elseif !fmm_on && hmatrix_on
-        Ga = HGOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
-        Ha = HFOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=offset,nearfield=nearfield,depth=depth)
+        Ga = HGOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth)
+        Ha = HFOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth)
     else
         Ha,Ga,C = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
         C0 = (exterior ? Diagonal(C) : Diagonal(1.0 - C))
-        Ha = (exterior ? Ha + C0 : Ha - C0)
+        Ha = (exterior ? Ha + C0 : -Ha + C0)
     end
     # Thermal matrices
     if progress; @info("Thermal Matrices:"); end
-    Hh,Gh = assemble_parallel!(mesh,kₕ,sources;
+    Hh,Gh = assemble_parallel!(mesh,kₕ,sources;offset=sparse_offset,
                         sparse=sparse_assembly,depth=depth,progress=progress);
     Hh = (exterior ?  Hh + C0 : -Hh + C0)
     # Viscous matrices
     if progress; @info("Viscous matrices:"); end
-    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;sparse=sparse_assembly,depth=depth,progress=progress);
+    Fᵥ,Bᵥ  = assemble_parallel!(mesh,kᵥ,sources;offset=sparse_offset,
+                        sparse=sparse_assembly,depth=depth,progress=progress);
     Aᵥ = (exterior ?  Fᵥ + C0 : -Fᵥ + C0)
     ### Computing tangential derivatives
     Dx,Dy,Dz = interpolation_function_derivatives(mesh)
