@@ -37,7 +37,6 @@ function interpolation_function_derivatives(mesh;global_derivatives=true)
     topology    = mesh.topology
     coordinates = mesh.coordinates
     n_elements  = number_of_elements(mesh)
-
     # Making a copy of the element type
     shape_function   = deepcopy(mesh.shape_function)
     physics_function = deepcopy(mesh.physics_function)
