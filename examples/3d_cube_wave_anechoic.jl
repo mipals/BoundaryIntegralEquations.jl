@@ -1,6 +1,6 @@
-# # Cube with anachoic condition (3D - Interior)
+# # Cube with anechoic condition (3D - Interior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations,IterativeSolvers, Plots, MeshViz, SpecialFunctions
+using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, MeshViz, SpecialFunctions
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide
@@ -20,7 +20,7 @@ bc_ana = [6] .- 1; # The .-1 is due to COMSOL 0-indexing of exported entities
 simple_mesh = create_bc_simple_mesh(mesh,[bc_pre; bc_ana],false);
 simple_pre  = create_bc_simple_mesh(mesh,bc_pre);
 simple_ana  = create_bc_simple_mesh(mesh,bc_ana);
-# We now plot the mesh with the pressure condition shown in red and the anachoic condition shown in blue
+# We now plot the mesh with the pressure condition shown in red and the anechoic condition shown in blue
 viz(simple_mesh;showfacets=true)
 viz!(simple_pre;showfacets=true,color=:red)
 viz!(simple_ana;showfacets=true,color=:blue)
@@ -55,7 +55,7 @@ bc2 = sort(unique(mesh.physics_topology[:,bc_ana]));
 ps = zeros(ComplexF64,length(C));
 ps[bc1] .= 1.0;
 bs = -(H*ps); # Computing right-hand side
-# Then we define the anachoic condition at ``x=1``.
+# Then we define the anechoic condition at ``x=1``.
 Z = zeros(ComplexF64,length(C));
 Z[bc1] .=  1.0;  # Unknown velocities
 Z[bc2] .= -im*k; # Impedance condition

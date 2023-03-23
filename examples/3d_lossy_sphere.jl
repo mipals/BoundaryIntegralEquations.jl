@@ -1,6 +1,6 @@
 # # Lossy sphere (3D - Exterior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations,IterativeSolvers, Plots, MeshViz
+using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, MeshViz
 # # Loading the mesh
 mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes");
 #src mesh_file = joinpath(mesh_path,"sphere_1m_extra_coarse");
@@ -25,8 +25,8 @@ n       = size(targets, 2);          # Number of target points
 # ```math
 # \begin{aligned}
 #   p_\text{analytical}(r,\theta) &\approx -3\rho c A_1h_1^{(1)}(kr)\cos(\theta)\\
-#   v^n_\text{analytical}(r,\theta) &\approx -\frac{6\mathrm{i}kB_1}{k_vr}h_n(k_vr)\cos(\theta)\\
-#   v^t_\text{analytical}(r,\theta) &\approx -\frac{3\mathrm{i}B_1\left(k_vrh_1'(k_vr) + h_n(k_vr)\right)}{r}\sin(\theta)
+#   v^n_\text{analytical}(r,\theta) &\approx -\frac{6\mathrm{i}kB_1}{k_vr}h_1(k_vr)\cos(\theta)\\
+#   v^t_\text{analytical}(r,\theta) &\approx -\frac{3\mathrm{i}B_1\left(k_vrh_1'(k_vr) + h_1(k_vr)\right)}{r}\sin(\theta)
 # \end{aligned}
 # ```
 # where ``A_1`` and ``B_1`` is found by solving the following system of equations
@@ -42,17 +42,17 @@ n       = size(targets, 2);          # Number of target points
 β = kᵥ*a; # As defined in (6.9.19) in Temkin
 b = k*a;  # As defined in (6.9.19) in Temkin
 # Now computing ``A_1``using (6.9.25)
-A₁ = -v₀/(3im*k)*b^3*exp(-im*b)*(3β + 3im - im*β^2)/(β^2*(b^2 - 2) - b^2 + im*(β*b^2 + 2b*β^2));
+A₁ = -v₀/(3im*k)*b^3*exp(-im*b)*(3β+3im-im*β^2)/(β^2*(b^2-2)-b^2+im*(β*b^2+2b*β^2));
 # Using the two equations described earlier we can compute the expressions containing ``B_1`` as follows
-h1_ka  = exp(im*b)/(b^2)*(-b - im);             # Spherical hankel function
-dh1_ka = exp(im*b)*(2b + im*(2 - b^2))/(b^3);   # Derivative of spherical hankel function
-B1h1   = -(v₀/(3im*k) - A₁*dh1_ka)/2;           # Top equation in the system shown earlier
-B1dh1  = -(v₀/(3im)*a - A₁*h1_ka);              # Bottom equation in the system shown earlier
+h1_ka  = exp(im*b)/(b^2)*(-b - im);           # Spherical hankel function
+dh1_ka = exp(im*b)*(2b + im*(2 - b^2))/(b^3); # Derivative of spherical hankel function
+B1h1   = -(v₀/(3im*k) - A₁*dh1_ka)/2;         # Top equation in the system shown earlier
+B1dh1  = -(v₀/(3im)*a - A₁*h1_ka);            # Bottom equation in the system shown earlier
 # Using the above the analytical expression can be evaluted on the surface
 θ_analytical  = collect(0:0.01:π)
 p_analytical  = -3.0*ρ₀*c*k*A₁*(h1_ka).*(cos.(θ_analytical));
-vn_analytical = -6im*k*B1h1*cos.(θ_analytical);  # Analytical expression for the normal velocity
-vt_analytical = -3im/a*B1dh1*sin.(θ_analytical); # Analytical expression for the tangential velocity
+vn_analytical = -6im*k*B1h1*cos.(θ_analytical);  # Analytical normal velocity
+vt_analytical = -3im/a*B1dh1*sin.(θ_analytical); # Analytical tangential velocity
 # # Iterative Solution through BEM
 LGO = LossyGlobalOuter(mesh,frequency;fmm_on=true,depth=1,n=3,progress=false);
 v0  = [v₀*ones(n); zeros(2n)];
