@@ -28,12 +28,12 @@ P₀ = 1.0;                                       # Magnitude of planewave
 # ```
 # where ``j_n, h_n`` and ``P_n`` are respectively the spherical Bessel function of the first kind, the Hankel function of the first kind and the Legendre polynomial of degree ``n``.
 # To make the implementation easier we defin the following helper functions
-dsp_j(n,z) = n/z*sphericalbesselj.(n,z) - sphericalbesselj.(n+1,z); # Derivative of j
-dsp_y(n,z) = n/z*sphericalbessely.(n,z) - sphericalbessely.(n+1,z); # Derivative of y
-sp_h(n,z)  = sphericalbesselj.(n,z) + im*sphericalbessely.(n,z);    # Hankel function (h)
-dsp_h(n,z) = dsp_j.(n,z) + im*dsp_y.(n,z);                          # Derivative of h
+dsp_j(n,z) = n/z*sphericalbesselj(n,z) - sphericalbesselj(n+1,z); # Derivative of j
+dsp_y(n,z) = n/z*sphericalbessely(n,z) - sphericalbessely(n+1,z); # Derivative of y
+sp_h(n,z)  = sphericalbesselj(n,z) + im*sphericalbessely(n,z);    # Hankel function (h)
+dsp_h(n,z) = dsp_j(n,z) + im*dsp_y(n,z);                          # Derivative of h
 # Using the helper functions we can define the a function for the coefficients
-c_n(n,ka)  = (im)^n*(2n + 1)*(dsp_j.(n,ka)./dsp_h.(n,ka));
+c_n(n,ka)  = (im)^n*(2n + 1)*(dsp_j(n,ka)./dsp_h(n,ka));
 # The total pressure as the sum of scattered and incident pressure
 θ_analytical = collect(0:0.01:π);   # Angles where the analytical solution will be evaluated
 N_truncation = 50;                  # Truncation of the sum
