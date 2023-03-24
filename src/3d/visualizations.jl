@@ -89,21 +89,6 @@ function create_vizualization_data(mesh,data,physics_function::Triangular)
     data_viz = data[sort!(unique(mesh.physics_topology[1:3,:]))]  # Removing quadratic parts
     return simple_mesh, data_viz
 end
-# function create_vizualization_data(mesh,data,physics_function::DiscontinuousTriangularConstant)
-#     # Repeating edge-points
-#     T = reduce(hcat,[mesh.coordinates[:,top] for top in eachcol(mesh.topology[1:3,:])])
-#     # Creating point data
-#     points = Point.(T[1,:],T[2,:],T[3,:])
-#     # Creating a "discontinuous linear topology"
-#     new_topology = reshape(1:length(points),3,size(mesh.topology,2))
-#     # Creating vector of connectivities
-#     connectivities = [connect(Tuple(Float64.(face))) for face in eachcol(new_topology)]
-#     # Combining connectivities and points to create a simple mesh
-#     simple_mesh = SimpleMesh(points, connectivities)
-#     # Repeating the data for every corner on the triangle
-#     data_viz = repeat(data,inner=3)
-#     return simple_mesh, data_viz
-# end
 function create_vizualization_data(mesh,data,physics_function::DiscontinuousTriangular)
     # Repeating edge-points
     T = reduce(hcat,[mesh.coordinates[:,top] for top in eachcol(mesh.topology[1:3,:])])
