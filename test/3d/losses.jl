@@ -9,7 +9,7 @@ using IterativeSolvers
                             Testing mesh interpolation schemes
 ==========================================================================================#
 @testset "Testing losses" begin
-    mesh_file = "../examples/meshes/sphere_1m"
+    mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_coarser");
     geometry_orders = [:linear,:quadratic]
     #! Currently the dicontinuous elements does not work. Constant elements are also no-go.
     #! physics_orders  = [:linear,:quadratic,:disctrilinear,:disctriquadratic]
