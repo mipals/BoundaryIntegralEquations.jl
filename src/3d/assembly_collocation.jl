@@ -88,10 +88,10 @@ end
 Computes the maximum distance between ``\\mathbf{x}, \\mathbf{y}, \\mathbf{z} \\in \\mathbb{R}^3``.
 """
 function maximum_sidelength(x,y,z)
-    d1 = hypot(x[1] - y[1],x[2] - y[2], x[3] - y[3])
-    d2 = hypot(y[1] - z[1],y[2] - z[2], y[3] - z[3])
-    d3 = hypot(z[1] - x[1],z[2] - x[2], z[3] - x[3])
-    return max(d1,d2,d3)
+    distance_xy = hypot(x[1] - y[1],x[2] - y[2], x[3] - y[3])
+    distance_yz = hypot(y[1] - z[1],y[2] - z[2], y[3] - z[3])
+    distance_zx = hypot(z[1] - x[1],z[2] - x[2], z[3] - x[3])
+    return max(distance_xy, distance_yz, distance_zx)
 end
 
 """
@@ -259,7 +259,7 @@ Assembles the BEM matrices for F, G and G0 kernels over the elements on the mesh
 function assemble_parallel!(mesh::Mesh3d,k,in_sources;fOn=true,gOn=true,cOn=true,
                             sparse=false,m=4,n=4,progress=true,depth=2,offset=nothing)
     if sparse
-        return sparse_assemble_parallel!(mesh,k,in_sources,mesh.shape_function;
+        return sparse_assemble_parallel!(mesh,k,in_sources,mesh.physics_function;
                                 fOn=fOn,gOn=gOn,progress=progress,depth=depth,offset=offset)
     else
         return assemble_parallel!(mesh::Mesh3d,k,in_sources,mesh.shape_function;
