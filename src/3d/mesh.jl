@@ -169,10 +169,10 @@ function set_physics_element(physics_order,shape_function,beta_type)
     elseif physics_order == :discquadconstant
         return DiscontinuousQuadrilateralConstant(shape_function)
     elseif physics_order == :discquadlinear
-        beta = get_beta_tri_linear(beta_type)
+        beta = get_beta_quad_linear(beta_type)
         return DiscontinuousQuadrilateralLinear4(shape_function,beta)
     elseif physics_order == :discquadquadratic
-        beta = get_beta_tri_quadratic(beta_type)
+        beta = get_beta_quad_quadratic(beta_type)
         return DiscontinuousQuadrilateralQuadraticLagrange(shape_function,beta)
     else
         return deepcopy(shape_function)
@@ -180,23 +180,13 @@ function set_physics_element(physics_order,shape_function,beta_type)
 end
 
 function get_beta_tri_linear(beta_type)
-    if typeof(beta_type) <: Number
-        return beta_type
-    elseif beta_type == :legendre
-        return 0.1667
-    elseif beta_type == :equidistant
-        return 0.25
-    end
+    # Half of a quad as the triangle is defined on [0,1] and the quad is defined on [-1,1]
+    return get_beta_quad_linear(beta_type)/2
 end
 
 function get_beta_tri_quadratic(beta_type)
-    if typeof(beta_type) <: Number
-        return beta_type
-    elseif beta_type == :legendre
-        return 0.0916
-    elseif beta_type == :equidistant
-        return 0.1667
-    end
+    # Half of a quad as the triangle is defined on [0,1] and the quad is defined on [-1,1]
+    return get_beta_quad_quadratic(beta_type)/2
 end
 
 function get_beta_quad_linear(beta_type)
