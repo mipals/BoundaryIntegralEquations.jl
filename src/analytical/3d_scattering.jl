@@ -1,15 +1,22 @@
 #==========================================================================================
                                 Adapted from OpenBEM
 ==========================================================================================#
-function incoming_wave(angles,K,xyzb,k)
+function incoming_wave(angles,P0,xyzb,k)
     # pI = zeros(size((xyzb)))
     A  = sin.(angles[1]) .* cos.(angles[2])
     B  = sin.(angles[1]) .* sin.(angles[2])
     C  = cos.(angles[1])
 
     dps = (A .* xyzb[1,:] + B .* xyzb[2,:] + C .* xyzb[3,:]) ./ sqrt.(A.^2 + B.^2 + C.^2)
-    return K .* exp.(-im .* (k .* dps))
+    return P0 .* exp.(-im .* (k .* dps))
 end
+"""
+    plane_wave_scattering_sphere(k,a,r,θ,Ieps)
+
+```math
+  p_s(r, \\theta) = -P_0\\sum_{n}^\\infty \\mathrm{i}^n(2n+1)\\frac{j_n^{'}(ka)}{h_n^{'}(ka)}P_n(\\cos(\\theta))h_n(kr)
+```
+"""
 function plane_wave_scattering_sphere(k,a,r,θ,Ieps)
 
     ka = k*a
@@ -35,13 +42,29 @@ function plane_wave_scattering_sphere(k,a,r,θ,Ieps)
     end
     return ptot[:], accuracy
 end
+"""
+```math
+  p_\\text{int}(r) = -\\mathrm{i}Z_0v_r(\\frac{a}{r})\\frac{ka\\sin(kr)}{ka\\cos(ka) - \\sin(ka)}
+ ```
+"""
+function p_interior_pulsating_sphere()
+
+end
+"""
+```math
+    p_\\text{int}(x,y,z) = -3v_z z \\mathrm{i}kZ_0\\frac{j_1(kr)}{kr(j_0(ka) - 2j_2(ka))},
+```
+"""
+function p_interior_oscilating_sphere()
+
+end
 
 pinc(r,phi,k;p0=1.0) = p0*exp.(im*k*r.*cos.(phi))
 # Short-cuts for spherical bessel j and y functions
 sp_j(n,z)  = sphericalbesselj.(n,z)
-dsp_j(n,z) = 0.5*(sphericalbesselj.(n-1,z) - sphericalbesselj.(n+1,z)) - 0.5*sphericalbesselj.(n,z)./(z)
+dsp_j(n,z) = (sphericalbesselj.(n-1,z) - sphericalbesselj.(n+1,z))/2 - sphericalbesselj.(n,z)./(2z)
 sp_y(n,z)  = sphericalbessely.(n,z)
-dsp_y(n,z) = 0.5*(sphericalbessely.(n-1,z) - sphericalbessely.(n+1,z)) - 0.5*sphericalbessely.(n,z)./(z)
+dsp_y(n,z) = (sphericalbessely.(n-1,z) - sphericalbessely.(n+1,z))/2 - sphericalbessely.(n,z)./(2z)
 # Defining spherical hankel function of the first kind
 sp_h(n,z)  = sp_j.(n,z) + im*sp_y.(n,z)
 dsp_h(n,z) = dsp_j.(n,z) + im*dsp_y.(n,z)
