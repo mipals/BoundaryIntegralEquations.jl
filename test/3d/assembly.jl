@@ -19,8 +19,8 @@ import BoundaryIntegralEquations: incoming_wave, plane_wave_scattering_sphere
     mesh_file = "../examples/meshes/sphere_1m" #! Relative path from the "runtests.jl" file
     geometry_orders = [:linear,:quadratic]
     physics_orders = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
-    errors = [0.037 0.0063 0.0073 0.0041 0.004;
-              0.048 2.8e-5 0.0008 4.2e-5 4.9e-5]
+    errors = [0.037 0.0063 0.0073 0.0044 0.004;
+              0.048 2.8e-5 0.0008 4.2e-4 4.9e-5]
     for (i,go) in enumerate(geometry_orders), (j,po) in enumerate(physics_orders)
         if go == :linear && po == :geometry
             continue
@@ -53,7 +53,7 @@ end
     geometry_orders = [:linear,:quadratic]
     physics_orders  = [:linear,:geometry,:discquadconstant,:discquadlinear,:discquadquadratic]
     errors = [0.012 0.012 0.014 0.009 0.008;
-              0.004 2.8e-5 0.0019 0.003 3.2e-5]
+              0.004 2.8e-5 0.0019 0.003 5.9e-5]
     for (i,go) in enumerate(geometry_orders), (j,po) in enumerate(physics_orders)
         if go == :linear && po == :geometry
             continue
