@@ -87,7 +87,6 @@ function sphere_first_order(k,c,rho,a,up,rtp;S=-1,kv=Inf)
 
         A1=zeros(ComplexF64, size(k))
         exp_beta_B1=zeros(ComplexF64, size(k))
-        exp_beta_B1=zeros(ComplexF64, size(k))
         AB=[a11 a12;
             a21 a22]\[up; up]
         A1=AB[1]

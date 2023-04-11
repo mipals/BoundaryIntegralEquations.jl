@@ -9,18 +9,20 @@ using IterativeSolvers
                                 Loading Mesh
 ==========================================================================================#
 geometry_orders     = [:linear,:quadratic]
-tri_physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic]
+tri_physics_orders  = [:linear,:geometry,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
 mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes")
-# tri_mesh_file = joinpath(mesh_path,"sphere_1m_fine");
+tri_mesh_file = joinpath(mesh_path,"sphere_1m_coarser");
+tri_mesh_file = joinpath(mesh_path,"sphere_1m");
+tri_mesh_file = joinpath(mesh_path,"sphere_1m_fine");
 tri_mesh_file = joinpath(mesh_path,"sphere_1m_finer");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_finest");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_35k");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_77k");
-tri_mesh_file = joinpath(mesh_path,"sphereTri6_ref3");
+# tri_mesh_file = joinpath(mesh_path,"sphereTri6_ref3");
 @time mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orders[2],
-                                                       physics_order=tri_physics_orders[2])
+                                                       physics_order=tri_physics_orders[3])
 
 # mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/test_binary.ply");
 #==========================================================================================
@@ -28,11 +30,11 @@ tri_mesh_file = joinpath(mesh_path,"sphereTri6_ref3");
 ==========================================================================================#
 # corners = sort!(unique(mesh.physics_topology[1:3,:]))
 # edges   = sort!(unique(mesh.physics_topology[4:6,:]))
-using MeshViz
-import WGLMakie as wgl
-simple_mesh = create_simple_mesh(mesh)
+# using MeshViz
+# import WGLMakie as wgl
 # wgl.set_theme!(resolution=(800, 800))
-viz(simple_mesh, showfacets = true)
+# simple_mesh = create_simple_mesh(mesh)
+# viz(simple_mesh, showfacets = true)
 # # wgl.scatter!(mesh.coordinates[1,:],mesh.coordinates[2,:],mesh.coordinates[3,:])
 # wgl.scatter!(mesh.targets[1,corners],mesh.targets[2,corners],mesh.targets[3,corners],color=:red)
 # wgl.scatter!(mesh.targets[1,edges],mesh.targets[2,edges],mesh.targets[3,edges],color=:blue)
@@ -44,11 +46,10 @@ viz(simple_mesh, showfacets = true)
 # wgl.lines!(element_coordinates[1,:],element_coordinates[2,:],element_coordinates[3,:])
 # wgl.scatter!(element_coordinates[1,:],element_coordinates[2,:],element_coordinates[3,:])
 
-
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 100.0                                   # Frequency                 [Hz]
+freq   = 500.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
@@ -56,7 +57,7 @@ radius = 1.0                                     # Radius of sphere_1m       [m]
 #==========================================================================================
                             Assembling BEM matrices
 ==========================================================================================#
-xyzb = mesh.targets
+xyzb = mesh.sources
 n = size(xyzb,2)
 u₀ = 1e-2
 normals  = mesh.normals
@@ -65,7 +66,11 @@ normals  = mesh.normals
                         Iterative Solution of the 1-variable system
 ===========================================================================================#
 # LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=2,n=3)
-LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=2,n=3)
+# LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=1)
+# LGM = BoundaryIntegralEquations.LossyGlobalOuter(mesh,freq;fmm_on=true,depth=2,sparse_lu=true)
+LGM = LossyGlobalOuter(mesh,freq;fmm_on=true,depth=2,sparse_lu=true);
+# LGM = LossyGlobalOuter(mesh,freq;fmm_on=true,depth=2);
+# cond(Matrix(LGM.Gh))
 #* Creating the right-hand side
 id = 1
 if id == 1
@@ -90,6 +95,7 @@ if typeof(LGM.Gv) <: Factorization
 else
     rhs = LGM.Ga*gmres(LGM.inner,LGM.Dr*v0 - LGM.Nd'*gmres(LGM.Gv,LGM.Hv*v0);verbose=true);
 end
+# @time pa = gmres(LGM,rhs;verbose=true,maxiter=2);
 @time pa = gmres(LGM,rhs;verbose=true);
 #? Try to solve using a direct solver / dense matrix
 
@@ -179,3 +185,67 @@ plot(plt1,plt2,plt3,layout=(3,1),dpi=500)
 # dvn2 = lsqr(V,rhs_v;atol=1e-15,btol=1e-13,verbose=true);
 # @test LGM.Dr*v ≈ -LGM.Nd'*dvn2            # Now this is satisfied
 # @test LGM.Hv*v ≈ -LGM.Gv*dvn2 atol = 1e-5 # But the BEM system has a higher error
+
+# For discontinuous linear elements something is weird...
+c1 = sort(unique(mesh.physics_topology[1,:]))
+c2 = sort(unique(mesh.physics_topology[2,:]))
+c3 = sort(unique(mesh.physics_topology[3,:]))
+scatter(ang_axis[c1],real(v_rAN_V[c1]))
+scatter!(ang_axis[c1],real.(v_n0[c1]))
+scatter!(ang_axis[c2],real.(v_n0[c2]))
+scatter!(ang_axis[c3],real.(v_n0[c3]))
+
+using Statistics
+quantile(real.(v_rAN_V[c1]) ./ real.(v_n0[c1]))
+quantile(real.(v_rAN_V[c2]) ./ real.(v_n0[c2]))
+quantile(real.(v_rAN_V[c3]) ./ real.(v_n0[c3]))
+
+
+c4 = sort(unique(mesh.physics_topology[4,:]))
+c5 = sort(unique(mesh.physics_topology[5,:]))
+c6 = sort(unique(mesh.physics_topology[6,:]))
+scatter!(ang_axis[c4],real.(v_n0[c4]))
+scatter!(ang_axis[c5],real.(v_n0[c5]))
+scatter!(ang_axis[c6],real.(v_n0[c6]))
+
+quantile(real.(v_rAN_V[c4]) ./ real.(v_n0[c4]))
+quantile(real.(v_rAN_V[c5]) ./ real.(v_n0[c5]))
+quantile(real.(v_rAN_V[c6]) ./ real.(v_n0[c6]))
+
+
+
+# fun
+nx = mesh.normals[1,:]
+ny = mesh.normals[2,:]
+nz = mesh.normals[3,:]
+tx = mesh.tangents[1,:]
+ty = mesh.tangents[2,:]
+tz = mesh.tangents[3,:]
+sx = mesh.sangents[1,:]
+sy = mesh.sangents[2,:]
+sz = mesh.sangents[3,:]
+D = [sparse(Diagonal(tx)) sparse(Diagonal(ty)) sparse(Diagonal(tz));
+     sparse(Diagonal(sx)) sparse(Diagonal(sy)) sparse(Diagonal(sz));
+     sparse(Diagonal(nx)) sparse(Diagonal(ny)) sparse(Diagonal(nz))]
+
+T = D'*D # Should be the identity matrix?
+x = rand(size(T,1))
+norm(T*x - x)./norm(x)
+sum(T,dims=2)
+
+S = D*D'
+x = rand(size(S,1))
+norm(S*x - x)./norm(x)
+sum(S,dims=2)
+
+# T[abs.(T .- 1.0) .< 1e-15]
+
+D
+D2 = [sparse(Diagonal(tx)) sparse(Diagonal(ty)) sparse(Diagonal(tz));
+      sparse(Diagonal(sx)) sparse(Diagonal(sy)) sparse(Diagonal(sz));
+      spzeros(n,3n)]
+
+M = D'*D2
+sum(M,dims=2)
+
+N = D*LGM.Dc
