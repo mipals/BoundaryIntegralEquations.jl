@@ -5,8 +5,7 @@ get_offset(physics_element::ContinuousQuadrilateral)    = 0.0
 
 get_beta(physics_element::Triangular) = 0.0
 get_beta(physics_element::DiscontinuousTriangularConstant)  = 1/3
-get_beta(physics_element::DiscontinuousTriangularLinear)    = physics_element.beta
-get_beta(physics_element::DiscontinuousTriangularQuadratic) = physics_element.beta
+get_beta(physics_element::DiscontinuousTriangular)          = physics_element.beta
 #==========================================================================================
                                 TriangularQuadratic Surface
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
@@ -198,22 +197,14 @@ function find_physics_nodes!(physics_nodes,idxs,di,physics_top)
     # [(idx[source_node] + di[t]) for t in physics_topology[:,element]]
 end
 
-"""
-sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-                          fOn=true,gOn=true,depth=1,offset=nothing,progress=true)
-
-Computes the subpart of the BEM matrices corresponding elements near the collocation point.
-If `depth=1` only elements directly connected to the collocation point is included.
-If `depth=2` two layers of elements connected to the collocation point is included.
-"""
-function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-        fOn=true,gOn=true,depth=1,offset=nothing,
-        progress=true) where {T <: Union{TriangularLinear,DiscontinuousTriangularLinear}}
+function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,physics_function;
+    fOn=true,gOn=true,depth=1,offset=nothing, progress=true, Ngauss = 40)
     topology    = get_topology(mesh)
     n_sources   = size(sources,2)
     coordinates = mesh.coordinates
     physics_topology = mesh.physics_topology
-    physics_function = mesh.physics_function
+    # physics_function = mesh.physics_function
+    shape_function = mesh.shape_function
     #======================================================================================
         Introducing three elements: (The hope here is to compute singular integrals)
         The numbers corresponds to the corner for which the GP-points are clustered
@@ -223,144 +214,48 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
                                             | \
                                             1 - 2
     ======================================================================================#
-    beta = get_beta(physics_function)
-    tmp  = DiscontinuousTriangularLinear(physics_function,beta)
-    if typeof(offset) <: Real
-        offr = offset
-    else
-        offr = get_offset(physics_function)
-    end
-    # offr = 0.0
-    # Dealing with corners
-    nodesX1,nodesY1,weights1 = singular_triangle_integration(tmp,3,[1.00;offr;offr],Diagonal(ones(3)),1e-6)
-    nodesX2,nodesY2,weights2 = singular_triangle_integration(tmp,3,[offr;1.00;offr],Diagonal(ones(3)),1e-6)
-    nodesX3,nodesY3,weights3 = singular_triangle_integration(tmp,3,[offr;offr;1.00],Diagonal(ones(3)),1e-6)
-    shape_function1 = deepcopy(shape_function)
-    shape_function2 = deepcopy(shape_function)
-    shape_function3 = deepcopy(shape_function)
-    set_interpolation_nodes!(shape_function1,nodesX1,nodesY1,weights1)
-    set_interpolation_nodes!(shape_function2,nodesX2,nodesY2,weights2)
-    set_interpolation_nodes!(shape_function3,nodesX3,nodesY3,weights3)
-    physics_function1 = deepcopy(physics_function)
-    physics_function2 = deepcopy(physics_function)
-    physics_function3 = deepcopy(physics_function)
-    set_interpolation_nodes!(physics_function1,nodesX1,nodesY1,weights1)
-    set_interpolation_nodes!(physics_function2,nodesX2,nodesY2,weights2)
-    set_interpolation_nodes!(physics_function3,nodesX3,nodesY3,weights3)
-
-    # Copying interpolation of physics functions1
-    physics_interpolation1 = physics_function1.interpolation
-    physics_interpolation2 = physics_function2.interpolation
-    physics_interpolation3 = physics_function3.interpolation
-
-    # Connections
-    element_connections, source_connections = connected_sources(mesh,depth)
-    lengths = length.(source_connections)
-    dict = [Dict(zip(source_connections[i],1:lengths[i])) for i = 1:length(lengths)]
-
-    idx = [0; cumsum(lengths)]
-    # Preallocation of return values
-    F = zeros(ComplexF64, idx[end])
-    G = zeros(ComplexF64, idx[end])
-
-    mn = length(nodesX1)
-    n_physics_functions = number_of_shape_functions(physics_function)
-    n_shape_functions   = number_of_shape_functions(shape_function)
-
-    n_threads     = nthreads()
-    Normals       = zeros(3, mn*n_threads)
-    Tangents      = zeros(3, mn*n_threads)
-    Sangents      = zeros(3, mn*n_threads)
-    Interpolation = zeros(3, mn*n_threads)
-    Jacobian      = zeros(mn,n_threads)
-    R             = zeros(mn,n_threads)
-    Integrand     = zeros(ComplexF64, mn, n_threads)
-    # Assembly loop
-    if progress; prog = Progress(n_sources, 0.2, "Assembling BEM matrices: \t", 50); end
-    @inbounds @threads for source_node = 1:n_sources
-        # Access source
-        source     = sources[:,source_node]
-        # Every thread has access to parts of the pre-allocated matrices
-        normals       = @view Normals[:,((threadid()-1)*mn+1):threadid()*mn]
-        tangents      = @view Tangents[:,((threadid()-1)*mn+1):threadid()*mn]
-        sangents      = @view Sangents[:,((threadid()-1)*mn+1):threadid()*mn]
-        interpolation = @view Interpolation[:,((threadid()-1)*mn+1):threadid()*mn]
-        jacobian      = @view Jacobian[:,threadid()]
-        r             = @view R[:,threadid()]
-        integrand     = @view Integrand[:,threadid()]
-        di = dict[source_node]
-        physics_nodes = zeros(Int64, n_physics_functions)
-        element_coordinates = zeros(3,n_shape_functions)
-        @inbounds for element ∈ element_connections[source_node]
-            # Access element topology and coordinates
-            element_coordinates .= coordinates[:,topology[:,element]]
-            find_physics_nodes!(physics_nodes,idx[source_node],di,physics_topology[:,element])
-            # Acces submatrix of the BEM matrix
-            submatrixF = @view F[physics_nodes]
-            submatrixG = @view G[physics_nodes]
-            # Use quadrature point clustered around the closest vertex
-            close_corner = find_closest_corner(source,element_coordinates)
-            if close_corner == 1
-                sparse_computing_integrals!(physics_interpolation1,shape_function1,
-                                            normals, tangents,sangents,
-                                            interpolation,jacobian,r,integrand,
-                                            element_coordinates,
-                                            fOn,gOn,submatrixF,submatrixG,k,source)
-            elseif close_corner == 2
-                sparse_computing_integrals!(physics_interpolation2,shape_function2,
-                                            normals, tangents,sangents,
-                                            interpolation,jacobian,r,integrand,
-                                            element_coordinates,
-                                            fOn,gOn,submatrixF,submatrixG,k,source)
-            else
-                sparse_computing_integrals!(physics_interpolation3,shape_function3,
-                                            normals, tangents,sangents,
-                                            interpolation,jacobian,r,integrand,
-                                            element_coordinates,
-                                            fOn,gOn,submatrixF,submatrixG,k,source)
-            end
+    if typeof(physics_function) <: ContinuousTriangular
+        beta = get_beta(physics_function)
+        tmp  = DiscontinuousTriangularLinear(physics_function,beta)
+        if typeof(offset) <: Real
+            offr = offset
+        else
+            offr = get_offset(physics_function)
         end
-        if progress; next!(prog); end # For the progress meter
+        # Dealing with corners
+        DO = Diagonal(ones(3))
+        nodesX1,nodesY1,weights1 = singular_triangle_integration(tmp,3,[1.00;offr;offr],DO,1e-6)
+        nodesX2,nodesY2,weights2 = singular_triangle_integration(tmp,3,[offr;1.00;offr],DO,1e-6)
+        nodesX3,nodesY3,weights3 = singular_triangle_integration(tmp,3,[offr;offr;1.00],DO,1e-6)
+        nodesX4,nodesY4,weights4 = singular_triangle_integration(tmp,3,[0.50;0.50;offr],DO,1e-6)
+        nodesX5,nodesY5,weights5 = singular_triangle_integration(tmp,3,[offr;0.50;0.50],DO,1e-6)
+        nodesX6,nodesY6,weights6 = singular_triangle_integration(tmp,3,[0.50;offr;0.50],DO,1e-6)
+    elseif typeof(physics_function) <: DiscontinuousTriangularConstant
+        nodesX1,nodesY1,weights1 = create_polar_elements(physics_function,Ngauss,1)
+        nodesX2,nodesY2,weights2 = nodesX1,nodesY1,weights1 # Filler - Not used
+        nodesX3,nodesY3,weights3 = nodesX1,nodesY1,weights1 # Filler - Not used
+        nodesX4,nodesY4,weights4 = nodesX1,nodesY1,weights1 # Filler - Not used
+        nodesX5,nodesY5,weights5 = nodesX1,nodesY1,weights1 # Filler - Not used
+        nodesX6,nodesY6,weights6 = nodesX1,nodesY1,weights1 # Filler - Not used
+    elseif typeof(physics_function) <: DiscontinuousTriangularLinear
+        # Dealing with corners
+        nodesX1,nodesY1,weights1 = create_polar_elements(physics_function,Ngauss,1)
+        nodesX2,nodesY2,weights2 = create_polar_elements(physics_function,Ngauss,2)
+        nodesX3,nodesY3,weights3 = create_polar_elements(physics_function,Ngauss,3)
+        nodesX4,nodesY4,weights4 = nodesX1,nodesY1,weights1 # Filler - Not used
+        nodesX5,nodesY5,weights5 = nodesX2,nodesY2,weights2 # Filler - Not used
+        nodesX6,nodesY6,weights6 = nodesX3,nodesY3,weights3 # Filler - Not used
+    elseif typeof(physics_function) <: DiscontinuousTriangularQuadratic
+        Ngauss = 40
+        # Dealing with corners
+        nodesX1,nodesY1,weights1 = create_polar_elements(physics_function,Ngauss,1)
+        nodesX2,nodesY2,weights2 = create_polar_elements(physics_function,Ngauss,2)
+        nodesX3,nodesY3,weights3 = create_polar_elements(physics_function,Ngauss,3)
+        nodesX4,nodesY4,weights4 = create_polar_elements(physics_function,Ngauss,4)
+        nodesX5,nodesY5,weights5 = create_polar_elements(physics_function,Ngauss,5)
+        nodesX6,nodesY6,weights6 = create_polar_elements(physics_function,Ngauss,6)
     end
 
-    I = inverse_rle(1:n_sources,lengths)
-    J = vcat(source_connections...)
-
-    return sparse(I,J,F), sparse(I,J,G)
-end
-
-function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
-    fOn=true,gOn=true,depth=1,offset=nothing,
-    progress=true) where {T <: Union{TriangularQuadratic,DiscontinuousTriangularQuadratic}}
-    topology    = get_topology(mesh)
-    n_sources   = size(sources,2)
-    coordinates = mesh.coordinates
-    physics_topology = mesh.physics_topology
-    physics_function = mesh.physics_function
-    #======================================================================================
-        Introducing three elements: (The hope here is to compute singular integrals)
-        The numbers corresponds to the corner for which the GP-points are clustered
-        As such choose the clustering that are closest to the source point
-        ————————————————————————————————————  Grid  ————————————————————————————————————————
-                                            3
-                                            | \
-                                            1 - 2
-    ======================================================================================#
-    beta = get_beta(physics_function)
-    tmp  = DiscontinuousTriangularLinear(physics_function,beta)
-    if typeof(offset) <: Real
-        offr = offset
-    else
-        offr = get_offset(physics_function)
-    end
-    # Dealing with corners
-    DO = Diagonal(ones(3))
-    nodesX1,nodesY1,weights1 = singular_triangle_integration(tmp,3,[1.00;offr;offr],DO,1e-6)
-    nodesX2,nodesY2,weights2 = singular_triangle_integration(tmp,3,[offr;1.00;offr],DO,1e-6)
-    nodesX3,nodesY3,weights3 = singular_triangle_integration(tmp,3,[offr;offr;1.00],DO,1e-6)
-    nodesX4,nodesY4,weights4 = singular_triangle_integration(tmp,3,[0.50;0.50;offr],DO,1e-6)
-    nodesX5,nodesY5,weights5 = singular_triangle_integration(tmp,3,[offr;0.50;0.50],DO,1e-6)
-    nodesX6,nodesY6,weights6 = singular_triangle_integration(tmp,3,[0.50;offr;0.50],DO,1e-6)
     shape_function1 = deepcopy(shape_function)
     shape_function2 = deepcopy(shape_function)
     shape_function3 = deepcopy(shape_function)
@@ -507,4 +402,46 @@ function sparse_assemble_parallel!(mesh::Mesh3d,k,sources,shape_function::T;
     J = vcat(source_connections...)
 
     return sparse(I,J,F), sparse(I,J,G)
+end
+
+
+
+function create_polar_elements(physics_function,Ngauss,c)
+    u = get_nodal_nodes_u(physics_function)
+    v = get_nodal_nodes_v(physics_function)
+    corners = [u'; v']
+
+    # Computing gauss points
+    X,Y,W = BoundaryIntegralEquations.getpolar_gaussian(Ngauss,1)
+
+    Tc = TriangularLinear(3,3)
+    set_interpolation_nodes!(Tc,X,Y)
+
+    T1 = [corners[:,c] [0.0; 1.0] [0.0; 0.0]]
+    T2 = [corners[:,c] [1.0; 0.0] [0.0; 1.0]]
+    T3 = [corners[:,c] [0.0; 0.0] [1.0; 0.0]]
+    G1 = T1*Tc(X',Y')
+    G2 = T2*Tc(X',Y')
+    G3 = T3*Tc(X',Y')
+    Du1 = T1*Tc.derivatives_u
+    Du2 = T2*Tc.derivatives_u
+    Du3 = T3*Tc.derivatives_u
+
+    Dv1 = T1*Tc.derivatives_v
+    Dv2 = T2*Tc.derivatives_v
+    Dv3 = T3*Tc.derivatives_v
+
+    jac = zeros(3,length(W))
+    for i in eachindex(W)
+        jac[1,i] = abs(Du1[1,i]*Dv1[2,i] - Du1[2,i]*Dv1[1,i])
+        jac[2,i] = abs(Du2[1,i]*Dv2[2,i] - Du2[2,i]*Dv2[1,i])
+        jac[3,i] = abs(Du3[1,i]*Dv3[2,i] - Du3[2,i]*Dv3[1,i])
+    end
+    w1 = jac[1,:].*W
+    w2 = jac[2,:].*W
+    w3 = jac[3,:].*W
+    Wlist = [w1;w2;w3]
+    Xlist = [G1[1,:];G2[1,:];G3[1,:]]
+    Ylist = [G1[2,:];G2[2,:];G3[2,:]]
+    return Xlist, Ylist, Wlist
 end
