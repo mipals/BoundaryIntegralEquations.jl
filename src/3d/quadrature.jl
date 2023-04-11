@@ -155,8 +155,8 @@ function linear_quadrature_transformation(gp,w,a,b)
     w  = (b - a)/2 *w
     return gp,w
 end
-max_rad1(x) = 1 ./ (cos.(x) + sin.(x))             #
-max_rad2(x) = sec.(x)/2                          # Per. definition of secant: 1/cos(x)
+max_rad1(x) = 1 ./ (cos.(x) + sin.(x))         #
+max_rad2(x) = sec.(x)/2                        # Per. definition of secant: 1/cos(x)
 max_rad3(x) = sin.(π/4) ./ sin.(x .- π/4)/2    # Sinus relation
 """
     polar_quadrature
