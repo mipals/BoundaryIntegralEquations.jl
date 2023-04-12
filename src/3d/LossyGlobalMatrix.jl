@@ -202,26 +202,26 @@ function _full10(A::LossyGlobalOuter)
     F = zeros(eltype(A), 10n,10n)
 
     # Acoustical Mode
-    F[0n+1:1n,0n+1:1n] = A.Ga
-    F[0n+1:1n,1n+1:2n] = A.Ha
+    F[0n+1:1n,0n+1:1n] = A.Ha
+    F[0n+1:1n,1n+1:2n] = A.Ga
     # Thermal Mode
-    F[1n+1:2n,2n+1:3n] = A.Gh
-    F[1n+1:2n,3n+1:4n] = A.Hh
+    F[1n+1:2n,2n+1:3n] = A.Hh
+    F[1n+1:2n,3n+1:4n] = A.Gh
     # Viscous Mode
-    F[2n+1:5n,4n+1:7n]  = A.Gv
-    F[2n+1:5n,7n+1:10n] = A.Hv
+    F[2n+1:5n,4n+1:7n]  = A.Hv
+    F[2n+1:5n,7n+1:10n] = A.Gv
     # Divergence
     F[5n+1:6n,4n+1:7n] = A.Dr
     F[5n+1:6n,7n+1:10n] = A.Nd'
     # Isothermal BC
-    F[6n+1:7n,0n+1:1n] = A.tau_a*Diagonal(ones(n))
-    F[6n+1:7n,2n+1:3n] = A.tau_h*Diagonal(ones(n))
+    F[6n+1:7n,0n+1:1n] = A.tau_a*Diagonal(ones(eltype(A),n))
+    F[6n+1:7n,2n+1:3n] = A.tau_h*Diagonal(ones(eltype(A),n))
     # No-slip
     F[7n+1:10n,0n+1:1n] = A.phi_a*A.Dc
     F[7n+1:10n,1n+1:2n] = A.phi_a*A.Nd
     F[7n+1:10n,2n+1:3n] = A.phi_h*A.Dc
     F[7n+1:10n,3n+1:4n] = A.phi_h*A.Nd
-    F[7n+1:10n,4n+1:7n] = Diagonal(ones(3n))
+    F[7n+1:10n,4n+1:7n] = Diagonal(ones(eltype(A),3n))
 
     return F
 end
