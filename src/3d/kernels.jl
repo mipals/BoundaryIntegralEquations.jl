@@ -14,6 +14,7 @@ function greens3d!(integrand,r,k)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = exp(im*k*r[i,j])/(4π*r[i,j])
     end
+    return integrand
 end
 
 """
@@ -32,6 +33,7 @@ function freens3d!(integrand,r,interpolation,sources,normals,k)
                          normals[2,i]*(interpolation[2,i] - sources[2,j]) +
                          normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
     end
+    return integrand
 end
 
 """
@@ -49,6 +51,7 @@ function freens3dk0!(integrand,r,interpolation,sources,normals)
                             normals[2,i]*(interpolation[2,i] - sources[2,j]) +
                             normals[3,i]*(interpolation[3,i] - sources[3,j]))/(4π*r[i,j]^3)
     end
+    return integrand
 end
 
 """
@@ -60,6 +63,7 @@ function freens3dk0_to_freens3d!(integrand,r,k)
     @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
         integrand[i,j] = integrand[i,j]*exp(im*k*r[i,j])*(1 - im*k*r[i,j])
     end
+    return integrand
 end
 #==========================================================================================
                                     Kernels for debugging.
@@ -74,3 +78,77 @@ Fills `integrand` with ones. Other inputs disregarded. Can be used to compute su
 onefunction!(integrand,r,k)                              = fill!(integrand,1)
 onefunction!(integrand,r,interpolation,source,normals)   = fill!(integrand,1)
 onefunction!(integrand,r,interpolation,source,normals,k) = fill!(integrand,1)
+
+#==========================================================================================
+                                Taylor Expansions of Kernels
+==========================================================================================#
+"""
+    taylor_greens3d!(integrand,r,k,m)
+
+``m``th term of the Taylor expansion of the Green's function with respect to the wavenumber.
+
+```math
+G^{(m)}(r_j) = \\frac{(\\mathrm{i}r)^m\\exp(\\mathrm{i}k_0r)}{4\\pi r_j}
+```
+"""
+function taylor_greens3d!(integrand,r,k0,m)
+    @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+        integrand[i,j] = (im*r[i,j])^m*exp(im*k0*r[i,j])/(4π*r[i,j])
+    end
+    return integrand
+end
+
+"""
+    taylor_freens3d!(integrand,r,interpolation,sources,normals,k0,m)
+
+``m``th term of the Taylor expansion of the normal derivative Green's function with respect to the wavenumber.
+
+```math
+\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
+```
+"""
+function taylor_freens3d!(integrand,r,sources,collocation,normals,k0,m)
+    @fastmath @inbounds for i = 1:size(integrand,1), j = 1:size(integrand,2)
+        integrand[i,j] = exp(im*k0*r[i,j])*(im*r[i,j])^m*(1 - im*k0*r[i,j] - m)*
+                        (normals[1,i]*(collocation[1,j] - sources[1,i]) +
+                         normals[2,i]*(collocation[2,j] - sources[2,i]) +
+                         normals[3,i]*(collocation[3,j] - sources[3,i]))/(4π*r[i,j]^3)
+    end
+    return integrand
+end
+
+"""
+    taylor_greens_gradient3d!(integrand,r,interpolation,sources,normals,k0,m)
+
+``m``th term of the Taylor expansion of the normal derivative Green's function with respect to the wavenumber.
+
+```math
+\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
+```
+"""
+function taylor_greens_gradient3d!(gradient,r,collocation,sources,k0,m)
+    @fastmath @inbounds for i = 1:size(gradient,2)
+        gradient[1,j] = collocation[1,j] - sources[1,i]
+        gradient[2,j] = collocation[2,j] - sources[2,i]
+        gradient[3,j] = collocation[3,j] - sources[3,i]
+        gradient[:,j] .*= exp(im*k0*r[i,j])*(im*r[i,j])^m*(1 - im*k0*r[i,j] - m)/(4π*r[i,j]^3)
+    end
+    return gradient
+end
+
+"""
+    taylor_greens_tangential_gradient3d!(integrand,r,interpolation,sources,normals,k0,m)
+
+``m``th term of the Taylor expansion of the normal derivative Green's function with respect to the wavenumber.
+
+```math
+\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
+```
+"""
+function taylor_greens_gradient3d!(gradient,r,collocation,sources,normals,k0,m)
+    taylor_greens_gradient3d!(gradient,r,collocation,sources,k0,m)
+    @fastmath @inbounds for j = 1:size(gradient,2)
+        gradient[:,j] .-= normals[:,j]*(normals[:,j]*gradient[:,j])
+    end
+    return gradient
+end
