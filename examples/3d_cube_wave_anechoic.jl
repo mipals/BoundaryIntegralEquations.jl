@@ -15,14 +15,14 @@ mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples",
 physics_orders  = [:linear,:geometry,:disctriconstant,:disctrilinear,:disctriquadratic];
 mesh = load3dTriangularComsolMesh(mesh_file;geometry_order=:linear, physics_order=physics_orders[5])
 bc_pre = [1] .- 1; # The .-1 is due to COMSOL 0-indexing of exported entities
-bc_ana = [6] .- 1; # The .-1 is due to COMSOL 0-indexing of exported entities
+bc_ane = [6] .- 1; # The .-1 is due to COMSOL 0-indexing of exported entities
 # Creating simple meshes for full mesh and boundary condition
-simple_mesh = create_bc_simple_mesh(mesh,[bc_pre; bc_ana],false);
+simple_mesh = create_bc_simple_mesh(mesh,[bc_pre; bc_ane],false);
 simple_pre  = create_bc_simple_mesh(mesh,bc_pre);
-simple_ana  = create_bc_simple_mesh(mesh,bc_ana);
+simple_ana  = create_bc_simple_mesh(mesh,bc_ane);
 # We now plot the mesh with the pressure condition shown in red and the anechoic condition shown in blue
-viz(simple_mesh;showfacets=true)
-viz!(simple_pre;showfacets=true,color=:red)
+viz(simple_pre;showfacets=true,color=:red)
+viz!(simple_mesh;showfacets=true,alpha=0.1)
 viz!(simple_ana;showfacets=true,color=:blue)
 wgl.current_figure()
 # # Setting up constants
@@ -44,14 +44,14 @@ x_ana = collect(0.0:0.01:1)
 p_analytical = P₀*exp.(-im*k*x_ana);
 # ## Solution using the dense BEM
 # We start by solving the BEM system using dense matrices. For this we need to first assemble the matrices
-F,G,C = assemble_parallel!(mesh,k,mesh.sources,n=2,m=2,progress=false);
+F,G,C = assemble_parallel!(mesh,k,mesh.sources,n=4,m=4,progress=false);
 H  = Diagonal(C) - F; # Adding the integral free term
 # Now we find the correct indicies
 bc_pre = 0 .== mesh.entities;
-bc_ana = 5 .== mesh.entities;
+bc_ane = 5 .== mesh.entities;
 bc1 = sort(unique(mesh.physics_topology[:,bc_pre]));
-bc2 = sort(unique(mesh.physics_topology[:,bc_ana]));
-# First we define the ``p=0`` bc at ``x=0``
+bc2 = sort(unique(mesh.physics_topology[:,bc_ane]));
+# First we define the ``p=1`` bc at ``x=0``
 ps = zeros(ComplexF64,length(C));
 ps[bc1] .= 1.0;
 bs = -(H*ps); # Computing right-hand side

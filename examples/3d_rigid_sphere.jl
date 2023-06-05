@@ -1,9 +1,9 @@
 # # Rigid sphere scattering (3D - Exterior)
 # # Importing related packages
 using LinearAlgebra, BoundaryIntegralEquations
-using IterativeSolvers, Plots, MeshViz, SpecialFunctions, LegendrePolynomials
+using IterativeSolvers, MeshViz, SpecialFunctions, LegendrePolynomials, Plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(800, 800))
+wgl.set_theme!(resolution=(600, 600))
 using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
 # # Loading Mesh
@@ -17,14 +17,14 @@ mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples",
 mesh = load3dTriangularComsolMesh(mesh_file;physics_order=:disctrilinear)
 # # Setting up constants
 frequency = 100.0;                              # Frequency                [Hz]
-c  = 340;                                       # Speed up sound           [m/s]
+c  = 343;                                       # Speed up sound           [m/s]
 a  = 1.0;                                       # Radius of sphere_1m      [m]
 k  = 2π*frequency/c;                            # Wavenumber
 P₀ = 1.0;                                       # Magnitude of planewave
 # # Analytical Solution
 # The analytical solution of the scattering of a sphere by plane wave can be computed as (Ihlenburg1998)
 # ```math
-#  p_\text{analytical}(r, \theta) = P_0\left(\exp(\mathrm{i}kr\cos(\theta)) - \sum_{n}^\infty \mathrm{i}^n(2n+1)\frac{j_n^{'}(ka)}{h_n^{'}(ka)}P_n(\cos(\theta))h_n(kr)\right),
+#  p_\text{analytical}(r, \theta) = P_0\left(\exp(\mathrm{i}kr\cos(\theta)) - \sum_{n=1}^\infty \mathrm{i}^n(2n+1)\frac{j_n^{'}(ka)}{h_n^{'}(ka)}P_n(\cos(\theta))h_n(kr)\right),
 # ```
 # where ``j_n, h_n`` and ``P_n`` are respectively the spherical Bessel function of the first kind, the Hankel function of the first kind and the Legendre polynomial of degree ``n``.
 # To make the implementation easier we defin the following helper functions
@@ -80,6 +80,7 @@ plot!(surface_angles[perm],abs.(p_fmm[perm]),label="FMM",linestyle=:dash,linewid
 plot!(surface_angles[perm],abs.(p_h[perm]),label="H-matrix",linestyle=:dash,linewidth=2)
 
 # Plotting the solution on the sphere. Note that the mesh is plotted as linear due to the underlying library used, not because the mesh itself is linear.
+wgl.set_theme!(resolution=(400, 400))
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz))
 wgl.Colorbar(fig[1,2],label="|p|"); fig

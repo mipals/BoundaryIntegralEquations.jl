@@ -249,3 +249,8 @@ M = D'*D2
 sum(M,dims=2)
 
 N = D*LGM.Dc
+
+
+data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
+fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz))
+wgl.Colorbar(fig[1,2],label="|p|"); fig

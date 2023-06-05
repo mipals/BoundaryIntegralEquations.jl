@@ -55,11 +55,11 @@ vn_analytical = -6im*k*B1h1*cos.(θ_analytical);  # Analytical normal velocity
 vt_analytical = -3im/a*B1dh1*sin.(θ_analytical); # Analytical tangential velocity
 # # Iterative Solution through BEM
 LGO = LossyGlobalOuter(mesh,frequency;fmm_on=true,depth=1,n=3,progress=false);
-v0  = [v₀*ones(n); zeros(2n)];
+v0  = [zeros(2n); v₀*ones(n) ];
 rhs = LGO.Ga*gmres(LGO.inner,LGO.Dr*v0 - LGO.Nd'*gmres(LGO.Gv,LGO.Hv*v0));
 pa  = gmres(LGO,rhs;verbose=true);
 # Finally we plot the results
-θ = acos.(targets[1,:]/a);    # Angles to target points [rad]
+θ = acos.(targets[3,:]/a);    # Angles to target points [rad]
 scatter(θ,real.(pa),label="BEM-global",markersize=3);
 plot!(θ_analytical,real.(p_analytical),label="Analytical",linewidth=2);
 ylabel!("Re(p)"); title!("Frequency = $(frequency)"); xlabel!("θ (rad)")
