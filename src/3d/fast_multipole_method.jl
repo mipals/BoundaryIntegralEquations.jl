@@ -246,6 +246,17 @@ function FMMGOperator(mesh,k;tol=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=
     coefficients = zeros(eltype(zk),size(sources,2))
     return FMMGOperator(zk,tol,targets,sources,C_map,coefficients,nearfield_correction)
 end
+
+function evaluate_targets(A::FMMGOperator,x,targets)
+    # Map the mesh nodes to the gauss nodes
+    mul!(A.coefficients,A.C,x)
+    # Computing the FMM sum
+    vals = hfmm3d(A.tol,A.k,A.sources,charges=A.coefficients,targets=targets,pgt=1)
+    # Ouput equal to the FMM contributions + near field corrections
+    # The FMM3D library does not divide by 4π so we do it manually
+    return vals.pottarg/4π
+end
+
 #==========================================================================================
                             Defining H-operator (double-layer)
 ==========================================================================================#
@@ -319,4 +330,17 @@ function FMMFOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=
     coefficients = zeros(eltype(zk),size(sources,2))
     dipvecs      = zeros(eltype(zk),3,size(sources,2))
     return FMMFOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
+end
+
+### Evaluate at new targets
+function evaluate_targets(A::FMMFOperator,x,targets)
+    # Map the mesh nodes to the gauss nodes
+    mul!(A.coefficients,A.C,x)
+    # Scale "dipoles"
+    scale_columns!(A.dipvecs,A.normals,A.coefficients)
+    # Computing the FMM sum
+    vals = hfmm3d(A.tol,A.k,A.sources,targets=targets,dipvecs=A.dipvecs,pgt=1)
+    # Ouput equal to the FMM contributions + near field corrections
+    # The FMM3D library does not divide by 4π so we do it manually
+    return vals.pottarg/4π
 end
