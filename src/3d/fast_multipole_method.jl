@@ -251,10 +251,14 @@ function evaluate_targets(A::FMMGOperator,x,targets)
     # Map the mesh nodes to the gauss nodes
     mul!(A.coefficients,A.C,x)
     # Computing the FMM sum
-    vals = hfmm3d(A.tol,A.k,A.sources,charges=A.coefficients,targets=targets,pgt=1)
-    # Ouput equal to the FMM contributions + near field corrections
-    # The FMM3D library does not divide by 4π so we do it manually
-    return vals.pottarg/4π
+    return hfmm3d(A.tol,A.k,A.sources,charges=A.coefficients,targets=targets,pgt=1).pottarg/4π
+end
+
+function evaluate_targets(A::FMMGOperator,k,x,targets)
+    # Map the mesh nodes to the gauss nodes
+    mul!(A.coefficients,A.C,x)
+    # Computing the FMM sum
+    return hfmm3d(A.tol,k,A.sources,charges=A.coefficients,targets=targets,pgt=1).pottarg/4π
 end
 
 #==========================================================================================
@@ -332,15 +336,23 @@ function FMMFOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=
     return FMMFOperator(zk,tol,targets,sources,normals,C_map,coefficients,dipvecs,nearfield_correction)
 end
 
-### Evaluate at new targets
+### For evaluating the FMM at new target positions
+# This function is for evaluating at the same frequency as the FMMFOperator
 function evaluate_targets(A::FMMFOperator,x,targets)
     # Map the mesh nodes to the gauss nodes
     mul!(A.coefficients,A.C,x)
     # Scale "dipoles"
     scale_columns!(A.dipvecs,A.normals,A.coefficients)
     # Computing the FMM sum
-    vals = hfmm3d(A.tol,A.k,A.sources,targets=targets,dipvecs=A.dipvecs,pgt=1)
-    # Ouput equal to the FMM contributions + near field corrections
-    # The FMM3D library does not divide by 4π so we do it manually
-    return vals.pottarg/4π
+    return hfmm3d(A.tol,A.k,A.sources,targets=targets,dipvecs=A.dipvecs,pgt=1).pottarg/4π
+end
+# This function is for evaluating at a different frequency from the FMMFOperator
+# The reason an FMMFOperator needs to be passed is due to the use of the coffiecient map
+function evaluate_targets(A::FMMFOperator,k,x,targets)
+    # Map the mesh nodes to the gauss nodes
+    mul!(A.coefficients,A.C,x)
+    # Scale "dipoles"
+    scale_columns!(A.dipvecs,A.normals,A.coefficients)
+    # Computing the FMM sum
+    return hfmm3d(A.tol,k,A.sources,targets=targets,dipvecs=A.dipvecs,pgt=1).pottarg/4π
 end
