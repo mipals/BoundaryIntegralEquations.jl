@@ -145,7 +145,7 @@ end
 \\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
 ```
 """
-function taylor_greens_gradient3d!(gradient,r,collocation,sources,normals,k0,m)
+function taylor_greens_tangential_gradient3d!(gradient,r,collocation,sources,normals,k0,m)
     taylor_greens_gradient3d!(gradient,r,collocation,sources,k0,m)
     @fastmath @inbounds for j = 1:size(gradient,2)
         gradient[:,j] .-= normals[:,j]*(normals[:,j]*gradient[:,j])

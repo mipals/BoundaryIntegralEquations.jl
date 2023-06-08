@@ -14,3 +14,4 @@ docs/Manifest.toml
 examples/debug_discontiuous.jl
 examples/separable.jl
 src/3d/old.jl
+examples/fa2023_pgfplots.jl
