@@ -25,6 +25,22 @@ BoundaryIntegralEquations.setup_fast_operator
 BoundaryIntegralEquations.create_single_layer_matrix
 ```
 
+```@docs
+BoundaryIntegralEquations.evaluate_targets(A::FMMFOperator,x,targets)
+```
+
+```@docs
+BoundaryIntegralEquations.evaluate_targets(A::FMMFOperator,k,x,targets)
+```
+
+```@docs
+BoundaryIntegralEquations.evaluate_targets(A::FMMGOperator,x,targets)
+```
+
+```@docs
+BoundaryIntegralEquations.evaluate_targets(A::FMMGOperator,k,x,targets)
+```
+
 ## Fast Multipole Operators
 
 ```@docs

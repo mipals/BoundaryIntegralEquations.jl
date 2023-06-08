@@ -9,12 +9,13 @@ examples = [
     # "3d_visualization.jl",
     # "3d_fmm.jl",
     # "3d_hmatrix.jl",
-    "3d_rigid_sphere.jl",
-    "3d_oscilating_sphere.jl",
-    "3d_pulsating_sphere.jl",
-    "3d_cube_wave.jl",
-    "3d_cube_wave_anechoic.jl",
-    "3d_lossy_sphere.jl",
+    # "3d_rigid_sphere.jl",
+    # "3d_oscilating_sphere.jl",
+    # "3d_pulsating_sphere.jl",
+    # "3d_cube_wave.jl",
+    # "3d_cube_wave_anechoic.jl",
+    # "3d_lossy_sphere.jl",
+    # "3d_rosebem.jl"
     # "2d_infinite_cylinder.jl",
 ]
 
@@ -60,6 +61,7 @@ makedocs(
             "Meshes"                        => "3d_meshes.md",
             "Fast Operators"                => "3d_fast_operators.md",
             "Viscous and Thermal Losses"    => "3d_losses.md",
+            "ROSEBEM"                       => "3d_rosebem.md",
             "Experimental Features"         => "3d_experimental.md",
             "Analytical Expressions"        => "3d_analytical.md",
             ],
@@ -74,6 +76,7 @@ makedocs(
             "examples/3d_cube_wave.md",
             "examples/3d_cube_wave_anechoic.md",
             "examples/3d_lossy_sphere.md",
+            "examples/3d_rosebem.md",
             # "examples/3d_fmm.md",
             # "examples/3d_hmatrix.md",
             ]

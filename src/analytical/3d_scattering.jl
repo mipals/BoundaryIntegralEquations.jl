@@ -44,7 +44,7 @@ function plane_wave_scattering_sphere(k,a,r,θ,Ieps)
 end
 """
 ```math
-  p_\\text{int}(r) = -\\mathrm{i}Z_0v_r(\\frac{a}{r})\\frac{ka\\sin(kr)}{ka\\cos(ka) - \\sin(ka)}
+  p_\\text{int}(r) = -\\mathrm{i}Z_{0}v_{r}(\\frac{a}{r})\\frac{ka\\sin(kr)}{ka\\cos(ka) - \\sin(ka)}
  ```
 """
 function p_interior_pulsating_sphere()

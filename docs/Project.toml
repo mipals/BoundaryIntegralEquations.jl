@@ -1,5 +1,6 @@
 [deps]
 BoundaryIntegralEquations = "ebf54fa4-afc0-484a-8ee1-77aaf84d33dc"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FMM3D = "1e13804c-f9b7-11ea-0ef0-29f3b1745df8"
 FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
@@ -25,3 +26,4 @@ Literate = "2"
 MeshViz = "0.7"
 SpecialFunctions = "1.8,2"
 WGLMakie = "0.8"
+DelimitedFiles = "1"
