@@ -69,7 +69,7 @@ include("3d/LossyGlobalMatrix.jl")
 include("3d/visualizations.jl")
 include("3d/fast_multipole_method.jl")
 include("3d/hmatrices.jl")
-include("3d/sebem.jl")
+include("3d/rosebem.jl")
 # Old/Experimental features
 include("3d/experimental/LossyBlockMatrix.jl")
 include("3d/experimental/LossyBlockMatrixCompact.jl")
