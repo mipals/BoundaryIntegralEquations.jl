@@ -199,13 +199,15 @@ function arnoldi_basis(A,b,q)
     return V
 end
 
-function scattering_krylov_basis(mesh,klist;eps=1-4,n_gauss=3,verbose=true,P₀=1)
+function scattering_krylov_basis(mesh,klist;eps=1-4,n_gauss=3,verbose=true,P₀=1,progress=true)
     n_sources = size(mesh.sources,2)
     nK       = length(klist)
     V = zeros(ComplexF64,n_sources, 0)      # Preallocating the total Krylov system
     solutions = zeros(ComplexF64,n_sources,nK) # list of solutions
     qlist = zeros(Int64,length(klist))
-    prog = Progress(nK, 0.2, "Assembling Krylov vectors:\t", 50)
+    if progress == true
+        prog = Progress(nK, 0.2, "Assembling Krylov vectors:\t", 50)
+    end
     for i = 0:nK-1
         k = klist[i+1]
         pI = P₀*exp.(im*k*mesh.sources[3,:]);
@@ -216,8 +218,10 @@ function scattering_krylov_basis(mesh,klist;eps=1-4,n_gauss=3,verbose=true,P₀=
         # F0, _, C0 = taylor_assemble!(mesh,k0,mesh.sources,mesh.shape_function;n=2,m=2,M=20,gOn=false)
         # V[:,i*q+1:(i+1)*q] = arnoldiBLI(A,b,q)
         V = [V arnoldi_basis(Hf,pI,history.iters)]
-        next!(prog)
         qlist[i+1] = history.iters
+        if progress == true
+            next!(prog)
+        end
     end
     U,S,_ = svd(V)                              # Extracting projection matrix
     idx = S .> eps  # Only use projection direcitons with singular values larger than `eps`
