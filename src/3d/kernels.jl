@@ -85,10 +85,10 @@ onefunction!(integrand,r,interpolation,source,normals,k) = fill!(integrand,1)
 """
     taylor_greens3d!(integrand,r,k,m)
 
-``m``th term of the Taylor expansion of the Green's function with respect to the wavenumber.
+``m``th derivative of the Green's function w.r.t. the wavenumber.
 
 ```math
-G^{(m)}(r_j) = \\frac{(\\mathrm{i}r)^m\\exp(\\mathrm{i}k_0r)}{4\\pi r_j}
+G^{(m)}(r_j,k_0) = \\frac{(\\mathrm{i}r)^m\\exp(\\mathrm{i}k_0r)}{4\\pi r_j}
 ```
 """
 function taylor_greens3d!(integrand,r,k0,m)
@@ -101,10 +101,10 @@ end
 """
     taylor_freens3d!(integrand,r,interpolation,sources,normals,k0,m)
 
-``m``th term of the Taylor expansion of the normal derivative Green's function with respect to the wavenumber.
+``m``th derivative of the normal derivative of the Green's function w.r.t. the wavenumber.
 
 ```math
-\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
+n\\cdot \\nabla G^{(m)}(r_j,k_0)
 ```
 """
 function taylor_freens3d!(integrand,r,sources,collocation,normals,k0,m)
@@ -120,10 +120,10 @@ end
 """
     taylor_greens_gradient3d!(integrand,r,interpolation,sources,normals,k0,m)
 
-``m``th term of the Taylor expansion of the normal derivative Green's function with respect to the wavenumber.
+Gradient of the ``m``th derivative of the Green's function w.r.t. the wavenumber.
 
 ```math
-\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
+\\nabla G^{(m)}(r_j,k_0)
 ```
 """
 function taylor_greens_gradient3d!(gradient,r,collocation,sources,k0,m)
@@ -139,10 +139,10 @@ end
 """
     taylor_greens_tangential_gradient3d!(integrand,r,interpolation,sources,normals,k0,m)
 
-``m``th term of the Taylor expansion of the normal derivative Green's function with respect to the wavenumber.
+Tangential gradient of the ``m``th derivative of the Green's function w.r.t. the wavenumber.
 
 ```math
-\\frac{e^{ikr_j}}{4\\pi r_j^3}(ikr_j - 1) (x_j - y)\\cdot n
+(\\mathbf{I} - \\mathbf{n}\\mathbf{n}^\\top)\\nabla G^{(m)}(r_j,k_0)
 ```
 """
 function taylor_greens_tangential_gradient3d!(gradient,r,collocation,sources,normals,k0,m)
