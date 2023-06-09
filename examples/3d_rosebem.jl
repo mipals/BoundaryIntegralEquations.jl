@@ -113,15 +113,15 @@ end
 # # Comparing ROSEBEM solution with the analytical solution
 # First we start with the point located directly behind the sphere
 p_i, p_s = p_analytical(0,2*r,ks;N_trunc = 80)
-plot(frequencies,abs.(p_i + p_s),label="Analytical Solution",legend=:topleft)
-plot!(frequencies,abs.(p_i + p1),label="ROSEBEM",legend=:topleft)
+plot(frequencies,abs.(p_i + p_s),label="Analytical Solution",legend=:topleft,linewidth=2)
+plot!(frequencies,abs.(p_i + p1),label="ROSEBEM",legend=:topleft,linestyle=:dash,linewidth=2)
 ylims!((0.7,1.5))
 xlabel!("Frequency [Hz]")
 ylabel!("|p/p0|")
 # While for the point located directly in front of the sphere the results look as follows
 p_i, p_s = p_analytical(π,2*r,ks;N_trunc = 80)
-plot(frequencies,abs.(p_i + p_s),label="Analytical Solution",legend=:topleft)
-plot!(frequencies,abs.(p_i + p2),label="ROSEBEM",legend=:topleft)
+plot(frequencies,abs.(p_i + p_s),label="Analytical Solution",legend=:topleft,linewidth=2)
+plot!(frequencies,abs.(p_i + p2),label="ROSEBEM",legend=:topleft,linestyle=:dash,linewidth=2)
 ylims!((0.50,1.6))
 xlabel!("Frequency [Hz]")
 ylabel!("|p/p0|")
