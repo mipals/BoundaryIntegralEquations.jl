@@ -48,7 +48,7 @@ BoundaryIntegralEquations.FMMGOperator
 ```
 
 ```@docs
-BoundaryIntegralEquations.FMMHOperator
+BoundaryIntegralEquations.FMMFOperator
 ```
 
 ## H-Matrix Operators

@@ -247,6 +247,12 @@ function FMMGOperator(mesh,k;tol=1e-6,n_gauss=3,nearfield=true,offset=0.2,depth=
     return FMMGOperator(zk,tol,targets,sources,C_map,coefficients,nearfield_correction)
 end
 
+"""
+    evaluate_targets(A::FMMGOperator,x,targets)
+
+Evaluates the G-operator with coefficients `x` at the `targets` positions.
+The wavenumber used is defined by the `FMMGOperaetor`.
+"""
 function evaluate_targets(A::FMMGOperator,x,targets)
     # Map the mesh nodes to the gauss nodes
     mul!(A.coefficients,A.C,x)
@@ -254,6 +260,12 @@ function evaluate_targets(A::FMMGOperator,x,targets)
     return hfmm3d(A.tol,A.k,A.sources,charges=A.coefficients,targets=targets,pgt=1).pottarg/4π
 end
 
+"""
+    evaluate_targets(A::FMMGOperator,k,x,targets)
+
+Evaluates the G-operator with coefficients `x` at the `targets` positions.
+The wavenumber used, `k`, is supplied by the user.
+"""
 function evaluate_targets(A::FMMGOperator,k,x,targets)
     # Map the mesh nodes to the gauss nodes
     mul!(A.coefficients,A.C,x)
@@ -337,7 +349,12 @@ function FMMFOperator(mesh,k;n_gauss=3,tol=1e-6,nearfield=true,offset=0.2,depth=
 end
 
 ### For evaluating the FMM at new target positions
-# This function is for evaluating at the same frequency as the FMMFOperator
+"""
+    evaluate_targets(A::FMMFOperator,x,targets)
+
+Evaluates the G-operator with coefficients `x` at the `targets` positions.
+The wavenumber used is defined by the `FMMGOperaetor`.
+"""
 function evaluate_targets(A::FMMFOperator,x,targets)
     # Map the mesh nodes to the gauss nodes
     mul!(A.coefficients,A.C,x)
@@ -346,8 +363,13 @@ function evaluate_targets(A::FMMFOperator,x,targets)
     # Computing the FMM sum
     return hfmm3d(A.tol,A.k,A.sources,targets=targets,dipvecs=A.dipvecs,pgt=1).pottarg/4π
 end
-# This function is for evaluating at a different frequency from the FMMFOperator
-# The reason an FMMFOperator needs to be passed is due to the use of the coffiecient map
+
+"""
+    evaluate_targets(A::FMMFOperator,k,x,targets)
+
+Evaluates the F-operator with coefficients `x` at the `targets` positions.
+The wavenumber used, `k`, is supplied by the user.
+"""
 function evaluate_targets(A::FMMFOperator,k,x,targets)
     # Map the mesh nodes to the gauss nodes
     mul!(A.coefficients,A.C,x)

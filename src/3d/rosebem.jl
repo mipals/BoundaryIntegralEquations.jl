@@ -149,14 +149,18 @@ function taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
 
 end
 
-# Helper Functions
+"""
+    apply_taylor_expansion(Abasis,k,k0)
+
+Assembling the Taylor series expansion with expansion wavenumber `k0` at a new wavenumber `k` and derivative matrices defined in `Abasis`.
+"""
 function apply_taylor_expansion(Abasis,k,k0)
     Mmax = size(Abasis,3) - 1
     Arom = Abasis[:,:,1]
     # Adding the Mmax Taylor terms
     @inbounds for i = 1:Mmax
         if i > 20 # Numerical issues of factorial otherwise
-            Arom += ((k - k0)^(i)/factorial(Int128(i)))*Abasis[:,:,i+1]
+            Arom += (Float64((k - k0)^(i)/factorial(Int128(i))))*Abasis[:,:,i+1]
         else
             Arom += ((k - k0)^(i)/factorial(i))*Abasis[:,:,i+1]
         end
@@ -164,6 +168,12 @@ function apply_taylor_expansion(Abasis,k,k0)
     return Arom
 end
 
+"""
+    apply_taylor_expansion(Abasis,bbasis,k,k0)
+
+Assembling the Taylor series expansion with expansion wavenumber `k0` at a new wavenumber `k` and derivative matrices defined in `Abasis` and right-hand side defiend by `bbasis`.
+Returns the system matrix and right-hand side, `Arom*x = brom`
+"""
 function apply_taylor_expansion(Abasis,bbasis,k,k0)
     Mmax = size(Abasis,3) - 1
     Arom = Abasis[:,:,1]
@@ -171,8 +181,8 @@ function apply_taylor_expansion(Abasis,bbasis,k,k0)
     # Adding the Mmax Taylor terms
     @inbounds for i = 1:Mmax
         if i > 20 # Numerical issues of factorial otherwise
-            Arom += ((k - k0)^(i)/factorial(Int128(i)))*Abasis[:,:,i+1]
-            brom += ((k - k0)^(i)/factorial(Int128(i)))*bbasis[:,i+1]
+            Arom += (Float64((k - k0)^(i)/factorial(Int128(i))))*Abasis[:,:,i+1]
+            brom += (Float64((k - k0)^(i)/factorial(Int128(i))))*bbasis[:,i+1]
         else
             Arom .+= ((k - k0)^(i)/factorial(i))*Abasis[:,:,i+1]
             brom .+= ((k - k0)^(i)/factorial(i))*bbasis[:,i+1]
@@ -181,7 +191,12 @@ function apply_taylor_expansion(Abasis,bbasis,k,k0)
     return Arom,brom
 end
 
+"""
+    arnoldi_basis(A,b,q)
 
+Computes the first `q` Krylov vectors of the linear system `A*x=b` using the Arnodli method.
+Returns a matrix `V` whose columsn are equal to the Krylov vectors.
+"""
 function arnoldi_basis(A,b,q)
     vp      = b/norm(b)                         # Extracting first Krylov vector
     V       = zeros(eltype(A),length(b),q)      # Preallocation of Krylov vector basis
@@ -199,6 +214,17 @@ function arnoldi_basis(A,b,q)
     return V
 end
 
+"""
+    scattering_krylov_basis(mesh,klist;eps=1-4,n_gauss=3,verbose=true,P₀=1,progress=true)
+
+Computes a reduced basis for the scattering of an incident wave.
+The basis is defined by computing the solution at the wavenumbers defined in `klist`.
+The number of basis vectors at each wavenumber is chosen to be equal number of iterations of the `gmres` algorithm.
+Returns:
+    * `U`: The reduced basis matrix.
+    * `solutions`: Colums equal to the solution at each wavenumbers in `klist`.
+    * `qlist`: The number of Krylov vectors used at each wavenumber in `klist`.
+"""
 function scattering_krylov_basis(mesh,klist;eps=1-4,n_gauss=3,verbose=true,P₀=1,progress=true)
     n_sources = size(mesh.sources,2)
     nK       = length(klist)
