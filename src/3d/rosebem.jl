@@ -44,7 +44,15 @@ function compute_taylor_integrals!(physics_interpolation,interpolation_element,
     end
 end
 
+"""
+    taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
+                            M=0,fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true,V=I)
 
+Return:
+ * `From`: Contains the derivatives of the `F`-matrix.
+ * `Grom`: Contains the derivatives of the `G`-matrix.
+ * `C`: Contains the integral free term.
+"""
 function taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
                             M=0,fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true,V=I)
     n_elements  = number_of_elements(mesh)
@@ -171,7 +179,7 @@ end
 """
     apply_taylor_expansion(Abasis,bbasis,k,k0)
 
-Assembling the Taylor series expansion with expansion wavenumber `k0` at a new wavenumber `k` and derivative matrices defined in `Abasis` and right-hand side defiend by `bbasis`.
+Assembling the Taylor series expansion with expansion wavenumber `k0` at a new wavenumber `k` and derivative matrices defined in `Abasis` and right-hand side defiend by `bbasis`. \\newline
 Returns the system matrix and right-hand side, `Arom*x = brom`
 """
 function apply_taylor_expansion(Abasis,bbasis,k,k0)
@@ -221,9 +229,9 @@ Computes a reduced basis for the scattering of an incident wave.
 The basis is defined by computing the solution at the wavenumbers defined in `klist`.
 The number of basis vectors at each wavenumber is chosen to be equal number of iterations of the `gmres` algorithm.
 Returns:
-    * `U`: The reduced basis matrix.
-    * `solutions`: Colums equal to the solution at each wavenumbers in `klist`.
-    * `qlist`: The number of Krylov vectors used at each wavenumber in `klist`.
+ * `U`: The reduced basis matrix.
+ * `solutions`: Colums equal to the solution at each wavenumbers in `klist`.
+ * `qlist`: The number of Krylov vectors used at each wavenumber in `klist`.
 """
 function scattering_krylov_basis(mesh,klist;eps=1-4,n_gauss=3,verbose=true,P₀=1,progress=true)
     n_sources = size(mesh.sources,2)

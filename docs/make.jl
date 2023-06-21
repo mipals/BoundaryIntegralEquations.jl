@@ -15,7 +15,7 @@ examples = [
     # "3d_cube_wave.jl",
     # "3d_cube_wave_anechoic.jl",
     # "3d_lossy_sphere.jl",
-    "3d_rosebem.jl"
+    # "3d_rosebem.jl"
     # "2d_infinite_cylinder.jl",
 ]
 
