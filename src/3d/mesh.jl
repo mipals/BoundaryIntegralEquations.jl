@@ -214,11 +214,11 @@ function get_beta_quad_quadratic(beta_type)
 end
 
 """
-    get_hmax(mesh::Mesh3d)
+    get_element_ares(mesh::Mesh3d)
 
-Computes the `h_max` of the mesh.
+Computes the areas of the elements.
 """
-function get_hmax(mesh::Mesh3d)
+function get_element_ares(mesh::Mesh3d)
     # Interpolating on each elements
     interpolations = interpolate_elements(mesh)
     # Preallocation
@@ -227,10 +227,36 @@ function get_hmax(mesh::Mesh3d)
     for (index,interpolation) in enumerate(interpolations)
         areas[index] = sum(interpolation.jacobian_mul_weights)
     end
+    return areas
+end
+"""
+    get_hmax(mesh::Mesh3d)
+
+Computes the `h_max` of the mesh.
+"""
+function get_hmax(mesh::Mesh3d)
+    # Getting the ares of each element
+    areas = get_element_ares(mesh)
     # Return correct hmax depending on element type
     if typeof(mesh.shape_function) <: Triangular
         return sqrt(2*maximum(areas))
     elseif typeof(mesh.shape_function) <: Quadrilateral
         return sqrt(maxium(areas))
+    end
+end
+
+"""
+    get_hmin(mesh::Mesh3d)
+
+Computes the `h_min` of the mesh.
+"""
+function get_hmin(mesh::Mesh3d)
+    # Getting the ares of each element
+    areas = get_element_ares(mesh)
+    # Return correct hmax depending on element type
+    if typeof(mesh.shape_function) <: Triangular
+        return sqrt(2*minimum(areas))
+    elseif typeof(mesh.shape_function) <: Quadrilateral
+        return sqrt(minimum(areas))
     end
 end
