@@ -60,10 +60,10 @@ perm = sortperm(ang_axis)
 # Plotting pressure
 K = 1
 gr(size=(600,500))
-scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="CBEM NxN",marker=:x,markersize=2,color=:black,dpi=400)
-plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=1,color=:blue)
+scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM - 1n",marker=:x,markersize=2,color=:black,dpi=400);
+plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=1,color=:blue);
 ylabel!("Re(Pa)");
-title!("Frequency = $(freq) Hz")
+title!("Frequency = $(freq) Hz");
 xlabel!("Angle [deg]")
 # savefig("pa1x1_$(M)DOFs_$(freq)Hz.png")
 #===========================================================================================
@@ -93,36 +93,36 @@ vt_sum = sqrt.(v_t1.^2 + v_t2.^2)
 #===========================================================================================
                                    Plotting solutions
 ===========================================================================================#
-plt1 = scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("Re(Pa)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue)
-title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("Re(Vn)"); plot!(ang_axis[perm],real.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue) # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
-plt3 = scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-plot!(ang_axis[perm],real.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue)
-xlabel!("Angle"); ylabel!("Re(Vt)")
+plt1 = scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black);
+ylabel!("Re(Pa)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue);
+title!("Frequency = $(freq) Hz");
+plt2 = scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black);
+ylabel!("Re(Vn)"); plot!(ang_axis[perm],real.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue); # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
+plt3 = scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black);
+plot!(ang_axis[perm],real.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue);
+xlabel!("Angle"); ylabel!("Re(Vt)");
 plt4 = plot(plt1,plt2,plt3,layout=(3,1))
 #savefig("all1x1_Real_$(M)DOFs_$(freq)Hz.png")
 
-plt1 = scatter(ang_axis,imag.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("Imag(Pa)"); plot!(ang_axis[perm],imag.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue)
-title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,imag.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("Imag(Vn)"); plot!(ang_axis[perm],imag.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue) # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
-plt3 = scatter(ang_axis,imag.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-plot!(ang_axis[perm],imag.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue)
-xlabel!("Angle"); ylabel!("Imag(Vt)")
+plt1 = scatter(ang_axis,imag.(pa),label="BEM",marker=:cross,markersize=2,color=:black);
+ylabel!("Imag(Pa)"); plot!(ang_axis[perm],imag.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue);
+title!("Frequency = $(freq) Hz");
+plt2 = scatter(ang_axis,imag.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black);
+ylabel!("Imag(Vn)"); plot!(ang_axis[perm],imag.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue); # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
+plt3 = scatter(ang_axis,imag.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black);
+plot!(ang_axis[perm],imag.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue);
+xlabel!("Angle"); ylabel!("Imag(Vt)");
 plt4 = plot(plt1,plt2,plt3,layout=(3,1))
 #savefig("all1x1_Imag_$(M)DOFs_$(freq)Hz.png")
 
-plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("|Pa|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",linewidth=2)
-title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(-v_rAN_V[perm]),label="Analytical",linewidth=2) # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
-plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-plot!(ang_axis[perm],abs.(v_thetaAN_V[perm]),label="Analytical",linewidth=2)
-xlabel!("Angle"); ylabel!("|Vt|")
+plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:black);
+ylabel!("|Pa|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",linewidth=2);
+title!("Frequency = $(freq) Hz");
+plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black);
+ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(-v_rAN_V[perm]),label="Analytical",linewidth=2); # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
+plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black);
+plot!(ang_axis[perm],abs.(v_thetaAN_V[perm]),label="Analytical",linewidth=2);
+xlabel!("Angle"); ylabel!("|Vt|");
 plt4 = plot(plt1,plt2,plt3,layout=(3,1))
 #savefig("all1x1_Abs_$(M)DOFs_$(freq)Hz.png")
 #===========================================================================================
@@ -141,11 +141,11 @@ epsRel = eps/refNorm
 # plotting pressure
 K = 1
 gr(size=(600,500))
-scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="CBEM NxN",marker=:x,markersize=2,color=:black,dpi=400)
-scatter!(ang_axis[1:K:end],real.(pa_fmm[1:K:end]),label="FMBEM",marker=:cross,markersize=2,color=:red,markerstrokewidth=0.5,dpi=400)
-plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=1,color=:blue)
+scatter(ang_axis[1:K:end],real.(pa[1:K:end]),label="BEM - 1n",marker=:x,markersize=2,color=:black,dpi=400);
+scatter!(ang_axis[1:K:end],real.(pa_fmm[1:K:end]),label="FMBEM",marker=:cross,markersize=2,color=:red,markerstrokewidth=0.5,dpi=400);
+plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=1,color=:blue);
 ylabel!("Re(Pa)");
-title!("Frequency = $(freq) Hz")
+title!("Frequency = $(freq) Hz");
 xlabel!("Angle [deg]")
 # savefig("pa1x1FMM_$(M)DOFs_$(freq)Hz.png")
 
@@ -174,44 +174,44 @@ vt_sum_fmm = sqrt.(v_t1.^2 + v_t2.^2)
 
 
 # plotting
-plt1 = scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,real.(pa_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-ylabel!("Re(Pa)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue)
-title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,real.(v_n0_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-ylabel!("Re(Vn)"); plot!(ang_axis[perm],real.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue) # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
-plt3 = scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,real.(vt_sum_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-plot!(ang_axis[perm],real.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue)
-xlabel!("Angle"); ylabel!("Re(Vt)")
+plt1 = scatter(ang_axis,real.(pa),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,real.(pa_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+ylabel!("Re(Pa)"); plot!(ang_axis[perm],real.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue);
+title!("Frequency = $(freq) Hz");
+plt2 = scatter(ang_axis,real.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,real.(v_n0_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+ylabel!("Re(Vn)"); plot!(ang_axis[perm],real.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue); # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
+plt3 = scatter(ang_axis,real.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,real.(vt_sum_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+plot!(ang_axis[perm],real.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue);
+xlabel!("Angle"); ylabel!("Re(Vt)");
 plt4 = plot(plt1,plt2,plt3,layout=(3,1))
 #savefig("all1x1FMM_Real_$(M)DOFs_$(freq)Hz.png")
 
-plt1 = scatter(ang_axis,imag.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,imag.(pa_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-ylabel!("Imag(Pa)"); plot!(ang_axis[perm],imag.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue)
-title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,imag.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,imag.(v_n0_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-ylabel!("Imag(Vn)"); plot!(ang_axis[perm],imag.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue) # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
-plt3 = scatter(ang_axis,imag.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,imag.(vt_sum_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-plot!(ang_axis[perm],imag.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue)
-xlabel!("Angle"); ylabel!("Imag(Vt)")
+plt1 = scatter(ang_axis,imag.(pa),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,imag.(pa_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+ylabel!("Imag(Pa)"); plot!(ang_axis[perm],imag.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue);
+title!("Frequency = $(freq) Hz");
+plt2 = scatter(ang_axis,imag.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,imag.(v_n0_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+ylabel!("Imag(Vn)"); plot!(ang_axis[perm],imag.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue); # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
+plt3 = scatter(ang_axis,imag.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,imag.(vt_sum_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+plot!(ang_axis[perm],imag.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue);
+xlabel!("Angle"); ylabel!("Imag(Vt)");
 plt4 = plot(plt1,plt2,plt3,layout=(3,1))
 #savefig("all1x1FMM_Imag_$(M)DOFs_$(freq)Hz.png")
 
-plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,abs.(pa_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-ylabel!("|Pa|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue)
-title!("Frequency = $(freq)")
-plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,abs.(v_n0_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue) # minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
-plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black)
-scatter!(ang_axis,abs.(vt_sum_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5)
-plot!(ang_axis[perm],abs.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue)
-xlabel!("Angle"); ylabel!("|Vt|")
+plt1 = scatter(ang_axis,abs.(pa),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,abs.(pa_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+ylabel!("|Pa|"); plot!(ang_axis[perm],abs.(pasAN[perm]),label="Analytical",linewidth=2,color=:blue);
+title!("Frequency = $(freq) Hz");
+plt2 = scatter(ang_axis,abs.(v_n0),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,abs.(v_n0_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+ylabel!("|Vn|"); plot!(ang_axis[perm],abs.(-v_rAN_V[perm]),label="Analytical",linewidth=2,color=:blue);# minus due to inconsistency with analytical solution >> v_rAN_V pointing outwards
+plt3 = scatter(ang_axis,abs.(vt_sum),label="BEM",marker=:cross,markersize=2,color=:black);
+scatter!(ang_axis,abs.(vt_sum_fmm),label="FMBEM",marker=:x,markersize=1,color=:red,markerstrokewidth=0.5);
+plot!(ang_axis[perm],abs.(v_thetaAN_V[perm]),label="Analytical",linewidth=2,color=:blue);
+xlabel!("Angle"); ylabel!("|Vt|");
 plt4 = plot(plt1,plt2,plt3,layout=(3,1))
 #savefig("all1x1FMM_Abs_$(M)DOFs_$(freq)Hz.png")
