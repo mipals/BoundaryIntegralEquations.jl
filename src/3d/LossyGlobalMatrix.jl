@@ -231,9 +231,9 @@ function _full4(A::LossyGlobalOuter)
     n = size(A,1)
     F = zeros(eltype(A), 4n, 4n)
 
-    R = A.Dr - A.Nd'*(A.Gv\Matrix(A.Hv))
+    #R = A.Dr - A.Nd'*(A.Gv\Matrix(A.Hv))
 
-    F[0n+1:1n,1n+1:4n] = R
+    F[0n+1:1n,1n+1:4n] = A.Dr - A.Nd'*(A.Gv\Matrix(A.Hv))
 
     F[1n+1:4n,0n+1:1n] = A.mu_a*A.Dc + A.Nd*(A.mu_h*(A.Gh\Matrix(A.Hh)) - A.phi_a*(A.Ga\A.Ha))
 
@@ -251,3 +251,17 @@ function _full1(A::LossyGlobalOuter)
 
     return F
 end
+
+function _full1_new(A::LossyGlobalOuter)
+    
+    # This way requres less memory (no dense 3n x 3n is assembled)
+    
+    RN = A.Dr*A.Nd - A.Nd'*(A.Gv\Matrix(A.Hv*A.Nd))
+    
+    RD = A.Dr*A.Dc - A.Nd'*(A.Gv\Matrix(A.Hv*A.Dc))
+    
+    Ri = RN\RD
+    
+    return A.Ga*(A.mu_a*(Ri) + A.mu_h*(A.Gh\Matrix(A.Hh))) - A.phi_a*A.Ha   
+end
+    
