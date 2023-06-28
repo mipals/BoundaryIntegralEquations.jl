@@ -4,13 +4,25 @@ using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots
 # # Loading the mesh
 mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes");
 #src mesh_file = joinpath(mesh_path,"sphere_1m_extra_coarse");
-mesh_file = joinpath(mesh_path,"sphere_1m_coarser");
-#src mesh_file = joinpath(mesh_path,"sphere_1m_coarse");
-# src mesh_file = joinpath(mesh_path,"sphere_1m");
-#src mesh_file = joinpath(mesh_path,"sphere_1m_fine");
+# mesh_file = joinpath(mesh_path,"sphere_1m_coarser");
+# mesh_file = joinpath(mesh_path,"sphere_1m_coarse");
+# mesh_file = joinpath(mesh_path,"sphere_1m");
+mesh_file = joinpath(mesh_path,"sphere_1m_fine");
+# mesh_file = joinpath(mesh_path,"sphere_1m_finer");
+mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
+# mesh_file = joinpath(mesh_path,"sphere_1m_finest");
+# mesh_file = joinpath(mesh_path,"sphere_1m_35k");
+# mesh_file = joinpath(mesh_path,"sphere_1m_77k");
 mesh = load3dTriangularComsolMesh(mesh_file)
+# Mesh with 323.7k DOFs - 647.3k elements
+# mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/test_binary.ply")
+# mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/F1.stl")
+# mesh = load3dTriangularMesh("/Users/mpasc/Documents/testfiles/quad_sphere_text.stl")
+
+BoundaryIntegralEquations.get_hmin(mesh;n=10)
+BoundaryIntegralEquations.get_hmax(mesh;n=10)
 # # Setting up constants
-frequency = 100.0;                    # Frequency               [Hz]
+frequency = 1000.0;                   # Frequency               [Hz]
 ρ₀,c,_,_,_,kᵥ,_,_,_,_,_,_ = visco_thermal_constants(;freq=frequency,S=1);
 a       = 1.0;                       # Radius of sphere        [m]
 ω       = 2π*frequency;              # Angular frequency       [rad/s]
@@ -54,39 +66,71 @@ p_analytical  = -3.0*ρ₀*c*k*A₁*(h1_ka).*(cos.(θ_analytical));
 vn_analytical = -6im*k*B1h1*cos.(θ_analytical);  # Analytical normal velocity
 vt_analytical = -3im/a*B1dh1*sin.(θ_analytical); # Analytical tangential velocity
 # # Iterative Solution through BEM
-LGO = LossyGlobalOuter(mesh,frequency;fmm_on=true,depth=1,n=3,progress=false);
+thres = 1e-4
+@time LGO_FMM = LossyGlobalOuter(mesh,frequency;thres=thres,fmm_on=true,depth=1,n=3,progress=true);
+@time LGO_H   = LossyGlobalOuter(mesh,frequency;thres=thres,hmatrix_on=true,depth=1,n=3,progress=true);
+println(prod(size(LGO_H))*2*8/(2^30))
+varinfo(r"LGO")
+
 v0  = [zeros(2n); v₀*ones(n) ];
-rhs = LGO.Ga*gmres(LGO.inner,LGO.Dr*v0 - LGO.Nd'*gmres(LGO.Gv,LGO.Hv*v0));
-pa  = gmres(LGO,rhs;verbose=true);
+rhs = LGO_FMM.Ga*gmres(LGO_FMM.inner,LGO_FMM.Dr*v0 - LGO_FMM.Nd'*gmres(LGO_FMM.Gv,LGO_FMM.Hv*v0));
+
+@time pa_fmm = gmres(LGO_FMM,rhs;verbose=true);
+@time pa_h   = gmres(LGO_H,rhs;verbose=true);
+
+time_h = @elapsed pa_h,hist_h = gmres(LGO_H,rhs;verbose=true,log=true);
+
 # Finally we plot the results
 θ = acos.(targets[3,:]/a);    # Angles to target points [rad]
-scatter(θ,real.(pa),label="BEM-global",markersize=3);
+scatter(θ,real.(pa_h),label="BEM-HMatrix",markersize=3);
+scatter!(θ,real.(pa_fmm),label="BEM-FMM",markersize=3);
 plot!(θ_analytical,real.(p_analytical),label="Analytical",linewidth=2);
 ylabel!("Re(p)"); title!("Frequency = $(frequency)"); xlabel!("θ (rad)")
 # # Computing the remaining variables
 # First we compute the remaining variables
-ph  = -LGO.tau_a/LGO.tau_h*pa;
-dpa = -gmres(LGO.Ga,LGO.Ha*pa);
-dph = -gmres(LGO.Gh,LGO.Hh*ph);
-v   = v0 - (LGO.phi_a*LGO.Dc*pa  +
-            LGO.phi_a*LGO.Nd*dpa +
-            LGO.phi_h*LGO.Dc*ph  +
-            LGO.phi_h*LGO.Nd*dph);
-dvn = -gmres(LGO.Gv,LGO.Hv*v);
-# Normal compontent of the viscous flow
-v_n0 = LGO.Nd'*v;
-# Computing the tangential velocity by substracting the normal information
-v_t = v + LGO.Nd*v_n0;
-vt_sum = sqrt.(v_t[0n+1:1n].^2 + v_t[1n+1:2n].^2 + v_t[2n+1:3n].^2);
+@time begin
+    ph_fmm  = -LGO_FMM.tau_a/LGO_FMM.tau_h*pa_fmm;
+    dpa_fmm = -gmres(LGO_FMM.Ga,LGO_FMM.Ha*pa_fmm);
+    dph_fmm = -gmres(LGO_FMM.Gh,LGO_FMM.Hh*ph_fmm);
+    v_fmm   = v0 - (LGO_FMM.phi_a*LGO_FMM.Dc*pa_fmm  +
+                LGO_FMM.phi_a*LGO_FMM.Nd*dpa_fmm +
+                LGO_FMM.phi_h*LGO_FMM.Dc*ph_fmm  +
+                LGO_FMM.phi_h*LGO_FMM.Nd*dph_fmm);
+    dvn_fmm = -gmres(LGO_FMM.Gv,LGO_FMM.Hv*v_fmm);
+    # Normal compontent of the viscous flow
+    v_n0_fmm = LGO_FMM.Nd'*v_fmm;
+    # Computing the tangential velocity by substracting the normal information
+    v_t_fmm = v_fmm + LGO_FMM.Nd*v_n0_fmm;
+    vt_sum_fmm = sqrt.(v_t_fmm[0n+1:1n].^2 + v_t_fmm[1n+1:2n].^2 + v_t_fmm[2n+1:3n].^2);
+end;
+# H-matrix
+@time begin
+    ph_h  = -LGO_H.tau_a/LGO_H.tau_h*pa_h;
+    dpa_h = -gmres(LGO_H.Ga,LGO_H.Ha*pa_h);
+    dph_h = -gmres(LGO_H.Gh,LGO_H.Hh*ph_h);
+    v_h   = v0 - (LGO_H.phi_a*LGO_H.Dc*pa_h  +
+                LGO_H.phi_a*LGO_H.Nd*dpa_h +
+                LGO_H.phi_h*LGO_H.Dc*ph_h  +
+                LGO_H.phi_h*LGO_H.Nd*dph_h);
+    dvn_h = -gmres(LGO_H.Gv,LGO_H.Hv*v_h);
+    # Normal compontent of the viscous flow
+    v_n0_h = LGO_H.Nd'*v_h;
+    # Computing the tangential velocity by substracting the normal information
+    v_t_h = v_h + LGO_FMM.Nd*v_n0_h;
+    vt_sum_h = sqrt.(v_t_h[0n+1:1n].^2 + v_t_h[1n+1:2n].^2 + v_t_h[2n+1:3n].^2);
+end;
 # Plotting real part of
-scatter(θ,abs.(pa),label="BEM",markersize=3);
+scatter(θ,abs.(pa_fmm),label="BEM-FMM",markersize=3);
+scatter!(θ,abs.(pa_h),label="BEM-HMatrix",markersize=3);
 plot!(θ_analytical,abs.(p_analytical),label="Analytical",linewidth=2);
 xlabel!("θ (rad)"); ylabel!("|p|"); title!("Frequency = $(frequency)")
 # Plotting normal velocity
-scatter(θ,abs.(v_n0),label="BEM",markersize=3);
+scatter(θ,abs.(v_n0_fmm),label="BEM-FMM",markersize=3)
+scatter!(θ,abs.(v_n0_h),label="BEM-HMatrix",markersize=3)
 plot!(θ_analytical,abs.(vn_analytical),label="Analytical",linewidth=2);
 xlabel!("θ (rad)"); ylabel!("|Vₙ|"); title!("Frequency = $(frequency)")
 # Plotting tangential velocity
-scatter(θ,abs.(vt_sum),label="BEM",markersize=3);
+scatter(θ,abs.(vt_sum_fmm),label="BEM-FMM",markersize=3);
+scatter!(θ,abs.(vt_sum_fmm),label="BEM-HMatrix",markersize=3);
 plot!(θ_analytical,abs.(vt_analytical),label="Analytical",linewidth=2);
 xlabel!("θ (rad)"); ylabel!("|Vₜ|"); title!("Frequency = $(frequency)")

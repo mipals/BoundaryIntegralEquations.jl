@@ -61,7 +61,7 @@ for mesh_file in mesh_files
             condF4  = cond(F4)
             @info "Computing Conditon Number of 10x10 (n=$(n))"
             condF10 = cond(F10)
-            
+
             # Plottin for a quick sanity check
             v0 = [u₀*ones(n); zeros(2n)]
             coordinates = [radius*ones(n,1) acos.(xyzb[1,:]/radius)]
@@ -116,7 +116,7 @@ for mesh_file in mesh_files
             savefig(joinpath(data_directory, mesh_file,"all_vn_depth$(depth)_freq$(Int(freq)).png"))
 
             # Saving data
-            jldsave(data_file, 
+            jldsave(data_file,
                     condF1=condF1,
                     condF4=condF4,
                     condF10=condF1,

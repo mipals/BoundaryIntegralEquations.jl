@@ -12,9 +12,9 @@ geometry_orders     = [:linear,:quadratic]
 tri_physics_orders  = [:linear,:geometry,:disctrilinear,:disctriquadratic]
 # Triangular Meshes
 mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes")
-tri_mesh_file = joinpath(mesh_path,"sphere_1m_coarser");
-tri_mesh_file = joinpath(mesh_path,"sphere_1m");
-tri_mesh_file = joinpath(mesh_path,"sphere_1m_fine");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_coarser");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m");
+# tri_mesh_file = joinpath(mesh_path,"sphere_1m_fine");
 tri_mesh_file = joinpath(mesh_path,"sphere_1m_finer");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_extremely_fine");
 # tri_mesh_file = joinpath(mesh_path,"sphere_1m_finest");
@@ -49,7 +49,7 @@ tri_mesh_file = joinpath(mesh_path,"sphere_1m_finer");
 #==========================================================================================
                                 Setting up constants
 ==========================================================================================#
-freq   = 500.0                                   # Frequency                 [Hz]
+freq   = 100.0                                   # Frequency                 [Hz]
 rho,c,kp,ka,kh,kv,ta,th,phi_a,phi_h,eta,mu = visco_thermal_constants(;freq=freq,S=1)
 k      = 2*π*freq/c                              # Wavenumber                [1/m]
 radius = 1.0                                     # Radius of sphere_1m       [m]
