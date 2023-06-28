@@ -14,7 +14,6 @@ using FastGaussQuadrature
 using ProgressMeter
 using DelimitedFiles
 using SparseArrays
-using ForwardDiff
 using LegendrePolynomials
 using Meshes
 using LoopVectorization
@@ -26,7 +25,11 @@ using FileIO
 using MeshIO
 using Base.Threads
 using StaticArrays
-using HMatrices
+# The gives out an @Info from the HMatrices when loaded
+# using Gmsh: Gmsh, gmsh
+using ForwardDiff
+# using HMatrices: HMatrices
+import HMatrices: assemble_hmat, PartialACA, ClusterTree
 #==========================================================================================
                                         Constants
 ==========================================================================================#
