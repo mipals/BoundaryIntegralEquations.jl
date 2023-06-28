@@ -6,47 +6,51 @@
 
 Loads the coordinates, topology and entites from a ".mphtxt" file.
 """
-function read_comsol_mesh(mesh_file,shape_function)
-    # Number of shape functions. Needed for the size of the topology
-    nShape = number_of_shape_functions(shape_function)
+function read_comsol_mesh(mesh_file)
     # Opening COMSOL mesh file
     fid = open(mesh_file * ".mphtxt")
     # Initializing output values
-    coordinates = zeros(3,0)
-    topology    = zeros(Int64,nShape,0)
-    entities    = zeros(Int64,1,0)
+    coordinates = Vector{Vector{Float64}}(undef,0)
+    topology    = Vector{Vector{Int64}}(undef,0)
+    entities    = Vector{Int64}(undef,0)
     for line in eachline(fid)
+        if length(line) < 4
+            continue
+        end
         if line == "# Mesh vertex coordinates"
-            newLine = readline(fid)
-            while !isempty(newLine)
-                coordinates = [coordinates parse.(Float64,split(newLine))]
-                newLine = readline(fid)
+            new_line = readline(fid)
+            while !isempty(new_line)
+                coordinates = push!(coordinates, parse.(Float64,split(new_line)))
+                new_line = readline(fid)
             end
         end
         if line == "# Elements"
-            newLine  = readline(fid)
-            while !isempty(newLine)
-                topology = [topology parse.(Int64,split(newLine))]
-                newLine = readline(fid)
+            new_line  = readline(fid)
+            while !isempty(new_line)
+                topology = push!(topology, parse.(Int64,split(new_line)))
+                new_line = readline(fid)
             end
         end
         if line == "# Geometric entity indices"
-            newLine = readline(fid)
-            while !isempty(newLine)
-                entities = [entities parse.(Int64,newLine)]
-                newLine = readline(fid)
+            new_line = readline(fid)
+            while !isempty(new_line)
+                entities = push!(entities, parse.(Int64,new_line))
+                new_line = readline(fid)
             end
         end
     end
 
     close(fid)
+    # Concatination the coordinates and topology
+    coordinates = reduce(hcat,coordinates)
+    topology    = reduce(hcat,topology)
     # Transform COMSOLs 0-indexing to Julias 1-indexing
     topology = topology .+ 1
-    if typeof(shape_function) <: TriangularQuadratic
+    if size(topology,1) == 6
         # Fixing COMSOLs weird triangle layout
         topology[5:6,:] = topology[6:-1:5,:]
     end
-    return coordinates,topology,entities
+    return coordinates,topology,entities'
 end
 
 """
@@ -60,7 +64,7 @@ function load3dTriangularComsolMesh(mesh_file;m=3,n=3,
                 entites=false,removed_entites=[-1])
 
     # Figuring out the element type
-    initial_coordinates,initial_topology,ents = read_comsol_mesh(mesh_file,TriangularQuadratic(2,2))
+    initial_coordinates,initial_topology,ents = read_comsol_mesh(mesh_file)
     if geometry_order == :quadratic
         shape_function = TriangularQuadratic(m,n)
     elseif geometry_order == :linear
@@ -124,7 +128,7 @@ function load3dQuadComsolMesh(mesh_file;m=4,n=4,
                 physics_order=:geometry,beta_type=:legendre,
                 entites=false,removed_entites=[-1])
     # Figuring out the element type
-    initial_coordinates,initial_topology,ents = read_comsol_mesh(mesh_file,QuadrilateralQuadraticLagrange(2,2))
+    initial_coordinates,initial_topology,ents = read_comsol_mesh(mesh_file)
     # Checking input
     if geometry_order == :quadratic
         shape_function = QuadrilateralQuadraticLagrange(m,n)
