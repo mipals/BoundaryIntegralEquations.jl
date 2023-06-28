@@ -214,13 +214,13 @@ function get_beta_quad_quadratic(beta_type)
 end
 
 """
-    get_element_ares(mesh::Mesh3d)
+    get_element_ares(mesh::Mesh3d;n=10)
 
-Computes the areas of the elements.
+Computes the areas of the elements using `n` quadrature points.
 """
-function get_element_ares(mesh::Mesh3d)
+function get_element_ares(mesh::Mesh3d;n=10)
     # Interpolating on each elements
-    interpolations = interpolate_elements(mesh)
+    interpolations = interpolate_elements(mesh;n=n)
     # Preallocation
     areas = zeros(length(interpolations))
     # Extracting the areas of each elements as the sum of jacobian*weights
@@ -230,33 +230,38 @@ function get_element_ares(mesh::Mesh3d)
     return areas
 end
 """
-    get_hmax(mesh::Mesh3d)
+    get_hmax(mesh::Mesh3d;n=10)
 
-Computes the `h_max` of the mesh.
+Computes the `h_max` of the mesh using `n` quadrature points for the area of an element.
 """
-function get_hmax(mesh::Mesh3d)
+function get_hmax(mesh::Mesh3d;n=10)
     # Getting the ares of each element
-    areas = get_element_ares(mesh)
+    areas = get_element_ares(mesh;n=n)
+    # As defined on p. 230 in Olaf Steinbach, Numerical Approx. Methods for Ellipctic BVPs
+    return sqrt(maximum(areas))
     # Return correct hmax depending on element type
-    if typeof(mesh.shape_function) <: Triangular
-        return sqrt(2*maximum(areas))
-    elseif typeof(mesh.shape_function) <: Quadrilateral
-        return sqrt(maxium(areas))
-    end
+    # if typeof(mesh.shape_function) <: Triangular
+    #     return sqrt(2*maximum(areas))
+    # elseif typeof(mesh.shape_function) <: Quadrilateral
+    #     return sqrt(maxium(areas))
+    # end
 end
 
 """
-    get_hmin(mesh::Mesh3d)
+    get_hmin(mesh::Mesh3d;n=10)
 
-Computes the `h_min` of the mesh.
+Computes the `h_min` of the mesh using `n` quadrature points for the area of an element.
 """
-function get_hmin(mesh::Mesh3d)
+function get_hmin(mesh::Mesh3d;n=n)
     # Getting the ares of each element
-    areas = get_element_ares(mesh)
+    areas = get_element_ares(mesh;n=n)
+    # As defined on p. 230 in Olaf Steinbach, Numerical Approx. Methods for Ellipctic BVPs
+    return sqrt(minimum(areas))
     # Return correct hmax depending on element type
-    if typeof(mesh.shape_function) <: Triangular
-        return sqrt(2*minimum(areas))
-    elseif typeof(mesh.shape_function) <: Quadrilateral
-        return sqrt(minimum(areas))
-    end
+    # if typeof(mesh.shape_function) <: Triangular
+    #     # As defined in
+    #     return sqrt(2*minimum(areas))
+    # elseif typeof(mesh.shape_function) <: Quadrilateral
+    #     return sqrt(minimum(areas))
+    # end
 end
