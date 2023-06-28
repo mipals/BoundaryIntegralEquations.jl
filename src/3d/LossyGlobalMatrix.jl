@@ -78,7 +78,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;
                             hmatrix_on=false,sparse_offset=nothing,
                             depth=1,sparse_assembly=true,exterior=true,sparse_lu=false,
                             m=3,n=3,S=1,fmm_on=false,nearfield=true,thres=1e-6,fmm_offset=0.2)
-    if fmm_on == false && size(mesh.normals,2) > 20000
+    if fmm_on == false && hmatrix_on == false && size(mesh.normals,2) > 20000
         @warn "Using a dense formulation with a mesh of this size can be problematic"
     end
     if (typeof(mesh.physics_function) <: DiscontinuousTriangularConstant)
@@ -114,7 +114,7 @@ function LossyGlobalOuter(mesh::Mesh,freq;
                         n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth) + I/2
     elseif !fmm_on && hmatrix_on
         Ga = HGOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth)
-        Ha = HFOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth)
+        Ha = HFOperator(mesh,kₐ;n_gauss=n,tol=thres,offset=fmm_offset,nearfield=nearfield,depth=depth) + I/2
     else
         Ha,Ga,C = assemble_parallel!(mesh,kₐ,sources;m=m,n=n,progress=progress)
         C0 = (exterior ? Diagonal(C) : Diagonal(1.0 - C))
@@ -211,7 +211,7 @@ function _full10(A::LossyGlobalOuter)
     F[2n+1:5n,4n+1:7n]  = A.Hv
     F[2n+1:5n,7n+1:10n] = A.Gv
     # Divergence
-    F[5n+1:6n,4n+1:7n] = A.Dr
+    F[5n+1:6n,4n+1:7n]  = A.Dr
     F[5n+1:6n,7n+1:10n] = A.Nd'
     # Isothermal BC
     F[6n+1:7n,0n+1:1n] = A.tau_a*Diagonal(ones(eltype(A),n))
@@ -231,9 +231,7 @@ function _full4(A::LossyGlobalOuter)
     n = size(A,1)
     F = zeros(eltype(A), 4n, 4n)
 
-    R = A.Dr - A.Nd'*(A.Gv\Matrix(A.Hv))
-
-    F[0n+1:1n,1n+1:4n] = R
+    F[0n+1:1n,1n+1:4n] = A.Dr - A.Nd'*(A.Gv\Matrix(A.Hv))
 
     F[1n+1:4n,0n+1:1n] = A.mu_a*A.Dc + A.Nd*(A.mu_h*(A.Gh\Matrix(A.Hh)) - A.phi_a*(A.Ga\A.Ha))
 
@@ -242,12 +240,14 @@ function _full4(A::LossyGlobalOuter)
 
     return F
 end
-
 function _full1(A::LossyGlobalOuter)
 
-    R = A.Dr - A.Nd'*(A.Gv\Matrix(A.Hv))
+    # This way requres less memory
+    RN = A.Dr*A.Nd - A.Nd'*(A.Gv\Matrix(A.Hv*A.Nd))
+    RD = A.Dr*A.Dc - A.Nd'*(A.Gv\Matrix(A.Hv*A.Dc))
 
-    F = A.Ga*(A.mu_a*((R*A.Nd)\Matrix(R*A.Dc)) + A.mu_h*((A.Gh)\Matrix(A.Hh))) - A.phi_a*A.Ha
+    Ri = RN\RD
 
-    return F
+    return A.Ga*(A.mu_a*(Ri) + A.mu_h*(A.Gh\Matrix(A.Hh))) - A.phi_a*A.Ha
+
 end
