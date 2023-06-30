@@ -44,7 +44,7 @@ for mesh_file in mesh_files
     elseif Sys.islinux()
         data_directory = "/home/mpasc/OneDrive/paper1"
     end
-        for depth in [1]
+    for depth in [1]
         data_file = joinpath(data_directory, mesh_file, "results_depth$(depth)_freq$(Int(freq)).jld2")
         if !isfile(data_file)
             @info "Computing setup: $(data_file)"

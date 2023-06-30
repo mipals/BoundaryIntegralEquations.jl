@@ -254,14 +254,24 @@ Here ``\mathbf{B}`` is the part approximated by the FMM (using ``Q`` Gaussian po
 ![Nearfield Correction](figures/nearfield_correction.png)
 
 ## H-Matrices
-The ``\mathcal{H}``-matrix approach differs from the FMM by the fact that it does not accelerate the sums directly. Instead, it approximates parts of the matrix that corresponds to performing the integration for all the ``n`` collocation points at the same time. In particular, it approximates the ``\mathbf{B}`` part of the BE matrix split
+The ``\mathcal{H}``-matrix approach differs from the FMM by the fact that it does not accelerate the sums directly. Instead, it approximates parts of the matrix that corresponds to performing the integration for all the ``n`` collocation points at the same time. In particular, it approximates the ``\mathbf{B}`` part of the BE matrix split as
 ```math
 \mathbf{B} = 
     \begin{bmatrix}
         G(\mathbf{x}_1,\mathbf{y}_1)  & G(\mathbf{x}_1,\mathbf{y}_2) & \dots    & G(\mathbf{x}_1,\mathbf{y}_{NQ}) \\
-        G(\mathbf{x}_2,\mathbf{y}_1)  & G(\mathbf{x}_1,\mathbf{y}_2) & \dots    & G(\mathbf{x}_2,\mathbf{y}_{NQ}) \\
+        G(\mathbf{x}_2,\mathbf{y}_1)  & G(\mathbf{x}_2,\mathbf{y}_2) & \dots    & G(\mathbf{x}_2,\mathbf{y}_{NQ}) \\
         \vdots          & \vdots         & \ddots   & \vdots            \\
         G(\mathbf{x}_n,\mathbf{y}_1)  & G(\mathbf{x}_n,\mathbf{y}_2) & \dots    & G(\mathbf{x}_n,\mathbf{y}_{NQ})
-    \end{bmatrix}.
+    \end{bmatrix},
 ```
-The approximation itself is based on the fact that subblocks of the matrix is well approximated by low-rank matrices. In this library all ``\mathcal{H}``-matrix computations is done using the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) package developed by Luiz M. Faria. The specific format implemented in this library is the standard that the scales ``O(n\text{log}(n))`` in terms of memory and computation. At the same some experimentation of the newly developed Interpolated Factored Green's Function (IFGF) approach using the [IFGF.jl](https://github.com/WaveProp/IFGF.jl) package also developed by Luiz. Note, that an often mentioned strength of the ``\mathcal{H}``-matrix approach is that it is possible to compute the LU-factorization of the matrix efficiently, which is particularly important for high-frequency problems where an iterative solver might have issue converging. However, in the case of collocation BEM an LU-factorization can not directly be applied. Worse so when dealing with losses where the linear system of equation is a collection of matrix products.
+for the ``\mathbf{G}``-matrix and as
+```math
+ \mathbf{B} = 
+    \begin{bmatrix}
+        \mathbf{n}(\mathbf{y}_1)^\top G(\mathbf{x}_1,\mathbf{y}_1)  & \mathbf{n}(\mathbf{y}_2)^\top G(\mathbf{x}_1,\mathbf{y}_2) & \dots    & \mathbf{n}(\mathbf{y}_{NQ})^\top G(\mathbf{x}_1,\mathbf{y}_{NQ})\\
+        \mathbf{n}(\mathbf{y}_1)^\top G(\mathbf{x}_2,\mathbf{y}_1)  & \mathbf{n}(\mathbf{y}_2)^\top G(\mathbf{x}_2,\mathbf{y}_2) & \dots    & \mathbf{n}(\mathbf{y}_{NQ})^\top G(\mathbf{x}_2,\mathbf{y}_{NQ})\\
+        \vdots                          & \vdots                         & \ddots   & \vdots \\
+        \mathbf{n}(\mathbf{y}_1)^\top G(\mathbf{x}_n,\mathbf{y}_1)  & \mathbf{n}(\mathbf{y}_2)^\top G(\mathbf{x}_n,\mathbf{y}_2) & \dots    & \mathbf{n}(\mathbf{y}_{NQ})^\top G(\mathbf{x}_n,\mathbf{y}_{NQ})
+    \end{bmatrix},
+```
+for the ``\mathbf{H}``-matrix. The approximation itself is based on the fact that subblocks of the matrix is well approximated by low-rank matrices. In this library all ``\mathcal{H}``-matrix computations is done using the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) package developed by Luiz M. Faria. The specific format implemented in this library is the standard that the scales ``O(n\text{log}(n))`` in terms of memory and computation. At the same some experimentation of the newly developed Interpolated Factored Green's Function (IFGF) approach using the [IFGF.jl](https://github.com/WaveProp/IFGF.jl) package also developed by Luiz. Note, that an often mentioned strength of the ``\mathcal{H}``-matrix approach is that it is possible to compute the LU-factorization of the matrix efficiently, which is particularly important for high-frequency problems where an iterative solver might have issue converging. However, in the case of collocation BEM an LU-factorization can not directly be applied. Worse so when dealing with losses where the linear system of equation is a collection of matrix products.
