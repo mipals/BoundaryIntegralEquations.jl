@@ -28,8 +28,8 @@ using StaticArrays
 # The gives out an @Info from the HMatrices when loaded
 # using Gmsh: Gmsh, gmsh
 using ForwardDiff
-# using HMatrices: HMatrices
-import HMatrices: assemble_hmat, PartialACA, ClusterTree
+using HMatrices
+# import HMatrices: assemble_hmat, PartialACA, ClusterTree
 #==========================================================================================
                                         Constants
 ==========================================================================================#

@@ -41,10 +41,10 @@ function p_analytical(θ_analytical,r,k;N_trunc = 50,R=1)
     return p_i, p_s
 end
 # # Solution using the ROSEBEM
-# The ROSEBEM is based on a Taylor series expansion of the BEM matrices (``\mathbf{F}_m \in \mathbb{C}^{n\times n}``) and a reduced basis (``\mathbf{V} \in \mathbb{C}^{n\times \ell}``).
+# The ROSEBEM is based on a Taylor series expansion of the BEM matrices (``\mathbf{F}_m(k_0) \in \mathbb{C}^{n\times n}``) and a reduced basis (``\mathbf{V} \in \mathbb{C}^{n\times \ell}``).
 # Using the Taylor expansion the BEM system at a different frequency (``k``) than the expansion frequency (``k_0``) can be assembled as
 # ```math
-#  \left(\mathbf{V}^{\text{H}}\text{diag}(\mathbf{c})\mathbf{V} + \sum_{m=0}^{M}\frac{(k-k_0)^m}{m!}\mathbf{V}^{\text{H}}\mathbf{F}_m\mathbf{V}\right)\mathbf{p}_\ell = \mathbf{V}^{\text{H}}\mathbf{p}_\text{incident}(k),
+#  \left(\mathbf{V}^{\text{H}}\text{diag}(\mathbf{c})\mathbf{V} + \sum_{m=0}^{M}\frac{(k-k_0)^m}{m!}\mathbf{V}^{\text{H}}\mathbf{F}_m(k_0)\mathbf{V}\right)\mathbf{p}_\ell = \mathbf{V}^{\text{H}}\mathbf{p}_\text{incident}(k),
 # ```
 # where ``\mathbf{p}_\ell`` is the so-called reduced variable. Note that in practice the ``\mathbf{F}_m``-matrice should never be stored directly. Instead ``\mathbf{V}^{\text{H}}\mathbf{F}_m\mathbf{V} \in \mathbb{C}^{\ell\times\ell}`` should be stored as it requires significantly less memory (as ``\ell < n``).
 # After ``\mathbf{p}_\ell`` is computed the full pressure can be extracted as ``\mathbf{p} = \mathbf{V}\mathbf{p}_\ell``.
@@ -94,7 +94,7 @@ println(errors)
 # The main advantange of using the ROSEBEM is when evaluating many frequencies. As such we here defining a list of frequencies (and the corresponding wavenumber)
 frequencies = collect(10:1:400);
 ks = frequencies/340*2π;
-# In order to avoid spurious frequencies we additionally defining some so-called CHIEF points
+# In order to avoid spurious frequencies we additionally define some so-called CHIEF points
 src_chief = 0.9*rand(3,10)/sqrt(3);
 # Furthermore we want to evaluate the pressure at two field points: One directly in front and one directly in the back of the sphere at double the radius. As such
 X_fieldpoints = [[0.0;0.0;2*r] [0.0;0.0;-2*r]];
