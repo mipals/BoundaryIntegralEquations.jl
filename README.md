@@ -1,8 +1,8 @@
 # BoundaryIntegralEquations.jl
 
-| **Documentation**   |  **Tests**     | **CodeCov** | **Lifecycle** |
-|:--------:|:---------------:|:-------:|:-------:
-|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev/)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)| ![](https://img.shields.io/badge/Lifecycle-Unstable-yellow)| 
+| **Documentation** | **Tests** | **CodeCov** | **Lifecycle** | **Aqua** |
+|:-----------------:|:---------:|:-----------:|:-------------:|:--------:|
+|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev/)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)| ![](https://img.shields.io/badge/Lifecycle-Unstable-yellow)| [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl) |
 
 
 BoundaryIntegralEquations.jl provides the basic building blocks required for implementing Boundary Element Methods (BEMs). Currently, it supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
@@ -18,21 +18,16 @@ For H-matrices the package utilizes the [HMatrices.jl](https://github.com/WavePr
 **N.B. The package is still under heavy development.**
 
 ## Installation
-The package can be downloaded directly from GitHub 
+The package can be installed directly from GitHub 
 
 ```julia
 using Pkg
 Pkg.add(url="https://github.com/mipals/BoundaryIntegralEquations.jl")
 ```
 
-## Element types
-* (Dis)continuous (Constant, Linear and Quadratic) Line elements
-* (Dis)continuous (Constant, Linear and Quadratic) Triangular Elements
-* (Dis)continuous (Constant, Linear and Quadratic) Quadrilateral Elements
-
 ## Mesh formats
-* COMSOLs *.mphtxt* files (best for applying boundary conditions)
-* .obj, .ply, .stl, .off, .2DM through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
+* COMSOLs *.mphtxt* files (including entity description)
+* `obj`, `stl`, `ply`, `off` and `2DM` through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
 
 ## Similar Packages
 * [BEAST.jl](https://github.com/krcools/BEAST.jl): Boundary Element Analysis and Simulation Toolkit. A general toolkit, with a focus on electromagnetics. Limitations with respect to element orders and only supplies Galerkin assembly. 

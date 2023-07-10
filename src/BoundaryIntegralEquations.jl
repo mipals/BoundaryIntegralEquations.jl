@@ -8,26 +8,26 @@ import Base: adjoint, *
 #==========================================================================================
                             Using relevant packagess
 ==========================================================================================#
+using Base.Threads
+using DelimitedFiles
 using LinearAlgebra
-using SpecialFunctions
 using FastGaussQuadrature
 using ProgressMeter
-using DelimitedFiles
 using SparseArrays
-using LegendrePolynomials
-using Meshes
-using LoopVectorization
-using LinearMaps
-using IterativeSolvers
+using SpecialFunctions
 using StatsBase
+using Meshes
+using MeshIO
+using LegendrePolynomials
+using LinearMaps
+using LoopVectorization
+using IterativeSolvers
 using FMM3D
 using FileIO
-using MeshIO
-using Base.Threads
 using StaticArrays
 # The gives out an @Info from the HMatrices when loaded
 # using Gmsh: Gmsh, gmsh
-using ForwardDiff
+import ForwardDiff
 using HMatrices
 # import HMatrices: assemble_hmat, PartialACA, ClusterTree
 #==========================================================================================
@@ -108,7 +108,7 @@ export ContinuousCurveLinear,ContinuousCurveQuadratic,
 export TriangularLinear,TriangularQuadratic,Triangular,
        DiscontinuousTriangularConstant,DiscontinuousTriangularLinear,
        DiscontinuousTriangularQuadratic,DiscontinuousTriangular
-export Quadrilateral,QuadrilateralLinear,QuadrilateralLinear4,
+export Quadrilateral,QuadrilateralLinear4,
        QuadrilateralQuadratic,QuadrilateralQuadraticLagrange,
        DiscontinuousQuadrilateralConstant,DiscontinuousQuadrilateralLinear4,
        DiscontinuousQuadrilateralQuadraticLagrange
@@ -123,7 +123,7 @@ export FMMGOperator, FMMFOperator, evaluate_targets
 export HGOperator, HFOperator
 
 # Visualizations
-export create_simple_mesh, create_bc_simple_mesh, viz, create_vizualization_data
+export create_simple_mesh, create_bc_simple_mesh, create_vizualization_data
 
 # Losses
 export LossyBlockMatrix,LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter

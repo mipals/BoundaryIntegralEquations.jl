@@ -10,9 +10,11 @@ examples/sphere_losses.jl
 examples/meshes/sphere_1m_finest.mphtxt
 examples/writing_to_vtk.jl
 examples/debug.jl
-docs/Manifest.toml
 examples/debug_discontiuous.jl
 examples/separable.jl
+examples/lossy_big_meshes.jl
+examples/hpc_big_meshes.jl
+docs/Manifest.toml
 src/3d/old.jl
 examples/fa2023_pgfplots.jl
 examples/gmsh_tests.jl

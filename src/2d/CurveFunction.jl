@@ -62,11 +62,15 @@ end
 #==========================================================================================
                                 Fallbacks for derivatives
 ==========================================================================================#
-function basisFunctionDerivative(curve_function::CurveFunction,ξ::Number)
-    return ForwardDiff.derivative.(curve_function,ξ)
-end
+# function basisFunctionDerivative(curve_function::CurveFunction,ξ::Number)
+#     return ForwardDiff.derivative(curve_function,ξ)
+# end
 function basisFunctionDerivative(curve_function::CurveFunction,ξ)
-    return hcat(ForwardDiff.derivative.(Ref(curve_function),ξ)...)
+    if length(ξ) == 1
+        return vcat(ForwardDiff.derivative.(Ref(curve_function),ξ)...)
+    else
+        return hcat(ForwardDiff.derivative.(Ref(curve_function),ξ)...)
+    end
 end
 function basisFunctionSecondOrderDerivative(curve_function::CurveFunction,nodes)
     hcat(ForwardDiff.derivative.(x->ForwardDiff.derivative(curve_function,x),nodes)...)
