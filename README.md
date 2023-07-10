@@ -1,38 +1,27 @@
 # BoundaryIntegralEquations.jl
 
-| **Documentation**   |  **Tests**     | **CodeCov** | **Lifecycle** |
-|:--------:|:---------------:|:-------:|:-------:
-|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev/)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)| ![](https://img.shields.io/badge/Lifecycle-Unstable-yellow)| 
+| **Documentation** | **Tests** | **CodeCov** | **Lifecycle** | **Aqua** |
+|:-----------------:|:---------:|:-----------:|:-------------:|:--------:|
+|[![](https://img.shields.io/badge/docs-online-blue.svg)](https://mipals.github.io/BoundaryIntegralEquations.jl/dev/)| [![Build Status](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mipals/BoundaryIntegralEquations.jl/actions/workflows/CI.yml?query=branch%3Amain) | [![Coverage](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/mipals/BoundaryIntegralEquations.jl)| ![](https://img.shields.io/badge/Lifecycle-Unstable-yellow)| [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl) |
 
 
-BoundaryIntegralEquations.jl provides the basic building blocks required for implementing Boundary Element Methods (BEMs). Currently, it supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications
+BoundaryIntegralEquations.jl provides the basic building blocks required for implementing Boundary Element Methods (BEMs). Currently, it supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications.
 
-$$
-c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n} }p(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x} = \mathrm{i}\rho ck\int_\Gamma G(\mathbf{x},\mathbf{y})v_s(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x}.
-$$
-
-For the Fast Multipole Method this package utilizes the Julia interfaces for the Flatiron Institute Fast Multipole Libraries: [2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia).
-
-For H-matrices the package utilizes the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl).
+The package supplies support for acceleration methods such as e.g. the Fast Multipole Method (FMM) and Hierarchical matrices. For the FMM the package utilizes the Flatiron Institute Fast Multipole Libraries ([2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia)) whereas for Hierarchical matrices it uses the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) package.
 
 **N.B. The package is still under heavy development.**
 
 ## Installation
-The package can be downloaded directly from GitHub 
+The package can be installed directly from GitHub 
 
 ```julia
 using Pkg
 Pkg.add(url="https://github.com/mipals/BoundaryIntegralEquations.jl")
 ```
 
-## Element types
-* (Dis)continuous (Constant, Linear and Quadratic) Line elements
-* (Dis)continuous (Constant, Linear and Quadratic) Triangular Elements
-* (Dis)continuous (Constant, Linear and Quadratic) Quadrilateral Elements
-
 ## Mesh formats
-* COMSOLs *.mphtxt* files (best for applying boundary conditions)
-* .obj, .ply, .stl, .off, .2DM through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
+* COMSOLs *.mphtxt* files (including entity description)
+* `obj`, `stl`, `ply`, `off` and `2DM` through [MeshIO.jl](https://github.com/JuliaIO/MeshIO.jl).
 
 ## Similar Packages
 * [BEAST.jl](https://github.com/krcools/BEAST.jl): Boundary Element Analysis and Simulation Toolkit. A general toolkit, with a focus on electromagnetics. Limitations with respect to element orders and only supplies Galerkin assembly. 
