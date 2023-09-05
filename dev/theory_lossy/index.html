@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Viscothermal Losses Theory · BoundaryIntegralEquations.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">BoundaryIntegralEquations.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><a class="tocitem" href="../theory_background/">Background Theory</a></li><li><a class="tocitem" href="../theory_rosebem/">ROSEBEM Theory</a></li><li class="is-active"><a class="tocitem" href>Viscothermal Losses Theory</a><ul class="internal"><li><a class="tocitem" href="#Kirchhoff-Decomposition"><span>Kirchhoff Decomposition</span></a></li><li><a class="tocitem" href="#Boundary-Coupling-of-the-Modes"><span>Boundary Coupling of the Modes</span></a></li><li><a class="tocitem" href="#The-Lossy-System-of-Equations"><span>The Lossy System of Equations</span></a></li><li><a class="tocitem" href="#Interpolation-Function-Derivatives"><span>Interpolation Function Derivatives</span></a></li><li><a class="tocitem" href="#The-Lossy-System-of-Equations-2"><span>The Lossy System of Equations</span></a></li><li><a class="tocitem" href="#Iterative-Solution-Scheme"><span>Iterative Solution Scheme</span></a></li><li><a class="tocitem" href="#Bibliography"><span>Bibliography</span></a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><input class="collapse-toggle" id="menuitem-5-1" type="checkbox"/><label class="tocitem" for="menuitem-5-1"><span class="docs-label">3D</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../examples/3d_rosebem/">ROSEBEM: Rigid sphere scattering</a></li><li><a class="tocitem" href="../examples/3d_rigid_sphere/">Rigid sphere scattering (Exterior)</a></li><li><a class="tocitem" href="../examples/3d_oscilating_sphere/">Oscilating sphere (Interior)</a></li><li><a class="tocitem" href="../examples/3d_pulsating_sphere/">Pulsating sphere (Interior)</a></li><li><a class="tocitem" href="../examples/3d_cube_wave/">Cube with vibrating sides (Interior)</a></li><li><a class="tocitem" href="../examples/3d_cube_wave_anechoic/">Cube with anechoic condition (Interior)</a></li><li><a class="tocitem" href="../examples/3d_lossy_sphere/">Oscilating Lossy sphere (Exterior)</a></li><li><a class="tocitem" href="../examples/3d_element_usage/">Surface Functions</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5-2" type="checkbox"/><label class="tocitem" for="menuitem-5-2"><span class="docs-label">2D</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../examples/2d_infinite_cylinder/">Scattering of infinite cylinder</a></li><li><a class="tocitem" href="../examples/2d_element_usage/">Curve Functions</a></li></ul></li></ul></li><li><span class="tocitem">Internals</span><ul><li><input class="collapse-toggle" id="menuitem-6-1" type="checkbox"/><label class="tocitem" for="menuitem-6-1"><span class="docs-label">3D</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../3d_kernels/">Kernels</a></li><li><a class="tocitem" href="../3d_elements/">Element Types</a></li><li><a class="tocitem" href="../3d_meshes/">Meshes</a></li><li><a class="tocitem" href="../3d_fast_operators/">Fast Operators</a></li><li><a class="tocitem" href="../3d_losses/">Viscous and Thermal Losses</a></li><li><a class="tocitem" href="../3d_rosebem/">ROSEBEM</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6-2" type="checkbox"/><label class="tocitem" for="menuitem-6-2"><span class="docs-label">2D</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../2d_kernels/">Kernels</a></li><li><a class="tocitem" href="../2d_elements/">Element Types</a></li><li><a class="tocitem" href="../2d_meshes/">Meshes</a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Viscothermal Losses Theory</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Viscothermal Losses Theory</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/mipals/BoundaryIntegralEquations.jl/blob/main/docs/src/theory_lossy.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Theoretical-Background-of-Lossy-BEM"><a class="docs-heading-anchor" href="#Theoretical-Background-of-Lossy-BEM">Theoretical Background of Lossy-BEM</a><a id="Theoretical-Background-of-Lossy-BEM-1"></a><a class="docs-heading-anchor-permalink" href="#Theoretical-Background-of-Lossy-BEM" title="Permalink"></a></h1><p>This page includes the (some of) theoretical foundations for including viscous and thermal losses into the simulations performed in of <code>BoundaryIntegralEquations.jl</code>.</p><p>For an example <a href="../examples/3d_lossy_sphere/">look here.</a></p><h2 id="Kirchhoff-Decomposition"><a class="docs-heading-anchor" href="#Kirchhoff-Decomposition">Kirchhoff Decomposition</a><a id="Kirchhoff-Decomposition-1"></a><a class="docs-heading-anchor-permalink" href="#Kirchhoff-Decomposition" title="Permalink"></a></h2><p>An equivalent formulation of the fully linearized Navier-Stokes (FLNS) equation is the Kirchhoff decomposition, which divides the problem into three <em>modes</em>, each satisfying its own Helmholtz equation.</p><p class="math-container">\[\begin{alignat}{3}
+    &amp;\text{Acoustic Mode:} \quad &amp;&amp;(\Delta + k_a^2)p_a(\mathbf{x})     &amp;&amp;= 0,\\
+    &amp;\text{Thermal Mode: } \quad &amp;&amp;(\Delta + k_h^2)p_h(\mathbf{x})     &amp;&amp;= 0,\\
+    &amp;\text{Viscous Mode: } \quad &amp;&amp;(\Delta + k_v^2)\mathbf{v}_v(\mathbf{x})   &amp;&amp;= \mathbf{0}, \quad \text{with}\quad \nabla\cdot \mathbf{v}_v(\mathbf{x}) = 0.
+\end{alignat}\]</p><p>The three modal wavenumbers (<span>$k_a,\ k_h\ \&amp;\ k_v$</span>) all depend on the lossless wavenumber (<span>$k$</span>) and the physical properties of the fluid, such as the thermal conductivity, specific heat capacity under constant pressure and the shear/bulk viscosity coefficients <a href="../theory_background/#henriquez2002a">[9]</a>. The total pressure and velocity can be extracted as the sum of the contributions of each of the three modes</p><p class="math-container">\[\begin{align}
+    p_t   &amp;= p_a + p_h,\\
+    \mathbf{v}_t &amp;= \mathbf{v}_a + \mathbf{v}_h + \mathbf{v}_v.
+\end{align}\]</p><p>Using the standard notation for the BEM discretization for the three modes, it must be true that</p><p class="math-container">\[\begin{equation}
+    \mathbf{H}_a\mathbf{p}_a + \mathbf{G}_a\frac{\partial\mathbf{p}_a}{\partial \mathbf{n}} = \mathbf{0},\quad
+    \mathbf{H}_h\mathbf{p}_h + \mathbf{G}_h\frac{\partial\mathbf{p}_h}{\partial \mathbf{n}} = \mathbf{0},\quad
+    \mathbf{H}_v\mathbf{v}   + \mathbf{G}_v\frac{\partial\mathbf{v}  }{\partial \mathbf{n}} = \mathbf{0},
+\end{equation}\]</p><p>where</p><p class="math-container">\[\begin{equation}
+    \mathbf{v}             =   \begin{bmatrix} \mathbf{v}_{v_x} &amp; \mathbf{v}_{v_y} &amp; \mathbf{v}_{v_z}\end{bmatrix}^\top, \quad 
+    \partial_\mathbf{n}\mathbf{v} =   \begin{bmatrix} \partial_\mathbf{n}\mathbf{v}_{v_x} &amp; 
+                                        \partial_\mathbf{n}\mathbf{v}_{v_y} &amp; 
+                                        \partial_\mathbf{n}\mathbf{v}_{v_z}
+                        \end{bmatrix}^\top,
+\end{equation}\]</p><p>and</p><p class="math-container">\[\begin{equation}
+    \mathbf{H}_v = \text{blkdiag}\left(\widetilde{\mathbf{H}_v},\ \widetilde{\mathbf{H}_v},\ \widetilde{\mathbf{H}_v}\right), \quad
+    \mathbf{G}_v = \text{blkdiag}\left(\widetilde{\mathbf{G}_v},\ \widetilde{\mathbf{G}_v},\ \widetilde{\mathbf{G}_v}\right),
+\end{equation}\]</p><p>with <span>$\widetilde{\mathbf{H}_v}$</span> and <span>$\widetilde{\mathbf{G}_v}$</span> being the result of a scalar discretization with wavenumber <span>$k_v$</span> and <span>$\text{blkdiag}$</span> is the block-diagonal operator.</p><h2 id="Boundary-Coupling-of-the-Modes"><a class="docs-heading-anchor" href="#Boundary-Coupling-of-the-Modes">Boundary Coupling of the Modes</a><a id="Boundary-Coupling-of-the-Modes-1"></a><a class="docs-heading-anchor-permalink" href="#Boundary-Coupling-of-the-Modes" title="Permalink"></a></h2><p>In the case of the fluid being air, it is valid to prescribe the so-called isothermal boundary condition due to high higher heat capacity of the boundary material. Mathematically, this condition can be written as</p><p class="math-container">\[\begin{equation}
+    p_a(\mathbf{x})\tau_a + p_h(\mathbf{x})\tau_h = 0, \quad \mathbf{x} \in \Gamma,
+\end{equation}\]</p><p>where <span>$\tau_a$</span> and <span>$\tau_h$</span> are dependent on the lossless wavenumber as well as the physical properties of fluid. In short, this boundary condition forces the temperature fluctuations to be zero, meaning that there is no exchange of heat between the fluid and the boundary. As such, there is a transition from the physics at the boundary to the bulk where the wave propagation can be considered isentropic (see Figure below). This transitional phase is in the literature called the thermal boundary layer and has a thickness that depends on the frequency. In air, the thickness can be approximated as <a href="../theory_background/#morse1968a">[10]</a></p><p class="math-container">\[\begin{equation}
+    \delta_h \approx 2.5\frac{1}{\sqrt{f}}\text{ mm}.
+\end{equation}\]</p><p><img src="../figures/boundary_layer_isothermal.png" alt="BoundaryLayerIsothermal"/></p><p>Furthermore, due to frictional forces the air sticks to the surface of objects. As such, it is common to prescribe a no-slip boundary condition</p><p class="math-container">\[\begin{equation}
+    \nabla p_a(\mathbf{x})\phi_a + \nabla p_h (\mathbf{x})\phi_h + \mathbf{v}_v(\mathbf{x}) = \mathbf{v}_{\text{boundary}}(\mathbf{x}), \quad \mathbf{x} \in \Gamma, 
+\end{equation}\]</p><p>Similar to the modal wavenumbers the constants <span>$\phi_a$</span>, and <span>$\phi_h$</span> are dependent on the lossless wavenumber as well as the physical properties of fluid. Again, the boundary condition results in a transitional phase from the boundary to the bulk (see Figure below). The thickness of the viscous boundary layer is of the same order as that of the thermal boundary layer, and can be approximated as <a href="../theory_background/#morse1968a">[10]</a></p><p class="math-container">\[\begin{equation}
+    \delta_v \approx 2.1\frac{1}{\sqrt{f}}\text{ mm}.
+\end{equation}\]</p><p><img src="../figures/boundary_layer_viscous.png" alt="BoundaryLayerViscous"/></p><h2 id="The-Lossy-System-of-Equations"><a class="docs-heading-anchor" href="#The-Lossy-System-of-Equations">The Lossy System of Equations</a><a id="The-Lossy-System-of-Equations-1"></a><a class="docs-heading-anchor-permalink" href="#The-Lossy-System-of-Equations" title="Permalink"></a></h2><p>The components of the three modes can be computed by solving the large system of equations originating from the combination of the three discretized integral equations, null-divergence constraint and boundary conditions </p><p class="math-container">\[\begin{equation}
+    \begin{bmatrix}
+        \quad\text{The three modes on the form described in (6)}\quad\\
+        \quad\text{Null Divergence Constraint}      \quad\\
+        \quad\text{Isothermal Boundary Condition}   \quad\\
+        \quad\text{No-Slip Boundary Condition}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{p}_a\\ \partial_\mathbf{n}\mathbf{p}_a\\ \mathbf{p}_h\\ \partial_\mathbf{n}\mathbf{p}_h\\ \mathbf{v} \\ \partial_\mathbf{n}\mathbf{v}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \mathbf{0}  \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{v}_s
+    \end{bmatrix},
+\end{equation}\]</p><p>where</p><p class="math-container">\[\begin{equation}
+    \mathbf{v}_s   = \begin{bmatrix} \mathbf{v}_{x_0} &amp; \mathbf{v}_{y_0} &amp; \mathbf{v}_{z_0}\end{bmatrix}^\top,
+\end{equation}\]</p><p>is the boundary velocities at each of the collocation nodes stacked with respect to the <span>$x, y,$</span> and <span>$z$</span> direction. From an implementation point of view, the equation above poses a challenge: How are the gradients required for the two boundary conditions and the null-divergence constraint computed? The answer lies in the boundary element representation of the underlying variables.</p><h2 id="Interpolation-Function-Derivatives"><a class="docs-heading-anchor" href="#Interpolation-Function-Derivatives">Interpolation Function Derivatives</a><a id="Interpolation-Function-Derivatives-1"></a><a class="docs-heading-anchor-permalink" href="#Interpolation-Function-Derivatives" title="Permalink"></a></h2><p>The interpolation function derivatives (IFDs) are the derivatives of the boundary element interpolation functions. As the boundary element interpolation is defined only on the surface, the interpolation function derivatives contain only the tangential information. The full gradient is then computed by combining the tangential information from the IFDs with the normal information coming directly from the boundary element interpolation of the normal derivative.</p><p>Taking the acoustic pressure <span>$p_a$</span> as an example, it follows that the boundary element representation of the interpolation on element <span>$e$</span> is given as</p><p class="math-container">\[\begin{equation}
+    % p_a\left(\mathbf{x}^e(\mathbf{u})\right) = p_a\left(\mathbf{X}^e\mathbf{N}^e(\mathbf{u})\right) = \mathbf{T}^e(\mathbf{u})\mathbf{p}_a^e, \quad \mathbf{u}\in\mathcal{L}^e,\ \mathbf{x} \in \Gamma_e,
+    p_a\left(\mathbf{x}^e(\mathbf{u})\right) = \mathbf{T}^e(\mathbf{u})\mathbf{p}_a^e, \quad \mathbf{u}\in\mathcal{L}^e,\ \mathbf{x} \in \Gamma_e,
+\end{equation}\]</p><p>where <span>$\mathbf{p}_a^e$</span> represent the nodal acoustical pressures of element <span>$e$</span> while <span>$\mathbf{N}^e(\mathbf{u})$</span> and <span>$\mathbf{T}^e(\mathbf{u})$</span> denotes the chosen interpolation schemes for respectively the geometry and the (acoustical) pressure on element <span>$e$</span>. The resulting gradient of <span>$p_a$</span> on element <span>$e$</span> can then be computed as</p><p class="math-container">\[\begin{equation}
+    \nabla_{\mathbf{u}}p_a\left(\mathbf{x}^e(\mathbf{u})\right) = \left(\nabla_{\mathbf{u}}\mathbf{T}^e(\mathbf{u})\right)\mathbf{p}_a^e
+\end{equation}\]</p><p>since the values <span>$\mathbf{p}_a^e$</span> are constants. Applying the multivariate chain rule <span>$\nabla_{\mathbf{u}}p_a = (\nabla_{\mathbf{u}}\mathbf{x}^e(\mathbf{u})^\top)\nabla_\mathbf{x} p_a$</span> followed by an isolation with respect to <span>$\nabla_\mathbf{x}$</span> gives the gradient of interest. Since the computations are based on boundary elements we have that the transpose of the Jacobian matrix</p><p class="math-container">\[\begin{equation}
+    \nabla_{\mathbf{u}}\mathbf{x}^e(\mathbf{u})^\top 
+    = \nabla_{\mathbf{u}}(\mathbf{X}^e\mathbf{N}^e(\mathbf{u}))^\top 
+    = \nabla_{\mathbf{u}}\mathbf{N}^e(\mathbf{u})^\top\left(\mathbf{X}^e\right)^\top,
+\end{equation}\]</p><p>is a <span>$2\times 3$</span>-matrix which cannot be inverted. It has been shown that it is enough to introduce an artificial <span>$u_3$</span> such that <span>$\frac{\partial\mathbf{T}^e}{\partial u_3} = \mathbf{0}$</span> (with <span>$\mathbf{0}$</span> being a row vector of appropriate length filled with zeros), while substituting <span>$\frac{\partial\mathbf{x}^e}{\partial u_3} = \frac{\partial\mathbf{x}^e}{\partial u_1}\times \frac{\partial\mathbf{x}^e}{\partial u_2}$</span> <a href="../theory_background/#atalla2015a">[11]</a>. As a result, the tangential part of the gradient can be computed as</p><p class="math-container">\[\begin{equation}
+    \nabla_\mathbf{x}^\parallel p_a\left(\mathbf{x}^e(\mathbf{x}_i)\right) 
+    = 
+    \begin{bmatrix}
+        \left(\frac{\partial\mathbf{x}^e}{\partial u_1}\right)^\top\\
+        \left(\frac{\partial\mathbf{x}^e}{\partial u_2}\right)^\top\\
+        \left(\frac{\partial\mathbf{x}^e}{\partial u_1}\times \dfrac{\partial\mathbf{x}^e}{\partial u_2}\right)^\top
+    \end{bmatrix}
+    ^{-1}
+    \begin{bmatrix}
+        \frac{\partial\mathbf{T}^e}{\partial u_1}\\
+        \frac{\partial\mathbf{T}^e}{\partial u_2}\\
+        \mathbf{0}
+    \end{bmatrix}
+    \mathbf{p}_a^e, \quad \mathbf{x} \in \Gamma_e,
+\end{equation} \]</p><p>where the superscript <span>$\parallel$</span> is used to explicitly show that this is only the tangential part of the gradient.  On element <span>$e$</span> there is a local coordinate <span>$\mathbf{x}_i$</span> for which <span>$\mathbf{x}^e(\mathbf{x}_i)$</span> is equal to a collocation point. Say that this is the <span>$i$</span>th collocation point then this means that there is a <span>$\mathbf{x}_i^{e,i}$</span> for which <span>$\mathbf{x}^{e}\left(\mathbf{x}_i^{e,i}\right) = \mathbf{x}_i$</span>. Using the element interpolation description that <span>$\mathbf{p}_a^e = \mathbf{L}^e\mathbf{p}_a$</span>, it follows that</p><p class="math-container">\[\begin{equation}
+    \nabla_\mathbf{x}^\parallel p_a\left(\mathbf{x}^{e}(\mathbf{x}_i^{e,i})\right) = \nabla_\mathbf{x}^\parallel p_a(\mathbf{x}_i) = 
+    \begin{bmatrix}
+        \left(\dfrac{\partial\mathbf{x}^e}{\partial u_1}\right)^\top\\
+        \left(\dfrac{\partial\mathbf{x}^e}{\partial u_2}\right)^\top\\
+        \left(\dfrac{\partial\mathbf{x}^e}{\partial u_1}\times \dfrac{\partial\mathbf{x}^e}{\partial u_2}\right)^\top
+    \end{bmatrix}
+    ^{-1}
+    \begin{bmatrix}
+        \dfrac{\partial\mathbf{T}^e}{\partial u_1}\\
+        \dfrac{\partial\mathbf{T}^e}{\partial u_2}\\
+        \mathbf{0}
+    \end{bmatrix}
+    \mathbf{L}^e\mathbf{p}_a = 
+    \begin{bmatrix}
+        \mathbf{D}_x^{e,i}\\ \mathbf{D}_y^{e,i}\\ \mathbf{D}_z^{e,i}
+    \end{bmatrix}
+    \mathbf{p}_a.
+\end{equation}\]</p><p>In the case of discontinuous elements, the collocation point is only connected to a single element, meaning that in practice the <span>$e$</span>th superscript is redundant. However, in the case of continuous elements, the collocation point can be connected to multiple elements, and the interpolation function derivative is chosen to be the average contribution from each of the connected elements. As such, the <span>$i$</span>th rows of the <span>$\mathbf{D}_\bullet$</span>-matrices can be computed as</p><p class="math-container">\[\begin{equation}
+    \mathbf{D}_x^{i} = \frac{1}{N_e(i)}\sum_{e=1}^{N_e(i)}\mathbf{D}_x^{e,i},\quad 
+    \mathbf{D}_y^{i} = \frac{1}{N_e(i)}\sum_{e=1}^{N_e(i)}\mathbf{D}_y^{e,i},\quad
+    \mathbf{D}_z^{i} = \frac{1}{N_e(i)}\sum_{e=1}^{N_e(i)}\mathbf{D}_z^{e,i},
+\end{equation}\]</p><p>where <span>$N_e(i)$</span> denotes the number of elements that is connected to collocation point <span>$i$</span>. The different <span>$\mathbf{D}_\bullet^i$</span> in the above are the collection of the <span>$i$</span>th rows in three separate matrices, <span>$\mathbf{D}_x, \mathbf{D}_y$</span> and <span>$\mathbf{D}_z$</span> so that </p><p class="math-container">\[\begin{equation}
+    % \left[\frac{\partial\mathbf{p}_a}{\partial x}\right]^\parallel = \mathbf{D}_x\mathbf{p}_a, \quad \left[\frac{\partial\mathbf{p}_a}{\partial y}\right]^\parallel = \mathbf{D}_y\mathbf{p}_a, \quad \left[\frac{\partial\mathbf{p}_a}{\partial z}\right]^\parallel = \mathbf{D}_z\mathbf{p}_a.
+    \frac{\partial\mathbf{p}_a}{\partial x}^\parallel = \mathbf{D}_x\mathbf{p}_a, \quad 
+    \frac{\partial\mathbf{p}_a}{\partial y}^\parallel = \mathbf{D}_y\mathbf{p}_a, \quad 
+    \frac{\partial\mathbf{p}_a}{\partial z}^\parallel = \mathbf{D}_z\mathbf{p}_a.
+\end{equation}\]</p><p>If the chosen discretization of the thermal and viscous modes is the same as for the acoustical mode, then the above interpolation function derivative matrices can be reused to compute <span>$\nabla_\mathbf{x}^\parallel p_h$</span> and <span>$\nabla_\mathbf{x}^\parallel\cdot \mathbf{v}_v$</span> respectively.</p><h2 id="The-Lossy-System-of-Equations-2"><a class="docs-heading-anchor" href="#The-Lossy-System-of-Equations-2">The Lossy System of Equations</a><a class="docs-heading-anchor-permalink" href="#The-Lossy-System-of-Equations-2" title="Permalink"></a></h2><p>The aim of the new formulation is to eliminate the change-of-basis utilized in both the no-slip and the null-divergence conditions. For the no-slip boundary condition, the solution is simply to realize that the full gradient is the sum of the tangential and normal gradient information. Written out this means that</p><p class="math-container">\[\begin{equation}
+    \nabla p_a = \nabla^\parallel p_a + \nabla^\perp p_a,
+\end{equation}\]</p><p>where <span>$\nabla^\perp p_a$</span> is the projection of the gradient onto the normal direction</p><p class="math-container">\[\begin{equation}
+    \nabla^\perp p_a
+    = \text{proj}_\mathbf{n}(\nabla p_a) 
+    = \mathbf{n}\frac{\mathbf{n}^\top\nabla p_a}{\mathbf{n}^\top\mathbf{n}}
+    = \mathbf{n}\partial_\mathbf{n} p_a.
+\end{equation}\]</p><p>From the knowledge that the IFD only contains the tangential information and that the normal derivative is described by the BE discretization the discrete form of full gradient can be written as</p><p class="math-container">\[\begin{equation}
+    \nabla\mathbf{p}_a = \begin{bmatrix}\mathbf{D}_x \\ \mathbf{D}_y \\ \mathbf{D}_z\end{bmatrix}\mathbf{p}_a + \begin{bmatrix} \text{diag}(\mathbf{n}_x) \\ \text{diag}(\mathbf{n}_y)\\ \text{diag}(\mathbf{n}_z) \end{bmatrix}
+    \partial_\mathbf{n}\mathbf{p}_a.
+\end{equation}\]</p><p>For the divergence a similar realization to that of the gradient is needed. That is, the total divergence is equal to the sum of the tangential and normal divergence. Written out, this means that</p><p class="math-container">\[\begin{equation}
+    \nabla_\mathbf{x}\cdot\mathbf{v}_v = \nabla_\mathbf{x}^\parallel\cdot \mathbf{v}_v + \nabla_\mathbf{x}^\perp\cdot \mathbf{v}_v.
+\end{equation}\]</p><p>As such, the discrete form of divergence of <span>$\mathbf{v}_v$</span> can be computed as</p><p class="math-container">\[\begin{equation}
+    \nabla\cdot\mathbf{v} = \begin{bmatrix} \mathbf{D}_x  &amp; \mathbf{D}_y  &amp; \mathbf{D}_z\end{bmatrix} \mathbf{v} + \begin{bmatrix} \text{diag}(\mathbf{n}_x) &amp; \text{diag}(\mathbf{n}_y)&amp; \text{diag}(\mathbf{n}_z)\end{bmatrix} \partial_\mathbf{n}\mathbf{v}.
+\end{equation}\]</p><p>Finally, using the discrete forms of the gradients and null-divergence large lossy system can be written as</p><p class="math-container">\[\begin{equation}
+    \begin{bmatrix}
+    \mathbf{G}_a       &amp; \mathbf{G}_a      &amp; \mathbf{0}         &amp; \mathbf{0}        &amp; \mathbf{0}   &amp; \mathbf{0}     \\
+    \mathbf{0}         &amp; \mathbf{0}        &amp; \mathbf{G}_h       &amp; \mathbf{G}_h      &amp; \mathbf{0}   &amp; \mathbf{0}     \\
+    \mathbf{0}         &amp; \mathbf{0}        &amp; \mathbf{0}         &amp; \mathbf{0}        &amp; \mathbf{G}_v &amp; \mathbf{G}_v   \\
+    \mathbf{0}         &amp; \mathbf{0}        &amp; \mathbf{0}         &amp; \mathbf{0}        &amp; \mathbf{D}_r &amp; \mathbf{N}^\top\\
+    \tau_a\mathbf{I}   &amp; \mathbf{0}        &amp; \tau_h\mathbf{I}   &amp; \mathbf{0}        &amp; \mathbf{0}   &amp; \mathbf{0}     \\
+    \phi_a\mathbf{D}_c &amp; \phi_a\mathbf{N}  &amp; \phi_h\mathbf{D}_c &amp; \phi_h\mathbf{N}  &amp; \mathbf{I}   &amp; \mathbf{0}     
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{p}_a\\ \partial_\mathbf{n}\mathbf{p}_a\\ \mathbf{p}_h\\ \partial_\mathbf{n}\mathbf{p}_h\\ \mathbf{v} \\ \partial_\mathbf{n}\mathbf{v}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \mathbf{0} \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{v}_s
+    \end{bmatrix},
+\end{equation}\]</p><p>where the following notation were introduced</p><p class="math-container">\[\begin{equation}
+    \mathbf{N}   = \begin{bmatrix} \text{diag}(\mathbf{n}_x) &amp; \text{diag}(\mathbf{n}_y)&amp; \text{diag}(\mathbf{n}_z)\end{bmatrix}^\top,\quad
+    \mathbf{D}_c = \begin{bmatrix} \mathbf{D}_x^\top &amp; \mathbf{D}_y^\top &amp; \mathbf{D}_z^\top\end{bmatrix}^\top, \quad
+    \mathbf{D}_r = \begin{bmatrix} \mathbf{D}_x  &amp; \mathbf{D}_y  &amp; \mathbf{D}_z\end{bmatrix}.
+\end{equation}\]</p><p>As this linear system has 10 DOF pr. collocation node, it becomes problematic to solve directly for even moderately large problems on a desktop machine. Fortunately, the system itself has <em>structure</em> which can be utilized. In particular, all the matrices, except <span>$\mathbf{G}_a$</span> and <span>$\mathbf{G}_a$</span>, are extremely sparse (see Figure below). However, due to the ill-conditioning of the large lossy system of equations, the structure cannot be easily utilized. The following section explains how the system can be condensed to a well-conditioned linear system with only 1 DOF pr. collocation node.</p><p><img src="../figures/lossy_system.png" alt="LossySystem"/></p><h2 id="Iterative-Solution-Scheme"><a class="docs-heading-anchor" href="#Iterative-Solution-Scheme">Iterative Solution Scheme</a><a id="Iterative-Solution-Scheme-1"></a><a class="docs-heading-anchor-permalink" href="#Iterative-Solution-Scheme" title="Permalink"></a></h2><p>The large lossy system of equations is ill-conditioned. As such, solving it through a conventional iterative solution scheme does not work. To resolve this, a Schur complement preconditioning step is used to reduce to a linear system that only has <span>$\mathbf{p}_a$</span> as a DOF. The resulting system is well-conditioned and can be solved using an iterative solution scheme. A brief derivation similar to that found in Paper J2 is restated here.</p><p>Due to the simplicity of the isothermal boundary condition the thermal mode can easily be removed using that</p><p class="math-container">\[\begin{equation}
+    \mathbf{p}_h = -\frac{\tau_a}{\tau_h}\mathbf{p}_a,\quad 
+    \partial_\mathbf{n} p_h = \frac{\tau_a}{\tau_h}\mathbf{G}_h^{-1}\mathbf{H}_h\mathbf{p}_a.
+\end{equation}\]</p><p>As such the large lossy system of equations can be reduced to</p><p class="math-container">\[\begin{equation}
+    \begin{bmatrix}
+    \mathbf{H}_a                                &amp; \mathbf{G}_a     &amp; \mathbf{0}   &amp; \mathbf{0}      \\
+    \mathbf{0}                                  &amp; \mathbf{0}       &amp; \mathbf{H}_v &amp; \mathbf{G}_v    \\
+    \mathbf{0}                                  &amp; \mathbf{0}       &amp; \mathbf{D}_r &amp; \mathbf{N}^\top \\
+    \mu_a\mathbf{D}_c + \mu_h\mathbf{N}\mathbf{G}_h^{-1}\mathbf{H}_h &amp; \phi_a\mathbf{N} &amp; \mathbf{I}   &amp; \mathbf{0}     
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{p}_a\\ \partial_\mathbf{n}\mathbf{p}_a\\ \mathbf{v} \\ \partial_\mathbf{n}\mathbf{v}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \mathbf{0} \\ \mathbf{0} \\ \mathbf{0} \\ \mathbf{v}_s
+    \end{bmatrix},
+\end{equation}\]</p><p>where the following two constants are introduced to ease the notation</p><p class="math-container">\[\begin{equation}
+    \mu_a = \phi_a - \frac{\tau_a\phi_h}{\tau_h}, \quad \mu_h = \frac{\tau_a\phi_h}{\tau_h}. 
+\end{equation}\]</p><p>The normal components of <span>$\mathbf{p}_a$</span> and <span>$\mathbf{v}$</span> can further be removed using the discretized integral equations</p><p class="math-container">\[\begin{align}
+    \partial_\mathbf{n} \mathbf{p}_a &amp;= -\mathbf{G}_a^{-1}\mathbf{H}_a\mathbf{p}_a, \\
+    \partial_\mathbf{n} \mathbf{v}   &amp;= -\mathbf{G}_v^{-1}\mathbf{H}_v\mathbf{v}.
+\end{align}\]</p><p>Using the above it follows that</p><p class="math-container">\[\begin{equation}
+    \begin{bmatrix}
+    \mathbf{0}         &amp; \mathbf{D}_r - \mathbf{N}^\top \mathbf{G}_v^{-1}\mathbf{H}_v\\
+    \mu_a\mathbf{D}_c + \mathbf{N}\left(\mu_h\mathbf{G}_h^{-1}\mathbf{H}_h - \phi_a\mathbf{G}_a^{-1}\mathbf{H}_a\right) &amp; \mathbf{I}   
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf{p}_a\\ \mathbf{v}
+    \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \mathbf{0} \\ \mathbf{v}_s - \phi_a\mathbf{N}\mathbf{G}_a^{-1}\mathbf{p}_\text{inc}
+    \end{bmatrix}.
+\end{equation}\]</p><p>Finally, the viscous mode can be completely removed using that</p><p class="math-container">\[\begin{equation}
+    \mathbf{v} = \mathbf{v}_s - \left(\mu_a\mathbf{D}_c + \mu_h\mathbf{N}\mathbf{G}_h^{-1}\mathbf{H}_h - \phi_a\mathbf{N}\mathbf{G}_a^{-1}\mathbf{H}_a\right)\mathbf{p}_a.
+\end{equation}\]</p><p>To ease the notation the following shorthand is introduced</p><p class="math-container">\[\begin{equation}
+    \mathbf{R} = \mathbf{D}_r - \mathbf{N}^\top\mathbf{G}_v^{-1}\mathbf{H}_v.
+\end{equation}\]</p><p>As such we can simplify to</p><p class="math-container">\[\begin{equation}
+    \mathbf{R}\left(\mu_a\mathbf{D}_c + \mathbf{N}\left(\mu_h\mathbf{G}_h^{-1}\mathbf{H}_h - \phi_a\mathbf{G}_a^{-1}\mathbf{H}_a\right)\right)\mathbf{p}_a = \mathbf{R}\mathbf{v}_s.
+\end{equation}\]</p><p>From a numerical point of view, the above is inconvenient as it requires the inverse of the dense matrix <span>$\mathbf{G}_a$</span>. To remove this requirement the above is left multiplied with</p><p class="math-container">\[\begin{equation}
+    \mathbf{G}_a\left(\mathbf{R}\mathbf{N}\right)^{-1},
+\end{equation} \]</p><p>which result in</p><p class="math-container">\[\begin{equation}
+    \left[\mathbf{G}_a\left(\mu_a\left(\mathbf{R}\mathbf{N}\right)^{-1}\mathbf{R}\mathbf{D}_c + \mu_h\mathbf{G}_h^{-1}\mathbf{H}_h\right) - \phi_a\mathbf{H}_a\right]\mathbf{p}_a = \mathbf{G}_a\left(\mathbf{R}\mathbf{N}\right)^{-1}\mathbf{R} \mathbf{v}_s.
+\end{equation}\]</p><p>As the aim is to solve large problems, we need to be able to solve the above using an iterative scheme. To do so, we must be able to define multiplication with the linear map corresponding to the system matrix. Doing so is fairly straightforward, with the caveat that each multiplication actually requires the solution of additional linear systems. The reason for this is that we need to multiply by both <span>$\mathbf{G}_h^{-1}$</span>, <span>$\mathbf{G}_v^{-1}$</span>, and <span>$\left(\mathbf{R}\mathbf{N}\right)^{-1}$</span>. Given that <span>$\mathbf{G}_h^{-1}$</span> and <span>$\mathbf{G}_v^{-1}$</span> are sparse and well-conditioned, they can be applied using a sparse LU-factorization or another iterative scheme. For multiplication with <span>$\left(\mathbf{R}\mathbf{N}\right)^{-1}$</span>, the only option is to use an iterative scheme, as there is no guarantee that the matrix is sparse. The full efficient solution scheme of the above equation can be found in the Algorithm below (Equation 4.50 refers to the above equation).</p><p><img src="../figures/algorithm_nested.png" alt="NestedAlgorithm"/></p><h2 id="Bibliography"><a class="docs-heading-anchor" href="#Bibliography">Bibliography</a><a id="Bibliography-1"></a><a class="docs-heading-anchor-permalink" href="#Bibliography" title="Permalink"></a></h2><div class="citation noncanonical"><dl><dt>[10]</dt>
+<dd>
+<div id="morse1968a">P. Morse and K. Ingard. <i>Theoretical acoustics</i>. McGraw-Hill (1968).</div>
+</dd><dt>[9]</dt>
+<dd>
+<div id="henriquez2002a">V. C. Henriquez. <i>Numerical Transducer Modeling</i>. Phd thesis, Technical University of Denmark (2002).</div>
+</dd><dt>[11]</dt>
+<dd>
+<div id="atalla2015a">N. Atalla and F. Sgard. <i>Finite Element and Boundary Methods in Structural Acoustics and Vibration</i>. <a href='https://doi.org/10.1201/b18366'>CRC Press (2015)</a>.</div>
+</dd>
+</dl></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../theory_rosebem/">« ROSEBEM Theory</a><a class="docs-footer-nextpage" href="../examples/3d_rosebem/">ROSEBEM: Rigid sphere scattering »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Tuesday 5 September 2023 13:54">Tuesday 5 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
