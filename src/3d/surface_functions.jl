@@ -131,7 +131,7 @@ function basisFunctionDerivative(surfaceFunction::DiscontinuousQuadrilateralLine
     return discontinuousQuadrilateralLinear4Derivatives(u,v,surfaceFunction.beta)
 end
 #==========================================================================================
-                            DiscontinuousQuadrilateralQuadraticLagrange (COMSOL Layout)
+                DiscontinuousQuadrilateralQuadraticLagrange (COMSOL Layout)
  ——————————————————————————————————————  Grid  ———————————————————————————————————————————
                                         3  9  4
                                         6  7  8

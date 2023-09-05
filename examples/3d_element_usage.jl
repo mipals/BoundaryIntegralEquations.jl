@@ -1,4 +1,4 @@
-# # Surface Functions (3D)
+# # Surface Functions
 # For 3D boundary integral equations the elements of interest are defined as `SurfaceFunction`s. These are defined as a vector of basis functions defined by two local coordinates, $u$ and $v$
 # ```math
 #   \mathbf{N}(u,v)

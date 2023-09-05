@@ -1,7 +1,7 @@
-# # Rigid sphere scattering (3D - Exterior)
+# # Rigid sphere scattering (Exterior)
 # # Importing related packages
 using LinearAlgebra, BoundaryIntegralEquations
-using IterativeSolvers, MeshViz, SpecialFunctions, LegendrePolynomials, Plots
+using IterativeSolvers, Meshes, SpecialFunctions, LegendrePolynomials, Plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(600, 600))
 using JSServe                           #hide
@@ -22,7 +22,7 @@ a  = 1.0;                                       # Radius of sphere_1m      [m]
 k  = 2π*frequency/c;                            # Wavenumber
 P₀ = 1.0;                                       # Magnitude of planewave
 # # Analytical Solution
-# The analytical solution of the scattering of a sphere by plane wave can be computed as (Ihlenburg1998)
+# The analytical solution of the scattering of a sphere by plane wave can be computed as ([ihlenburg1998a](@cite))
 # ```math
 #  p_\text{analytical}(r, \theta) = P_0\left(\exp(\mathrm{i}kr\cos(\theta)) - \sum_{n=1}^\infty \mathrm{i}^n(2n+1)\frac{j_n^{'}(ka)}{h_n^{'}(ka)}P_n(\cos(\theta))h_n(kr)\right),
 # ```
@@ -84,3 +84,11 @@ wgl.set_theme!(resolution=(400, 400))
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz))
 wgl.Colorbar(fig[1,2],label="|p|"); fig
+
+# # Bibliography
+# ```@bibliography
+# Pages = []
+# Canonical = false
+
+# ihlenburg1998a
+# ```

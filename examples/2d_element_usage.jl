@@ -1,4 +1,4 @@
-# # Curve Functions (2D)
+# # Curve Functions
 # For 2D boundary integral equations the elements of interest are defined as `CurveFunction`s. These are defined as a vector of basis functions defined by a single local coordinate ($u$)
 # ```math
 #   \mathbf{N}(u)

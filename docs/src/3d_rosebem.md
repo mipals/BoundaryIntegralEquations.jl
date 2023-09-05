@@ -1,5 +1,6 @@
 # ROSEBEM
-(Reduced Order Series Expansion Boundary Element Method)
+
+For some theory [look here.](theory_rosebem.md)
 
 ```@docs
 BoundaryIntegralEquations.compute_taylor_integrals!

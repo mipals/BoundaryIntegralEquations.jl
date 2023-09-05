@@ -1,4 +1,7 @@
 # Viscous and thermal losses
+
+For some theory [look here.](theory_lossy.md)
+
 ```@docs
 BoundaryIntegralEquations.LossyGlobalOuter
 ```

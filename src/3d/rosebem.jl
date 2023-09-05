@@ -46,7 +46,7 @@ end
 
 """
     taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
-                            M=0,fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true,V=I)
+                            M=0,fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true,U=I)
 
 Return:
  * `From`: Contains the derivatives of the `F`-matrix.
@@ -54,7 +54,7 @@ Return:
  * `C`: Contains the integral free term.
 """
 function taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
-                            M=0,fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true,V=I)
+                            M=0,fOn=true,gOn=true,cOn=true,m=3,n=3,progress=true,U=I)
     n_elements  = number_of_elements(mesh)
     sources     = convert.(eltype(shape_function),in_sources)
     n_sources   = size(in_sources,2)
@@ -90,10 +90,10 @@ function taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
     physics_interpolation3 = copy(physics_function3.interpolation')
 
     # Preallocation of return values
-    if typeof(V) <: UniformScaling
+    if typeof(U) <: UniformScaling
         n_nodes = size(mesh.sources,2)
     else
-        n_nodes = size(V,2)
+        n_nodes = size(U,2)
     end
     F = zeros(ComplexF64, n_sources, n_nodes, M+1)
     G = zeros(ComplexF64, n_sources, n_nodes, M+1)
@@ -138,8 +138,8 @@ function taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
             end
         end
         for m = 1:M+1
-            F[source_node:source_node,:,m] = Fview[:,:,m]*V
-            G[source_node:source_node,:,m] = Gview[:,:,m]*V
+            F[source_node:source_node,:,m] = Fview[:,:,m]*U
+            G[source_node:source_node,:,m] = Gview[:,:,m]*U
         end
         if progress; next!(prog); end # For the progress meter
     end
@@ -148,10 +148,9 @@ function taylor_assemble!(mesh::Mesh3d,k,in_sources,shape_function::Triangular;
     Grom = zeros(eltype(F),n_nodes,n_nodes,M+1)
 
     for m = 1:M+1
-        From[:,:,m] = V'*F[:,:,m]
-        Grom[:,:,m] = V'*G[:,:,m]
+        From[:,:,m] = U'*F[:,:,m]
+        Grom[:,:,m] = U'*G[:,:,m]
     end
-    # Crom = V'*Diagonal(C)*V
 
     return From, Grom, C
 
