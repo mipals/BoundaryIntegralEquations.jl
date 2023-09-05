@@ -1,4 +1,4 @@
-# # Scattering of infinite cylinder (2D)
+# # Scattering of infinite cylinder
 # # Importing relevant packages
 using BoundaryIntegralEquations
 using Plots

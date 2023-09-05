@@ -1,6 +1,6 @@
-# # Pulsating sphere (3D - Interior)
+# # Pulsating sphere (Interior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, MeshViz, SpecialFunctions
+using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, Meshes, SpecialFunctions
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide

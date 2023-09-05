@@ -14,7 +14,7 @@ tri_mesh = load3dTriangularComsolMesh(tri_mesh_file;geometry_order=geometry_orde
 #==========================================================================================
                                 3d Visualization
 ==========================================================================================#
-using MeshViz
+using Meshes
 import WGLMakie as wgl
 wgl.set_theme!(resolution=(900, 900))
 tri_bc_ents = [358] .- 1

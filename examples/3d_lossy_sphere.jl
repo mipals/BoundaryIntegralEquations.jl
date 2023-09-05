@@ -1,4 +1,4 @@
-# # Lossy sphere (3D - Exterior)
+# # Oscilating Lossy sphere (Exterior)
 # # Importing related packages
 using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots
 # # Loading the mesh
@@ -6,7 +6,7 @@ mesh_path = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples",
 #src mesh_file = joinpath(mesh_path,"sphere_1m_extra_coarse");
 mesh_file = joinpath(mesh_path,"sphere_1m_coarser");
 #src mesh_file = joinpath(mesh_path,"sphere_1m_coarse");
-# src mesh_file = joinpath(mesh_path,"sphere_1m");
+#src mesh_file = joinpath(mesh_path,"sphere_1m");
 #src mesh_file = joinpath(mesh_path,"sphere_1m_fine");
 mesh = load3dTriangularComsolMesh(mesh_file)
 # # Setting up constants
@@ -20,7 +20,7 @@ normals = mesh.normals;              # Normal coordinates      [m]
 targets = mesh.sources;              # Source coordinates      [m]
 n       = size(targets, 2);          # Number of target points
 # # Analytical solution
-# The following is the analytical solution of a sphere oscillating in a viscous fluid described in section 6.9 of S. Temkin, 2001.
+# The following is the analytical solution of a sphere oscillating in a viscous fluid described in section 6.9 of S. Temkin, 2001 ([temkin2001elements](@cite)).
 # The solution is truncated to only include the first order terms (which are the dominating terms). Here the analytical solution for the acoustical pressure, normal velocity and tangential velocity described by
 # ```math
 # \begin{aligned}
@@ -90,3 +90,12 @@ xlabel!("θ (rad)"); ylabel!("|Vₙ|"); title!("Frequency = $(frequency)")
 scatter(θ,abs.(vt_sum),label="BEM",markersize=3);
 plot!(θ_analytical,abs.(vt_analytical),label="Analytical",linewidth=2);
 xlabel!("θ (rad)"); ylabel!("|Vₜ|"); title!("Frequency = $(frequency)")
+
+
+# # Bibliography
+# ```@bibliography
+# Pages = []
+# Canonical = false
+
+# temkin2001elements
+# ```

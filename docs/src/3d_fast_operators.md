@@ -1,5 +1,7 @@
 # Fast Operators
 
+For some theory [look here.](theory_background.md#The-Fast-Multipole-Method-and-BEM)
+
 ## Helper Functions
 ```@docs
 BoundaryIntegralEquations.partial_assemble_parallel!

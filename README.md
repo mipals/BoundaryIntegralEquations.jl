@@ -7,6 +7,16 @@
 
 BoundaryIntegralEquations.jl provides the basic building blocks required for implementing Boundary Element Methods (BEMs). Currently, it supplies the discretization of the Kirchhoff–Helmholtz integral equation found in acoustical applications.
 
+```math
+\zeta(\mathbf{x})p(\mathbf{x}) + \int_\Gamma \frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n}(\mathbf{y})}p(\mathbf{y})\ \mathrm{d}S_\mathbf{y} -
+    \mathrm{i} \rho_0 c k \int_\Gamma G(\mathbf{x},\mathbf{y})v_\mathbf{n}(\mathbf{y})\ \mathrm{d}S_\mathbf{y} = 0.
+```
+where 
+```math 
+    G(\mathbf{x},\mathbf{y}) = \frac{\exp\left(\mathrm{i}k\|\mathbf{x} - \mathbf{y}\|_2\right)}{4\pi\|\mathbf{x} - \mathbf{y}\|_2},
+``` 
+is the Green's function of the Helmholtz operator, ``k`` is the wavenumber, ``\rho_0`` is the ambient density and ``c`` is the speed of sound.
+
 The package supplies support for acceleration methods such as e.g. the Fast Multipole Method (FMM) and Hierarchical matrices. For the FMM the package utilizes the Flatiron Institute Fast Multipole Libraries ([2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia)) whereas for Hierarchical matrices it uses the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) package.
 
 **N.B. The package is still under heavy development.**

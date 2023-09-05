@@ -1,32 +1,16 @@
 # BoundaryIntegralEquations.jl
 
-`BoundaryIntegralEquations.jl` provides the basis functionalities for implementing Boundary Element Methods.
-
-Currently, the package is focused on solving the Helmholtz equation for acoustical problems through the Kirchoff-Helmholtz integral Equation
+`BoundaryIntegralEquations.jl` provides the basis functionalities for implementing Boundary Element Methods. Currently, the package is focused on solving the Helmholtz equation for acoustical problems through the Kirchoff-Helmholtz integral Equation
 
 ```math
-c(\mathbf{y})p(\mathbf{y}) + \int_\Gamma\frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n} }p(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x} = \mathrm{i}\rho ck\int_\Gamma G(\mathbf{x},\mathbf{y})v_s(\mathbf{x})\ \mathrm{d}\Gamma_\mathbf{x},
+\zeta(\mathbf{x})p(\mathbf{x}) + \int_\Gamma \frac{\partial G(\mathbf{x}, \mathbf{y})}{\partial \mathbf{n}(\mathbf{y})}p(\mathbf{y})\ \mathrm{d}S_\mathbf{y} -
+    \mathrm{i} \rho_0 c k \int_\Gamma G(\mathbf{x},\mathbf{y})v_\mathbf{n}(\mathbf{y})\ \mathrm{d}S_\mathbf{y} = 0.
 ```
-where ``G(\mathbf{x},\mathbf{y})`` is the Green's function of the Helmholtz operator.
-
-For the Fast Multipole Method this package utilizes the Julia interfaces for the Flatiron Institute Fast Multipole Libraries: [2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia).
-
-For H-matrices the package utilizes the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl).
-
-**N.B. The package is still under heavy development.**
-
-## Installation
-The package can be downloaded directly from GitHub 
-
-```julia
-using Pkg
-Pkg.add(url="https://github.com/mipals/BoundaryIntegralEquations.jl")
-```
-
-## Element types
-* (Dis)continuous (Constant, Linear and Quadratic) Line elements
-* (Dis)continuous (Constant, Linear and Quadratic) Triangular Elements
-* (Dis)continuous (Constant, Linear and Quadratic) Quadrilateral Elements
+where 
+```math 
+    G(\mathbf{x},\mathbf{y}) = \frac{\exp\left(\mathrm{i}k\|\mathbf{x} - \mathbf{y}\|_2\right)}{4\pi\|\mathbf{x} - \mathbf{y}\|_2},
+``` 
+is the Green's function of the Helmholtz operator, ``k`` is the wavenumber, ``\rho_0`` is the ambient density and ``c`` is the speed of sound.
 
 ## Mesh formats
 * COMSOLs *.mphtxt* files (best for applying boundary conditions)

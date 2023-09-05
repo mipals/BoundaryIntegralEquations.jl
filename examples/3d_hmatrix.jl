@@ -4,7 +4,7 @@ using LinearAlgebra
 using BoundaryIntegralEquations
 using IterativeSolvers
 using Plots
-using MeshViz
+using Meshes
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide

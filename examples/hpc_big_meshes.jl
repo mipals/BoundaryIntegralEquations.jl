@@ -40,7 +40,7 @@ depth = intputArguments["depth"]
                                 Loading packages
 ==========================================================================================#
 # # Importing related packages
-frequency = 100.0
+frequency = 1000.0
 depth = 1
 fmm_on = true
 hmatrix_on = false
@@ -71,7 +71,8 @@ vt_analytical = -3im/a*B1dh1*sin.(θ_analytical); # Analytical tangential veloci
 # # Loading the mesh
 data_directory = "/work3/mpasc/fmm_paper"
 if Sys.isapple()
-    data_directory = "/Users/mpasc/OneDrive - Danmarks Tekniske Universitet/paper_fmm"
+    # data_directory = "/Users/mpasc/OneDrive - Danmarks Tekniske Universitet/paper_fmm"
+    data_directory = "/Users/mpasc/Documents/FMM_PAPER"
 elseif Sys.islinux()
     data_directory = "/home/mpasc/OneDrive/paper_fmm"
 end

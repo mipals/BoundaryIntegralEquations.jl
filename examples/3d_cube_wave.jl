@@ -1,6 +1,6 @@
-# # Cube with vibrating sides (3D - Interior)
+# # Cube with vibrating sides (Interior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, MeshViz, SpecialFunctions
+using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, SpecialFunctions, Meshes
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide

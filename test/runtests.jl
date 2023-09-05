@@ -1,7 +1,7 @@
 using SafeTestsets
 
 # Formatting
-@safetestset "Aqua testing         " begin include("aqua_test.jl") end
+@safetestset "Aqua testing         " begin include("aqua_test.jl")                   end
 # 2D Tests
 @safetestset "2D: Curve Functions  " begin include("2d/curve_functions_test.jl")     end
 @safetestset "2D: Assembly         " begin include("2d/assembly_test.jl")            end
