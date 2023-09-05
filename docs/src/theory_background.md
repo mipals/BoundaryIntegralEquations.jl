@@ -261,7 +261,7 @@ Since the above has to hold for all ``\mathbf{a} \in \mathbb{C}^n`` it follows t
 For simplification purposes the above is sometimes written as
 
 ```math
-\mathbf{H}\mathbf{p} = \mathbf{G}\partial_\mathbf{n}\mathbf{p} .
+\mathbf{H}\mathbf{p} + \mathbf{G}\partial_\mathbf{n}\mathbf{p} = \mathbf{0}.
 ```
 
 We now briefly explain how to compute the ``k``th row of ``\mathbf{F}``. To do so element description of the unknown functions is used
