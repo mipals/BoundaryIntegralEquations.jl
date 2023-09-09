@@ -1,10 +1,22 @@
 # # Cube with anechoic condition (Interior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, Meshes, SpecialFunctions
+using BoundaryIntegralEquations # For BIEs
+using IterativeSolvers          # For gmres
+using LinearAlgebra             # For Diagonal
+using Plots                     # For 2d plots
+using Meshes                    # For 3d mesh plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
+# # Setting up constants
+frequency = 54.59;                              # Frequency                [Hz]
+c  = 343;                                       # Speed up sound           [m/s]
+ρ₀ = 1.21;                                      # Mean density             [kg/m^3]
+Z₀ = ρ₀*c;                                      # Characteristic impedance [Rayl]
+P₀ = 1.0;                                       # Pressure of plane wave   [m/s]
+l  = 1.0;                                       # Length of cube           [m]
+k  = 2π*frequency/c;                            # Computing the wavenumber
 # # Loading Mesh
 # Loading and visualizing the triangular cube mesh
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_extremely_coarse");
@@ -25,14 +37,6 @@ viz(simple_pre;showfacets=true,color=:red)
 viz!(simple_mesh;showfacets=true,alpha=0.1)
 viz!(simple_ana;showfacets=true,color=:blue)
 wgl.current_figure()
-# # Setting up constants
-frequency = 54.59;                              # Frequency                [Hz]
-c  = 343;                                       # Speed up sound           [m/s]
-ρ₀ = 1.21;                                      # Mean density             [kg/m^3]
-Z₀ = ρ₀*c;                                      # Characteristic impedance [Rayl]
-P₀ = 1.0;                                       # Pressure of plane wave   [m/s]
-l  = 1.0;                                       # Length of cube           [m]
-k  = 2π*frequency/c;                            # Computing the wavenumber
 # # Analytical Solution
 # The analytical description of the interior pressure of a planewave is given by
 # ```math

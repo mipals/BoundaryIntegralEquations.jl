@@ -1,10 +1,23 @@
 # # Oscilating sphere (Interior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, Meshes, SpecialFunctions
+using BoundaryIntegralEquations # For BIEs
+using IterativeSolvers          # For gmres
+using SpecialFunctions          # For Bessel functions
+using LinearAlgebra             # For Diagonal
+using Meshes                    # For 3d mesh plots
+using Plots                     # For 2d plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
+# # Setting up constants
+frequency = 100.0;      # Frequency                [Hz]
+c  = 343.0;             # Speed up sound           [m/s]
+ρ₀ = 1.21;              # Mean density             [kg/m^3]
+Z₀ = ρ₀*c;              # Characteristic impedance [Rayl]
+vz = 1.0;               # Speed in the z-direction [m/s]
+a  = 1.0;               # Radius of sphere_1m      [m]
+k  = 2π*frequency/c;    # Wavenumber
 # # Loading Mesh
 # Loading and visualizing the triangular (spherical) mesh
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_coarser");
@@ -14,14 +27,6 @@ mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples",
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_finer");
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_extremely_fine");
 mesh = load3dTriangularComsolMesh(mesh_file)
-# # Setting up constants
-frequency = 100.0;      # Frequency                [Hz]
-c  = 343.0;             # Speed up sound           [m/s]
-ρ₀ = 1.21;              # Mean density             [kg/m^3]
-Z₀ = ρ₀*c;              # Characteristic impedance [Rayl]
-vz = 1.0;               # Speed in the z-direction [m/s]
-a  = 1.0;               # Radius of sphere_1m      [m]
-k  = 2π*frequency/c;    # Wavenumber
 # # Analytical Solution
 # The analytical description of the interior pressure of an z-oscilating sphere is given by
 # ```math

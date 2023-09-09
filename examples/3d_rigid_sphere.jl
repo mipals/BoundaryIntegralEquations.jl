@@ -1,11 +1,22 @@
 # # Rigid sphere scattering (Exterior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations
-using IterativeSolvers, Meshes, SpecialFunctions, LegendrePolynomials, Plots
+using BoundaryIntegralEquations # For BIEs
+using LegendrePolynomials       # For Legendre Polynomials
+using SpecialFunctions          # For Bessel functions
+using IterativeSolvers          # For gmres
+using LinearAlgebra             # For Diagonal
+using Meshes                    # For 3d mesh plots
+using Plots                     # For 2d plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(600, 600))
 using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
+# # Setting up constants
+frequency = 100.0;                              # Frequency                [Hz]
+c  = 343;                                       # Speed up sound           [m/s]
+a  = 1.0;                                       # Radius of sphere_1m      [m]
+k  = 2π*frequency/c;                            # Wavenumber
+P₀ = 1.0;                                       # Magnitude of planewave
 # # Loading Mesh
 # Loading and visualizing the triangular (spherical) mesh
 mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_coarser");
@@ -15,19 +26,13 @@ mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples",
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_finer");
 #src mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","sphere_1m_extremely_fine");
 mesh = load3dTriangularComsolMesh(mesh_file;physics_order=:disctrilinear)
-# # Setting up constants
-frequency = 100.0;                              # Frequency                [Hz]
-c  = 343;                                       # Speed up sound           [m/s]
-a  = 1.0;                                       # Radius of sphere_1m      [m]
-k  = 2π*frequency/c;                            # Wavenumber
-P₀ = 1.0;                                       # Magnitude of planewave
 # # Analytical Solution
 # The analytical solution of the scattering of a sphere by plane wave can be computed as ([ihlenburg1998a](@cite))
 # ```math
 #  p_\text{analytical}(r, \theta) = P_0\left(\exp(\mathrm{i}kr\cos(\theta)) - \sum_{n=1}^\infty \mathrm{i}^n(2n+1)\frac{j_n^{'}(ka)}{h_n^{'}(ka)}P_n(\cos(\theta))h_n(kr)\right),
 # ```
 # where ``j_n, h_n`` and ``P_n`` are respectively the spherical Bessel function of the first kind, the Hankel function of the first kind and the Legendre polynomial of degree ``n``.
-# To make the implementation easier we defin the following helper functions
+# To make the implementation easier we define the following helper functions
 dsp_j(n,z) = n/z*sphericalbesselj(n,z) - sphericalbesselj(n+1,z); # Derivative of j
 dsp_y(n,z) = n/z*sphericalbessely(n,z) - sphericalbessely(n+1,z); # Derivative of y
 sp_h(n,z)  = sphericalbesselj(n,z) + im*sphericalbessely(n,z);    # Hankel function (h)

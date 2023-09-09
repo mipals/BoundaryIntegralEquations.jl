@@ -1,5 +1,5 @@
 # Reduced Order Series Expansion Boundary Element Method (ROSEBEM)
-This page includes the (some of) theoretical foundations speeding up multifrequency problems using the Reduced Order Series Expansion Boundary Element Method (ROSEBEM) [panagiotopoulos2020](@cite) [Paltorp2023](@cite).
+This page includes (some of) the theoretical foundations speeding up multifrequency problems using the Reduced Order Series Expansion Boundary Element Method (ROSEBEM) [panagiotopoulos2020](@cite) [Paltorp2023](@cite).
 
 For an example [look here.](examples/3d_rosebem.md)
 
@@ -64,7 +64,7 @@ Using this we can visualize the SEBEM as
 ![Step2](figures/rosebem_2.png)
 Similarly, the reduced basis assumption, for both $\mathbf{p}$ and $\partial_\mathbf{n}\mathbf{p}$, is visualized as
 ![Step3](figures/rosebem_3.png)
-Inserting assumption from above into the SEBEM visualization
+Inserting assumption from above into the SEBEM visualization while also multiplying with the Hermitian transpose of the reduced basis 
 ![Step4](figures/rosebem_4.png)
 Finally by performing the matrix-matrix, the ROSEBEM appears as
 ![Step5](figures/rosebem_5.png)

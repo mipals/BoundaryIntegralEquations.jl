@@ -1,10 +1,21 @@
 # # Cube with vibrating sides (Interior)
 # # Importing related packages
-using LinearAlgebra, BoundaryIntegralEquations, IterativeSolvers, Plots, SpecialFunctions, Meshes
+using BoundaryIntegralEquations # For BIEs
+using IterativeSolvers          # For gmres
+using LinearAlgebra             # For Diagonal
+using Plots                     # For 2d plots
+using Meshes                    # For 3d mesh plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide
 Page(exportable=true, offline=true)     #hide
+# # Setting up constants
+frequency = 100.0;      # Frequency                [Hz]
+c  = 343.0;             # Speed up sound           [m/s]
+ρ₀ = 1.21;              # Mean density             [kg/m^3]
+Z₀ = ρ₀*c;              # Characteristic impedance [Rayl]
+v₀ = 1.0;               # Speed in the x-direction [m/s]
+k  = 2π*frequency/c;    # Wavenumber
 # # Loading and visualizing the triangular cube mesh
 # First we define the path to the mesh file
 mesh_file = joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","examples","meshes","1m_cube_extremely_coarse");
@@ -24,13 +35,6 @@ simple_mesh = create_bc_simple_mesh(mesh,bc_ents,false);
 viz(simple_mesh;showfacets=true)
 viz!(simple_bc;showfacets=true,color=:red)
 wgl.current_figure()
-# # Setting up constants
-frequency = 100.0;      # Frequency                [Hz]
-c  = 343.0;             # Speed up sound           [m/s]
-ρ₀ = 1.21;              # Mean density             [kg/m^3]
-Z₀ = ρ₀*c;              # Characteristic impedance [Rayl]
-v₀ = 1.0;               # Speed in the x-direction [m/s]
-k  = 2π*frequency/c;    # Wavenumber
 # # Analytical Solution
 # The analytical description of the interior pressure in unit cube with the side at ``x=0`` be applied a velocity of ``v_{0}``
 # ```math
