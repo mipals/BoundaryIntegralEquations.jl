@@ -16,7 +16,7 @@ examples = [
     # "3d_cube_wave.jl",
     # "3d_cube_wave_anechoic.jl",
     # "3d_lossy_sphere.jl",
-    "3d_rosebem.jl",
+    # "3d_rosebem.jl",
     # "3d_fmm.jl",
     # "3d_hmatrix.jl",
     # "2d_infinite_cylinder.jl",
@@ -54,13 +54,13 @@ makedocs(bib,
         "Viscothermal Losses Theory" => "theory_lossy.md",
         "Examples" => [
             "3D" => [
+                "examples/3d_lossy_sphere.md",
                 "examples/3d_rosebem.md",
                 "examples/3d_rigid_sphere.md",
                 "examples/3d_oscilating_sphere.md",
                 "examples/3d_pulsating_sphere.md",
                 "examples/3d_cube_wave.md",
                 "examples/3d_cube_wave_anechoic.md",
-                "examples/3d_lossy_sphere.md",
                 "examples/3d_element_usage.md",
             ],
             "2D" => [

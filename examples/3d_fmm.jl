@@ -1,10 +1,10 @@
 # # Scattering of a hard sphere (FMM)
 # # Importing related packages
-using LinearAlgebra
-using BoundaryIntegralEquations
-using IterativeSolvers
-using Plots
-using Meshes
+using BoundaryIntegralEquations # For BIEs
+using IterativeSolvers          # For gmres
+using LinearAlgebra             # For Diagonal
+using Plots                     # For 2d plots
+using Meshes                    # For 3d mesh plots
 import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
 wgl.set_theme!(resolution=(800, 800))
 using JSServe                           #hide
