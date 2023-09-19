@@ -14,8 +14,10 @@
 
 # # Importing relevant packages
 using Plots
+gr()
 using LinearAlgebra
 using BoundaryIntegralEquations
+#hide using DisplayAs
 # # Triangles
 # The simplest `SurfaceFunction` is `TriangularLinear` which defines a linear interpolation of a triangle. A `TriangularLinear` with 3 gaussian points is created as follows
 linear_triangular = TriangularLinear(3)

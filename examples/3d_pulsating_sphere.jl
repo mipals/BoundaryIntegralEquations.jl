@@ -5,10 +5,8 @@ using IterativeSolvers          # For gmres
 using LinearAlgebra             # For Diagonal
 using Meshes                    # For 3d mesh plots
 using Plots                     # For 2d plots
-import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(800, 800))
-using JSServe                           #hide
-Page(exportable=true, offline=true)     #hide
+import GLMakie as wgl
+wgl.set_theme!(resolution=(1600, 1600)) #hide
 # # Setting up constants
 frequency = 54.59;      # Frequency                [Hz]
 c  = 343.0;             # Speed up sound           [m/s]
@@ -72,4 +70,6 @@ ylabel!("p/Z₀"); xlabel!("r/a")
 # The surface pressures can also be plotted. Note that it is only possible to plot linear meshes, meaing that we must remove the quadratic parts.
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz/Z₀))
-wgl.Colorbar(fig[1,2],label="|p/Z₀|"); fig
+wgl.Colorbar(fig[1,2],label="|p/Z₀|");
+wgl.save("3d_pulsating_sphere.png",fig) #hide
+# ![](3d_pulsating_sphere.png)

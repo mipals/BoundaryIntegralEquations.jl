@@ -6,7 +6,6 @@ using LegendrePolynomials       # For Legendre Polynomials
 using SpecialFunctions          # For Bessel functions
 using IterativeSolvers          # For gmres
 using LinearAlgebra             # For Diagonal
-using Polynomials               # For chebyshev expansions
 using Plots                     # For 2d plots
 using ProgressMeter, LinearMaps
 import BoundaryIntegralEquations: scattering_krylov_basis
