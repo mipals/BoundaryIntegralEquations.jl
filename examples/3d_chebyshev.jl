@@ -103,10 +103,10 @@ function chebyshev_eval(x,M)
     end
     return output
 end
-function eval_chebyshev_matrix(C,coeffs)
-    output = -C[:,:,1]/2
+function eval_chebyshev_matrix(Cj,coeffs)
+    output = -Cj[:,:,1]/2
     for index = eachindex(coeffs)
-        output += coeffs[index]*C[:,:,index]
+        output += coeffs[index]*Cj[:,:,index]
     end
     return output
 end
