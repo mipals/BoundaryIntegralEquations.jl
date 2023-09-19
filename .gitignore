@@ -19,3 +19,5 @@ src/3d/old.jl
 examples/fa2023_pgfplots.jl
 examples/gmsh_tests.jl
 Manifest.toml
+examples/tests_fmm3d.jl
+examples/chebyshev_old.jl
