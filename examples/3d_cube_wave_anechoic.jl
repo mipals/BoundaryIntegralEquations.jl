@@ -5,10 +5,8 @@ using IterativeSolvers          # For gmres
 using LinearAlgebra             # For Diagonal
 using Plots                     # For 2d plots
 using Meshes                    # For 3d mesh plots
-import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(800, 800))
-using JSServe                           #hide
-Page(exportable=true, offline=true)     #hide
+import GLMakie as wgl
+wgl.set_theme!(resolution=(1600, 1600)) #hide
 # # Setting up constants
 frequency = 54.59;                              # Frequency                [Hz]
 c  = 343;                                       # Speed up sound           [m/s]
@@ -33,10 +31,11 @@ simple_mesh = create_bc_simple_mesh(mesh,[bc_pre; bc_ane],false);
 simple_pre  = create_bc_simple_mesh(mesh,bc_pre);
 simple_ana  = create_bc_simple_mesh(mesh,bc_ane);
 # We now plot the mesh with the pressure condition shown in red and the anechoic condition shown in blue
-viz(simple_pre;showfacets=true,color=:red)
+fig = viz(simple_pre;showfacets=true,color=:red)
 viz!(simple_mesh;showfacets=true,alpha=0.1)
 viz!(simple_ana;showfacets=true,color=:blue)
-wgl.current_figure()
+wgl.save("3d_cube_wave_anechoic_viz.png",fig) #hide
+# ![](3d_cube_wave_anechoic_viz.png)
 # # Analytical Solution
 # The analytical description of the interior pressure of a planewave is given by
 # ```math
@@ -119,4 +118,6 @@ xlabel!("r/a")
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=real.(data_viz/P₀))
 #src wgl.scatter!(mesh.sources[1,:],mesh.sources[2,:],mesh.sources[3,:],color=abs.(p_fmm/Z₀))
-wgl.Colorbar(fig[1,2],label="Re(p/p₀)"); fig
+wgl.Colorbar(fig[1,2],label="Re(p/p₀)");
+wgl.save("3d_cube_wave_anechoic.png",fig) #hide
+# ![](3d_cube_wave_anechoic.png)

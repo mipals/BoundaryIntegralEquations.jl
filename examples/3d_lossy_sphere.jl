@@ -7,7 +7,6 @@ using Plots                     # For plottings
 frequency = 100.0;                   # Frequency               (Hz)
 ρ₀,c,_,_,_,kᵥ,_,_,_,_,_,_ = visco_thermal_constants(;freq=frequency,S=1);
 a       = 1.0;                       # Radius of sphere        (m)
-ω       = 2π*frequency;              # Angular frequency       (rad/s)
 k       = 2π*frequency/c;            # Wavenumber              (1/m)
 v₀      = 1e-2;                      # Initial velocity        (m/s)
 # # Loading the mesh
@@ -46,7 +45,7 @@ sp_h(z)  = -exp(im*z)*(z + im)/(z^2);          # Spherical Hankel function of or
 dsp_h(z) = exp(im*z)*(2z + im*(2-z^2))/(z^3);  # Derivative of Spherical Hankel function of order 1
 # Using these it is now possible to evaluate the analytical expressions
 θ_analytical  = collect(0:0.01:π)
-pa_analytical = -3.0*ρ₀*c*k*A₁*(sp_h(k*a))*(cos.(θ_analytical)); # Analytical acoustic pressure
+pa_analytical = -3.0*ρ₀*c*k*A₁*(sp_h(k*a))*cos.(θ_analytical);   # Analytical acoustic pressure
 vr_analytical = ( v₀ - 3*im*k*A₁*dsp_h(k*a))*cos.(θ_analytical); # Analytical viscous velocity in the radial direction
 vθ_analytical = (-v₀ + 3*im/a*A₁*sp_h(k*a))*sin.(θ_analytical);  # Analytical viscous velocity in the polar direction
 # # Solution through BEM

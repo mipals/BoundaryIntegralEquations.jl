@@ -5,10 +5,8 @@ using IterativeSolvers          # For gmres
 using LinearAlgebra             # For Diagonal
 using Plots                     # For 2d plots
 using Meshes                    # For 3d mesh plots
-import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(800, 800))
-using JSServe                           #hide
-Page(exportable=true, offline=true)     #hide
+import GLMakie as wgl
+wgl.set_theme!(resolution=(1600, 1600))
 # # Setting up constants
 frequency = 100.0;      # Frequency                [Hz]
 c  = 343.0;             # Speed up sound           [m/s]
@@ -32,9 +30,10 @@ bc_ents = [0];
 simple_bc   = create_bc_simple_mesh(mesh,bc_ents);
 simple_mesh = create_bc_simple_mesh(mesh,bc_ents,false);
 # Using the simple meshes we can visualize the mesh, with boundary 0 (where velocity condition will be applied) shown in red
-viz(simple_mesh;showfacets=true)
+fig = viz(simple_mesh;showfacets=true)
 viz!(simple_bc;showfacets=true,color=:red)
-wgl.current_figure()
+wgl.save("3d_cube_wave_viz.png",fig) #hide
+# ![](3d_cube_wave_viz.png)
 # # Analytical Solution
 # The analytical description of the interior pressure in unit cube with the side at ``x=0`` be applied a velocity of ``v_{0}``
 # ```math
@@ -88,4 +87,6 @@ ylabel!("|p/Z₀|"); xlabel!("r/a")
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz/Z₀))
 #src wgl.scatter!(mesh.sources[1,:],mesh.sources[2,:],mesh.sources[3,:],color=abs.(p_fmm/Z₀))
-wgl.Colorbar(fig[1,2],label="|p/Z₀|"); fig
+wgl.Colorbar(fig[1,2],label="|p/Z₀|");
+wgl.save("3d_cube_wave_viz_results.png",fig) #hide
+# ![](3d_cube_wave_viz_results.png)

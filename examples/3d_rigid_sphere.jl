@@ -7,10 +7,7 @@ using IterativeSolvers          # For gmres
 using LinearAlgebra             # For Diagonal
 using Meshes                    # For 3d mesh plots
 using Plots                     # For 2d plots
-import WGLMakie as wgl # WGLMakie integrates into VSCode. Other backends can also be used.
-wgl.set_theme!(resolution=(600, 600))
-using JSServe                           #hide
-Page(exportable=true, offline=true)     #hide
+import GLMakie as wgl
 # # Setting up constants
 frequency = 100.0;                              # Frequency                [Hz]
 c  = 343;                                       # Speed up sound           [m/s]
@@ -85,10 +82,12 @@ plot!(surface_angles[perm],abs.(p_fmm[perm]),label="FMM",linestyle=:dash,linewid
 plot!(surface_angles[perm],abs.(p_h[perm]),label="H-matrix",linestyle=:dash,linewidth=2)
 
 # Plotting the solution on the sphere. Note that the mesh is plotted as linear due to the underlying library used, not because the mesh itself is linear.
-wgl.set_theme!(resolution=(400, 400))
+wgl.set_theme!(resolution=(600, 600))
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz))
-wgl.Colorbar(fig[1,2],label="|p|"); fig
+wgl.Colorbar(fig[1,2],label="|p|");
+wgl.save("3d_rigid_sphere.png",fig) #hide
+# ![](3d_rigid_sphere.png)
 
 # # Bibliography
 # ```@bibliography
