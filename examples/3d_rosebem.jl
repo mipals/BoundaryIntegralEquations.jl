@@ -1,5 +1,5 @@
 # # ROSEBEM - Taylor
-# The Reduced Order Series Expansion Boundary Element Method (ROSEBEM) is a technique to significantly increase the computational efficiency of multifrequency BEM problems [panagiotopoulos2020](@cite) [Paltorp2023](@cite).
+# The Reduced Order Series Expansion Boundary Element Method (ROSEBEM) is a technique to significantly increase the computational efficiency of multifrequency BEM problems [panagiotopoulos2020](@cite) [Paltorp2023](@cite). In this example we look at the scattering of a rigid sphere and how the ROSEBEM using a Chebyshev series expansion can be used to accelerate the computational efforts.
 # # Importing related packages
 using BoundaryIntegralEquations # For BIEs
 using LegendrePolynomials       # For Legendre Polynomials
@@ -7,7 +7,6 @@ using SpecialFunctions          # For Bessel functions
 using IterativeSolvers          # For gmres
 using LinearAlgebra             # For Diagonal
 using Plots                     # For 2d plots
-import BoundaryIntegralEquations: scattering_krylov_basis, taylor_assemble!, apply_taylor_expansion
 # # Setting up constants
 c  = 343;                           # Speed up sound           (m/s)
 a  = 1.0;                           # Radius of sphere_1m      (m)
@@ -54,9 +53,9 @@ end
 k0 = 2π*225/c;  # Expansion wavenumber (for the Taylor series)
 M = 25          # Number of terms in the Taylor series
 L = 3           # Number of primary frequencyies used to compute the ROM Basis
-klist = 2π*(LinRange(100,300,L))/c;  # Defining the primary frequencies
+k_primary = 2π*(LinRange(100,300,L))/c;  # Defining the primary frequencies
 # For the computation of the reduced basis (`U`) solution (`sols`) at each frequency is used.
-U,sols,_ = scattering_krylov_basis(mesh,klist;P₀=P₀,verbose=false,progress=false);
+U,sols,_ = scattering_krylov_basis(mesh,k_primary;P₀=P₀,verbose=false,progress=false);
 println("Reduced basis size: $(size(U,2)) | Reduction in DOF: $(1 - size(U,2)/size(U,1)) %");
 # Given the ROM basis we can now compute the Taylor series including M terms
 Fm, _, Cm = taylor_assemble!(mesh,k0,mesh.sources,mesh.shape_function;n=2,m=2,M=M,gOn=false,U=U,progress=false);
@@ -97,13 +96,17 @@ p_i, p_s = p_analytical(0,2*r,ks;N_trunc = 80)
 plot(frequencies,abs.(p_i + p_s),label="Analytical Solution",legend=:topleft,linewidth=2)
 plot!(frequencies,abs.(p_i + p1_taylor),label="ROSEBEM",legend=:topleft,linestyle=:dash,linewidth=2)
 plot!(frequencies,abs.(p_i + p1_taylor_chief),label="ROSEBEM-CHIEF",legend=:topleft,linestyle=:dash,linewidth=2)
-ylims!((0.7,1.5)); xlabel!("Frequency [Hz]"); ylabel!("|p/p0|")
+ylims!((0.7,1.5)); xlabel!("Frequency [Hz]"); ylabel!("|p/p0|");
+scatter!([k0*(c/2π)],[0.7],label="k₀",markershape=:diamond);
+scatter!(k_primary*(c/2π),0.7ones(length(k_primary)),label="Primary Frequencies")
 # While for the point located directly in front of the sphere the results look as follows
 p_i, p_s = p_analytical(π,2*r,ks;N_trunc = 80)
 plot(frequencies,abs.(p_i + p_s),label="Analytical Solution",legend=:topleft,linewidth=2)
 plot!(frequencies,abs.(p_i + p2_taylor),label="ROSEBEM",legend=:topleft,linestyle=:dash,linewidth=2)
 plot!(frequencies,abs.(p_i + p2_taylor_chief),label="ROSEBEM-CHIEF",legend=:topleft,linestyle=:dash,linewidth=2)
-ylims!((0.50,1.6)); xlabel!("Frequency [Hz]"); ylabel!("|p/p0|")
+ylims!((0.5,1.6)); xlabel!("Frequency [Hz]"); ylabel!("|p/p0|");
+scatter!([k0*(c/2π)],[0.5],label="k₀",markershape=:diamond);
+scatter!(k_primary*(c/2π),0.5ones(length(k_primary)),label="Primary Frequencies")
 
 # # Bibliography
 # ```@bibliography

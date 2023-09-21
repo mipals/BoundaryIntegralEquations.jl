@@ -86,7 +86,7 @@ wgl.set_theme!(resolution=(600, 600))
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz))
 wgl.Colorbar(fig[1,2],label="|p|");
-wgl.save("3d_rigid_sphere.png",fig) #hide
+wgl.save(joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","docs","src","examples","3d_rigid_sphere.png"),fig) #hide
 # ![](3d_rigid_sphere.png)
 
 # # Bibliography
