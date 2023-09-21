@@ -71,5 +71,5 @@ ylabel!("p/Z₀"); xlabel!("r/a")
 data_mesh,data_viz = create_vizualization_data(mesh,p_fmm)
 fig, ax, hm = viz(data_mesh;showfacets=true, color=abs.(data_viz/Z₀))
 wgl.Colorbar(fig[1,2],label="|p/Z₀|");
-wgl.save("3d_pulsating_sphere.png",fig) #hide
+wgl.save(joinpath(dirname(pathof(BoundaryIntegralEquations)),"..","docs","src","examples","3d_pulsating_sphere.png"),fig) #hide
 # ![](3d_pulsating_sphere.png)
