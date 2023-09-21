@@ -129,4 +129,7 @@ export create_simple_mesh, create_bc_simple_mesh, create_vizualization_data
 export LossyBlockMatrix,LossyBlockMatrixCompact,LossyOneVariableInner,LossyOneVariableOuter
 export compute_lossy_rhs,LossyGlobalOuter
 
+# ROSEBEM
+export scattering_krylov_basis, taylor_assemble!, apply_taylor_expansion
+
 end

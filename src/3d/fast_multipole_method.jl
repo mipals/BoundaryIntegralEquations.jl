@@ -143,14 +143,17 @@ Saves the ``i``th column of `normals` scaled by the ``i``th value of `scalings` 
 
 Used when creating the "dipole-vectors" required for using the FMM.
 """
-function scale_columns!(dipvecs, normals, scalings)
-    @inbounds for i in eachindex(scalings)
-        dipvecs[1, i] = normals[1, i] * scalings[i]
-        dipvecs[2, i] = normals[2, i] * scalings[i]
-        dipvecs[3, i] = normals[3, i] * scalings[i]
+function scale_columns!(dipvecs, normals, scalings, nd=1)
+    @inbounds for i = 1:size(normals,2)
+        @inbounds for j = 1:nd
+            dipvecs[j + 0nd, i] = normals[1, i] * scalings[i,j]
+            dipvecs[j + 1nd, i] = normals[2, i] * scalings[i,j]
+            dipvecs[j + 2nd, i] = normals[3, i] * scalings[i,j]
+        end
     end
     return dipvecs
 end
+
 
 """
     setup_fast_operator(mesh,zk,n_gauss,nearfield,offset,depth;single_layer=true)
@@ -244,6 +247,47 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Ouput equal to the FMM contributions + near field corrections
     # The FMM3D library does not divide by 4π so we do it manually
     return y .= vals.pottarg / 4π + A.nearfield_correction * x
+end
+function LinearAlgebra.mul!(Y::AbstractMatrix{T},
+                            A::FMMGOperator{T},
+                            X::AbstractMatrix) where {T<:ComplexF64}
+    # Checking dimensions
+    LinearMaps.check_dim_mul(Y, A, X)
+    # Set between 16-32 as discussed with Manas Rachh
+    batch_size = 32
+    # Get input, batch_size and number of sources
+    n_input = size(X,2)
+    n_whole = div(n_input,batch_size)
+    n_sources = size(A.sources,2)
+    # Preallocation
+    coefficients = zeros(eltype(X), batch_size, n_sources)
+    for i = 1:n_whole
+        # Getting X-batch
+        Xview = @view X[:, (batch_size*(i-1) + 1):(batch_size*i) ]
+        # Mapping collocation point values to Gaussian points
+        mul!(coefficients, Transpose(Xview), A.C')
+        # Computing the FMM sum
+        vals = hfmm3d(A.tol, A.k, A.sources; targets=A.targets, charges=coefficients, pgt=1, nd=batch_size)
+        # Ouput equal to the FMM contributions + near field corrections
+        Y[:, (batch_size*(i-1) + 1):(batch_size*i) ] .=
+                            Transpose(vals.pottarg) / 4π + A.nearfield_correction * Xview
+    end
+    # Checking if batch_size was equal to input - Returning if true
+    if mod(n_input,batch_size) == 0
+        return Y
+    end
+    # Getting X-batch
+    Xview        = @view X[:, (batch_size*n_whole + 1):(batch_size*n_whole + mod(n_input,batch_size)) ]
+    # Pre-allocating
+    coefficients = zeros(eltype(X), mod(n_input,batch_size), n_sources)
+    # Mapping values of X-batch at the collocation points to the Gaussian points
+    mul!(coefficients, Transpose(Xview), A.C')
+    # Computing the FMM sum
+    vals = hfmm3d(A.tol, A.k, A.sources; targets=A.targets, charges=coefficients, pgt=1, nd=mod(n_input,batch_size))
+    # Ouput equal to the FMM contributions + near field corrections
+    Y[:, (batch_size*n_whole + 1):(batch_size*n_whole + mod(n_input,batch_size)) ] .=
+                            Transpose(vals.pottarg) / 4π + A.nearfield_correction * Xview
+    return Y
 end
 
 function FMMGOperator(mesh, k; tol=1e-6, n_gauss=3, nearfield=true, offset=0.2, depth=1)
@@ -346,6 +390,53 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # Ouput equal to the FMM contributions + near field corrections
     # The FMM3D library does not divide by 4π so we do it manually
     return y .= vals.pottarg / 4π + A.nearfield_correction * x
+end
+function LinearAlgebra.mul!(Y::AbstractMatrix{T},
+                            A::FMMFOperator{T},
+                            X::AbstractMatrix) where {T<:ComplexF64}
+    # Checking dimensions
+    LinearMaps.check_dim_mul(Y, A, X)
+    # Set between 16-32 as discussed with Manas Rachh
+    batch_size = 32
+    # Get input and number of sources
+    n_input = size(X,2)
+    n_whole = div(n_input,batch_size)
+    n_sources = size(A.sources,2)
+    # Preallocation
+    coefficients = zeros(eltype(X), n_sources, batch_size)
+    dipvecs = zeros(eltype(coefficients), 3batch_size, n_sources)
+    for i = 1:n_whole
+        # Getting X-batch
+        Xview = @view X[:, (batch_size*(i-1) + 1):(batch_size*i) ]
+        # Mapping collocation point values to Gaussian points
+        mul!(coefficients, A.C, Xview)
+        # Scale "dipoles"
+        scale_columns!(dipvecs, A.normals, coefficients, batch_size)
+        # Computing the FMM sum
+        vals = hfmm3d(A.tol, A.k, A.sources; targets=A.targets, dipvecs=dipvecs, pgt=1, nd=batch_size)
+        # Ouput equal to the FMM contributions + near field corrections
+        Y[:, (batch_size*(i-1) + 1):(batch_size*i) ] .=
+                            Transpose(vals.pottarg) / 4π + A.nearfield_correction * Xview
+    end
+    # Checking if batch_size was equal to input - Returning if true
+    if mod(n_input,batch_size) == 0
+        return Y
+    end
+    # Getting X-batch
+    Xview        = @view X[:, (batch_size*n_whole + 1):(batch_size*n_whole + mod(n_input,batch_size)) ]
+    # Pre-allocating
+    coefficients = zeros(eltype(X), n_sources,   mod(n_input,batch_size))
+    dipvecs      = zeros(eltype(coefficients), 3*mod(n_input,batch_size), n_sources)
+    # Mapping values of X-batch at the collocation points to the Gaussian points
+    mul!(coefficients, A.C, Xview)
+    # Scale "dipoles"
+    scale_columns!(dipvecs, A.normals, coefficients, mod(n_input,batch_size))
+    # Computing the FMM sum
+    vals = hfmm3d(A.tol, A.k, A.sources; targets=A.targets, dipvecs=dipvecs, pgt=1, nd=mod(n_input,batch_size))
+    # Ouput equal to the FMM contributions + near field corrections
+    Y[:, (batch_size*n_whole + 1):(batch_size*n_whole + mod(n_input,batch_size)) ] .=
+                            Transpose(vals.pottarg) / 4π + A.nearfield_correction * Xview
+    return Y
 end
 
 function FMMFOperator(mesh, k; n_gauss=3, tol=1e-6, nearfield=true, offset=0.2, depth=1)
