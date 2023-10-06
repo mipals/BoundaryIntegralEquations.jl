@@ -107,15 +107,15 @@ L = 3;           # Number of primary wavenumbers used to compute the ROM Basis
 k_primary = 2π*(LinRange(100,300,L))/c;  # Defining the primary frequencies
 U,sols,_ = scattering_krylov_basis(mesh,k_primary;P₀=P₀,verbose=false,progress=false);
 @info "Reduced basis size: $(size(U,2)) | Reduction in DOF: $(1 - size(U,2)/size(U,1)) %";
-# Then we define the secondary wavenumbers, i.e. the wavenumbers for which we compute the matrices ``\mathbf{U}^\text{H}\mathbf{A}(k)\mathbf{U}``
+# Then we define the secondary wavenumbers, i.e. the wavenumbers for which we compute the matrices ``\mathbf{U}^\text{H}\mathbf{A}\left(g^{-1}(\omega)\right)\mathbf{U}``
 kmin = 2π*10/c;
 kmax = 2π*400/c;
 g(k)    = 2/(kmax - kmin)*k .- (kmax + kmin )/(kmax - kmin);
 ginv(ω) = (kmax - kmin)/2*ω .+ (kmin + kmax)/2;
 M  = 25;                                # Number of terms in the Chebyshev approximation
 ωᵢ = cos.(π*(collect(0:M-1) .+ 1/2)/M); # Zeros of the Chebyshev polynomials
-k_secondary = ginv.(ωᵢ);               # Mapping [-1,1] to [kmin, kmax]
-# Using the defined functions we can create the basis matrices ``\mathbf{U}^\text{H}\mathbf{A}(\omega_i)\mathbf{U}``
+k_secondary = ginv.(ωᵢ);                # Mapping [-1,1] to [kmin, kmax]
+# Using the defined functions we can create the basis matrices ``\mathbf{U}^\text{H}\mathbf{A}\left(g^{-1}(\omega_i)\right)\mathbf{U}``
 A_reduced = create_basis_matrices(mesh,k_secondary,U);
 # Now from the basis matrices we can compute the Chebyshev coefficient matrices (``\mathbf{C}_j``) as
 Cj  = create_chebyshev_coefficients(A_reduced);

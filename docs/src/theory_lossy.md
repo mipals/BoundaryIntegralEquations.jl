@@ -256,7 +256,7 @@ As this linear system has 10 DOF pr. collocation node, it becomes problematic to
 ![LossySystem](figures/lossy_system.png)
 
 ## Iterative Solution Scheme
-The large lossy system of equations is ill-conditioned. As such, solving it through a conventional iterative solution scheme does not work. To resolve this, a Schur complement preconditioning step is used to reduce to a linear system that only has $\mathbf{p}_a$ as a DOF. The resulting system is well-conditioned and can be solved using an iterative solution scheme. A brief derivation similar to that found in Paper J2 is restated here.
+The large lossy system of equations is ill-conditioned. As such, solving it through a conventional iterative solution scheme does not work. To resolve this, a Schur complement preconditioning step is used to reduce to a linear system that only has $\mathbf{p}_a$ as a DOF. The resulting system is well-conditioned and can be solved using an iterative solution scheme. A brief derivation similar to that found in [Preuss2023](@cite) is restated here.
 
 Due to the simplicity of the isothermal boundary condition the thermal mode can easily be removed using that
 ```math
