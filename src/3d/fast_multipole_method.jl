@@ -235,9 +235,7 @@ end
 # Overloading size. Used to check dimension of inputs
 Base.size(A::FMMGOperator) = (size(A.targets, 2), size(A.targets, 2))
 
-function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
-                            A::FMMGOperator{T},
-                            x::AbstractVector) where {T<:ComplexF64}
+function LinearMaps._unsafe_mul!(y,A::FMMGOperator{T},x::AbstractVector) where {T<:ComplexF64}
     # Checking dimensions
     LinearMaps.check_dim_mul(y, A, x)
     # Compute coefficients
@@ -248,9 +246,7 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # The FMM3D library does not divide by 4π so we do it manually
     return y .= vals.pottarg / 4π + A.nearfield_correction * x
 end
-function LinearAlgebra.mul!(Y::AbstractMatrix{T},
-                            A::FMMGOperator{T},
-                            X::AbstractMatrix) where {T<:ComplexF64}
+function LinearMaps._unsafe_mul!(Y,A::FMMGOperator{T},X::AbstractMatrix) where {T<:ComplexF64}
     # Checking dimensions
     LinearMaps.check_dim_mul(Y, A, X)
     # Set between 16-32 as discussed with Manas Rachh
@@ -288,6 +284,23 @@ function LinearAlgebra.mul!(Y::AbstractMatrix{T},
     Y[:, (batch_size*n_whole + 1):(batch_size*n_whole + mod(n_input,batch_size)) ] .=
                             Transpose(vals.pottarg) / 4π + A.nearfield_correction * Xview
     return Y
+end
+
+function LinearMaps._unsafe_mul!(
+    y,
+    AdjA::LinearMaps.AdjointMap{<:Any,<:FMMGOperator},
+    x::AbstractVector
+)
+    LinearMaps.check_dim_mul(y, AdjA, x)
+
+    A = AdjA.lmap
+    # Set between 16-32 as discussed with Manas Rachh
+    # Get input, batch_size and number of sources
+    # Computing the FMM sum
+    vals = hfmm3d(A.tol, -A.k, A.targets; targets=A.sources, charges=ComplexF64.(x), pgt=1)
+
+    y .= A.nearfield_correction' * x + A.C'*vals.pottarg/4π
+    return y
 end
 
 function FMMGOperator(mesh, k; tol=1e-6, n_gauss=3, nearfield=true, offset=0.2, depth=1)
@@ -376,9 +389,7 @@ end
 
 Base.size(A::FMMFOperator) = (size(A.targets, 2), size(A.targets, 2))
 
-function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
-                            A::FMMFOperator{T},
-                            x::AbstractVector) where {T<:ComplexF64}
+function LinearMaps._unsafe_mul!(y,A::FMMFOperator{T},x::AbstractVector) where {T<:ComplexF64}
     # Checking dimensions
     LinearMaps.check_dim_mul(y, A, x)
     # Map the mesh nodes to the gauss nodes
@@ -391,9 +402,29 @@ function LinearAlgebra.mul!(y::AbstractVecOrMat{T},
     # The FMM3D library does not divide by 4π so we do it manually
     return y .= vals.pottarg / 4π + A.nearfield_correction * x
 end
-function LinearAlgebra.mul!(Y::AbstractMatrix{T},
-                            A::FMMFOperator{T},
-                            X::AbstractMatrix) where {T<:ComplexF64}
+function LinearMaps._unsafe_mul!(
+    y,
+    AdjA::LinearMaps.AdjointMap{<:Any,<:FMMFOperator},
+    x::AbstractVector
+)
+    LinearMaps.check_dim_mul(y, AdjA, x)
+
+    A = AdjA.lmap
+    # We have to split the computation into three parts - Lots of overhead memory. Maybe pre-allocate at another point in time
+    N = size(A.targets,2)
+    Nxyz =  [Transpose(x);  zeros(ComplexF64,1,N); zeros(ComplexF64,1,N);
+             zeros(ComplexF64,1,N); Transpose(x);  zeros(ComplexF64,1,N);
+             zeros(ComplexF64,1,N); zeros(ComplexF64,1,N); Transpose(x)]
+    # Using -k due to conjugation
+    V = hfmm3d(A.tol, -A.k, A.targets; targets=A.sources, dipvecs=Nxyz, pgt=1, nd=3).pottarg
+    # The dimensions are wrong
+    val = -sum(Transpose(A.normals .* V),dims=2)
+
+    y .= A.C'*val/4π+ A.nearfield_correction' * x
+    return y
+end
+
+function LinearMaps._unsafe_mul!(Y,A::FMMFOperator{T},X::AbstractMatrix) where {T<:ComplexF64}
     # Checking dimensions
     LinearMaps.check_dim_mul(Y, A, X)
     # Set between 16-32 as discussed with Manas Rachh
