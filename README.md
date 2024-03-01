@@ -19,8 +19,6 @@ is the Green's function of the Helmholtz operator, $k$ is the wavenumber, $\rho_
 
 The package supplies support for acceleration methods such as e.g. the Fast Multipole Method (FMM) and Hierarchical matrices. For the FMM the package utilizes the Flatiron Institute Fast Multipole Libraries ([2D](https://github.com/mipals/FMM2D.jl), [3D](https://github.com/flatironinstitute/FMM3D/tree/master/julia)) whereas for Hierarchical matrices it uses the [HMatrices.jl](https://github.com/WaveProp/HMatrices.jl) package.
 
-**N.B. The package is still under heavy development.**
-
 ## Installation
 The package can be installed directly from GitHub 
 
