@@ -21,3 +21,6 @@ examples/gmsh_tests.jl
 Manifest.toml
 examples/tests_fmm3d.jl
 examples/chebyshev_old.jl
+Manifest.toml
+examples/3d_chebyshev_largescale.jl
+examples/3d_rigid_sphere_test.jl

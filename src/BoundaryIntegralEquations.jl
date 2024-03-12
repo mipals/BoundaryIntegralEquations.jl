@@ -16,7 +16,6 @@ using ProgressMeter
 using SparseArrays
 using SpecialFunctions
 using StatsBase
-using Meshes
 using MeshIO
 using LegendrePolynomials
 using LinearMaps
@@ -25,11 +24,8 @@ using IterativeSolvers
 using FMM3D
 using FileIO
 using StaticArrays
-# The gives out an @Info from the HMatrices when loaded
-# using Gmsh: Gmsh, gmsh
 import ForwardDiff
 using HMatrices
-# import HMatrices: assemble_hmat, PartialACA, ClusterTree
 #==========================================================================================
                                         Constants
 ==========================================================================================#
@@ -97,7 +93,7 @@ export CurveFunction,ShapeFunction,SurfaceFunction
 export visco_thermal_constants,ambient_to_properties
 
 # Mesh-related functions
-export Mesh,Mesh3d,Mesh2d
+export Mesh3d,Mesh2d
 export load3dTriangularComsolMesh,load3dQuadComsolMesh,read_comsol_mesh,load3dTriangularMesh
 
 # 1D element types (for 2D)
