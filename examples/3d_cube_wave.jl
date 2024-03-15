@@ -6,7 +6,7 @@ using LinearAlgebra             # For Diagonal
 using Plots                     # For 2d plots
 using Meshes                    # For 3d mesh plots
 import GLMakie as wgl
-wgl.set_theme!(resolution=(1600, 1600))
+wgl.set_theme!(size=(1600, 1600))
 # # Setting up constants
 frequency = 100.0;      # Frequency                [Hz]
 c  = 343.0;             # Speed up sound           [m/s]
