@@ -1,5 +1,6 @@
 module BoundaryIntegralEquationsMeshesExt
 
+using LinearAlgebra
 using BoundaryIntegralEquations
 using BoundaryIntegralEquations: set_interpolation_nodes!, remove_unused_nodes
 using Meshes: SimpleMesh, Point, connect
