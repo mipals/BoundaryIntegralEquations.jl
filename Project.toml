@@ -1,7 +1,7 @@
 name = "BoundaryIntegralEquations"
 uuid = "ebf54fa4-afc0-484a-8ee1-77aaf84d33dc"
-authors = ["Mikkel Paltorp Schmitt <mikkel.paltorp@gmail.com>"]
 version = "0.1.0"
+authors = ["Mikkel Paltorp Schmitt <mikkel.paltorp@gmail.com>"]
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
@@ -43,6 +43,7 @@ LinearAlgebra = "1"
 LinearMaps = "3"
 LoopVectorization = "0.12"
 MeshIO = "0.4"
+Meshes = "0.56"
 ProgressMeter = "1"
 SafeTestsets = "0.1"
 SparseArrays = "1"
