@@ -1,7 +1,7 @@
 name = "BoundaryIntegralEquations"
 uuid = "ebf54fa4-afc0-484a-8ee1-77aaf84d33dc"
-authors = ["Mikkel Paltorp Schmitt <mikkel.paltorp@gmail.com>"]
 version = "0.1.0"
+authors = ["Mikkel Paltorp Schmitt <mikkel.paltorp@gmail.com>"]
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
@@ -32,6 +32,7 @@ BoundaryIntegralEquationsMeshesExt = "Meshes"
 [compat]
 Aqua = "0.8"
 DelimitedFiles = "1"
+FMM3D = "2"
 FastGaussQuadrature = "0.4, 0.5, 1"
 FileIO = "1"
 ForwardDiff = "0.10"
